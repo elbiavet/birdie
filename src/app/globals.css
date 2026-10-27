@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --club-primary: #0f4c3a;
-  --club-primary-fg: #ffffff;
-  --club-secondary: #d4af37;
-  --club-accent: #1b7a58;
-  --club-bg: #f8faf9;
+  --club-primary: #0F4C3A;
+  --club-primary-fg: #FFFFFF;
+  --club-secondary: #D4AF37;
+  --club-accent: #1B7A58;
+  --club-bg: #F8FAF9;
 }
 
 body {

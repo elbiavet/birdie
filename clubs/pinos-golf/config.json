@@ -1,0 +1,44 @@
+{
+  "clubId": "pinos-golf",
+  "name": "Club de Golf Los Pinos del Mar",
+  "shortName": "Los Pinos Golf",
+  "tagline": "Links mediterráneo frente al mar",
+  "appId": "com.birdie.pinosgolf",
+  "domains": {
+    "staging": "staging.pinosgolf.birdie.app",
+    "production": "app.lospinosgolf.com"
+  },
+  "theme": {
+    "primary": "#0C2D48",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E2B659",
+    "accent": "#145DA0",
+    "background": "#F4F7FA"
+  },
+  "coordinates": {
+    "lat": 36.5101,
+    "lng": -4.8824
+  },
+  "defaultCourseExternalId": "golfapi_course_2048",
+  "contact": {
+    "email": "reservas@lospinosgolf.com",
+    "phone": "+34 952 000 200",
+    "address": "Avenida Litoral s/n, Marbella",
+    "website": "https://lospinosgolf.com"
+  },
+  "features": {
+    "scorecard": true,
+    "gps": true,
+    "stats": true,
+    "calendar": true,
+    "tournaments": true,
+    "bookings": true,
+    "playerDirectory": true,
+    "clubDirectory": true,
+    "news": true,
+    "clubInfo": true,
+    "forum": false,
+    "adminChat": true,
+    "specialEvents": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "clubId": "demo-club",
+  "name": "Real Club de Golf Valle Verde",
+  "shortName": "RCG Valle Verde",
+  "tagline": "Tradición y deporte desde 1968",
+  "appId": "com.birdie.valleverde",
+  "domains": {
+    "staging": "staging.valleverde.birdie.app",
+    "production": "app.rcgvalleverde.es"
+  },
+  "theme": {
+    "primary": "#0F4C3A",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#D4AF37",
+    "accent": "#1B7A58",
+    "background": "#F8FAF9"
+  },
+  "coordinates": {
+    "lat": 40.4682,
+    "lng": -3.7815
+  },
+  "defaultCourseExternalId": "golfapi_course_1024",
+  "contact": {
+    "email": "secretaria@rcgvalleverde.es",
+    "phone": "+34 910 000 100",
+    "address": "Carretera del Monte km 4.5, Madrid",
+    "website": "https://rcgvalleverde.es"
+  },
+  "features": {
+    "scorecard": true,
+    "gps": true,
+    "stats": true,
+    "calendar": true,
+    "tournaments": true,
+    "bookings": true,
+    "playerDirectory": true,
+    "clubDirectory": true,
+    "news": true,
+    "clubInfo": true,
+    "forum": true,
+    "adminChat": true,
+    "specialEvents": true
+  }
+}

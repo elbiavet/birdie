@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://birdie.app/schemas/club-config.schema.json",
+  "title": "Birdie Club Configuration",
+  "description": "Configuración white-label declarativa por club de golf",
+  "type": "object",
+  "required": [
+    "clubId",
+    "name",
+    "shortName",
+    "appId",
+    "domains",
+    "theme",
+    "coordinates",
+    "defaultCourseExternalId",
+    "features"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "clubId": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Identificador único en kebab-case (ej. demo-club)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Nombre oficial completo del club de golf"
+    },
+    "shortName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 24,
+      "description": "Nombre corto para cabeceras e icono de app nativa"
+    },
+    "tagline": {
+      "type": "string",
+      "description": "Lema o subtítulo institucional del club"
+    },
+    "appId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+      "description": "Identificador de paquete Android/iOS para Capacitor (ej. com.birdie.democlub)"
+    },
+    "domains": {
+      "type": "object",
+      "required": ["staging", "production"],
+      "additionalProperties": false,
+      "properties": {
+        "staging": { "type": "string", "minLength": 3 },
+        "production": { "type": "string", "minLength": 3 }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "required": [
+        "primary",
+        "primaryForeground",
+        "secondary",
+        "accent",
+        "background"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "primaryForeground": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "secondary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "accent": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "background": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "coordinates": {
+      "type": "object",
+      "required": ["lat", "lng"],
+      "additionalProperties": false,
+      "properties": {
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lng": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "defaultCourseExternalId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ID externo del recorrido principal en Golf API"
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "website": { "type": "string" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "required": [
+        "scorecard",
+        "gps",
+        "stats",
+        "calendar",
+        "tournaments",
+        "bookings",
+        "playerDirectory",
+        "clubDirectory",
+        "news",
+        "clubInfo",
+        "forum",
+        "adminChat",
+        "specialEvents"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "scorecard": { "type": "boolean" },
+        "gps": { "type": "boolean" },
+        "stats": { "type": "boolean" },
+        "calendar": { "type": "boolean" },
+        "tournaments": { "type": "boolean" },
+        "bookings": { "type": "boolean" },
+        "playerDirectory": { "type": "boolean" },
+        "clubDirectory": { "type": "boolean" },
+        "news": { "type": "boolean" },
+        "clubInfo": { "type": "boolean" },
+        "forum": { "type": "boolean" },
+        "adminChat": { "type": "boolean" },
+        "specialEvents": { "type": "boolean" }
+      }
+    }
+  }
+}
