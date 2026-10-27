@@ -1,0 +1,44 @@
+{
+  "name": "birdie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma white-label de golf multi-club (Next.js + Capacitor Android + Supabase)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:apk": "CAPACITOR_BUILD=true next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "configure:club": "tsx scripts/configure-club.ts",
+    "cap:sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.0",
+    "@capacitor/android": "^7.1.0",
+    "@capacitor/core": "^7.1.0",
+    "@capacitor/geolocation": "^7.1.0",
+    "@capacitor/push-notifications": "^7.0.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "lucide-react": "^0.477.0",
+    "next": "^15.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.1.0",
+    "@tailwindcss/postcss": "^4.0.9",
+    "@types/node": "^22.13.8",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.21.0",
+    "eslint-config-next": "^15.2.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}
