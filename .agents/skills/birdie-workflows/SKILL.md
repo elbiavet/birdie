@@ -1,12 +1,12 @@
 ---
 name: birdie-workflows
 description: >-
-  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, y (3) ejecutar la revisión de cierre de fase en BACKLOG.md. Úsala siempre que trabajes en alta de clubes, cambios de base de datos o cierres de fase.
+  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, (3) sincronizar campos desde Golf API y cola offline SQLite, y (4) ejecutar la revisión de cierre de fase en BACKLOG.md. Úsala siempre que trabajes en alta de clubes, cambios de base de datos, núcleo deportivo o cierres de fase.
 ---
 
 # Flujos de Trabajo Reutilizables de Birdie (`birdie-workflows`)
 
-Esta skill contiene las instrucciones operativas paso a paso para los tres flujos de trabajo recurrentes del proyecto **Birdie**. Las reglas generales y permanentes residen en [`AGENTS.md`](../../../AGENTS.md).
+Esta skill contiene las instrucciones operativas paso a paso para los flujos de trabajo recurrentes del proyecto **Birdie**. Las reglas generales y permanentes residen en [`AGENTS.md`](../../../AGENTS.md).
 
 ---
 
@@ -82,3 +82,19 @@ Antes de dar por cerrada cualquier fase en [`BACKLOG.md`](../../../BACKLOG.md):
    - Si una prueba depende de un servicio externo o binario no instalado localmente (ej. contenedor de `supabase test db` o compilación Gradle Android en runner Linux), deja constancia explícita en la columna `Registro de Tests / Resultado` de `BACKLOG.md` indicando qué se verificó estáticamente en local y qué workflow de CI lo ejecuta.
 4. **Actualizar `AGENTS.md`, esta skill y `BACKLOG.md`**:
    - Registra la tarea de `[REVISIÓN DE CIERRE FASE X]` en `BACKLOG.md` y márcala como `completada` solo tras obtener salida `0` en todos los comandos.
+
+---
+
+## Flujo 4: Sincronización de Campos Golf API y Cola Offline-First (SQLite ↔ Supabase)
+
+Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la lógica WHS/Stableford o modifiques la sincronización offline del marcador:
+
+1. **Normalización y alta de recorridos (`src/lib/golf-api/`)**:
+   - Todo payload externo de `golfapi.io` / `GolfCourseAPI` debe pasar por `normalizeExternalCoursePayload` en [`src/lib/golf-api/index.ts`](../../../src/lib/golf-api/index.ts) o por la Edge Function [`supabase/functions/sync-golf-course/index.ts`](../../../supabase/functions/sync-golf-course/index.ts) (restringida a `club_admin` y `superadmin`).
+   - Verifica que los 18 hoyos tengan `strokeIndex` únicos del `1` al `18` y coordenadas GPS (`greenFrontLat/Lng`, `greenCenterLat/Lng`, `greenBackLat/Lng`).
+2. **Caché offline de hoyos en SQLite**:
+   - Invoca `syncCourseToOfflineCache(courseId)` para persistir los 18 hoyos en `cacheCourseData` (`src/lib/capacitor/sqlite.ts`) antes de iniciar una ronda sin cobertura.
+3. **Anotación Offline-First y vaciado de cola (`src/lib/offline-sync/index.ts`)**:
+   - Usa siempre `recordHoleScoreOfflineFirst(params)` para calcular puntos Stableford (`src/lib/scoring/engine.ts`) y guardar en SQLite local con `syncStatus = 'pending'`.
+   - Cuando recupere conectividad (`isOnline`), ejecuta `flushPendingScoresToSupabase()` para enviar los registros pendientes y marcarlos como `synced`.
+   - En los tests unitarios de Vitest, limpia siempre el almacén en `beforeEach` mediante `await clearOfflineStore()`.
