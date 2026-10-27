@@ -1,0 +1,77 @@
+name: Build Club Android APK (Multi-Club Matrix)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno de destino para cada club (staging o production)'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      club_filter:
+        description: 'ID de club específico o "all" para compilar todos los clubes'
+        required: false
+        default: 'all'
+        type: string
+
+jobs:
+  build-android-apk:
+    name: Build APK (${{ matrix.club }} — ${{ inputs.environment || 'staging' }})
+    runs-on: ubuntu-latest
+    if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
+    strategy:
+      fail-fast: false
+      matrix:
+        club:
+          - demo-club
+          - pinos-golf
+
+    env:
+      NEXT_PUBLIC_CLUB_ID: ${{ matrix.club }}
+      NEXT_PUBLIC_APP_ENV: ${{ inputs.environment || 'staging' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Java JDK 17 for Android Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply White-Label configuration for ${{ matrix.club }}
+        run: npm run configure:club -- --club=${{ matrix.club }} --env=${{ inputs.environment || 'staging' }}
+
+      - name: Build Next.js Static Export (out/)
+        run: npm run build:apk
+
+      - name: Initialize or Sync Capacitor Android Project
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Build Android APK with Gradle
+        working-directory: ./android
+        run: ./gradlew assembleDebug
+
+      - name: Upload Club APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: birdie-${{ matrix.club }}-${{ inputs.environment || 'staging' }}-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
