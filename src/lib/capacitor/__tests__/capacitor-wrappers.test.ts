@@ -4,11 +4,15 @@ import {
   calculateDistanceMeters,
   calculateGreenDistances,
   getCurrentGpsPosition,
+  getCurrentPosition,
   metersToYards,
+  watchPosition,
 } from '../geolocation';
 import {
+  cacheCourseData,
   cacheCourseHoles,
   clearOfflineStore,
+  getCachedCourseData,
   getCachedCourseHoles,
   getOfflineRoundScores,
   getPendingSyncScores,
@@ -51,6 +55,16 @@ describe('Capacitor Config & Wrappers Nativos (Geolocation, SQLite Offline, Push
     const pos = await getCurrentGpsPosition(teeHoyo1);
     expect(pos.lat).toBe(teeHoyo1.lat);
     expect(pos.source).toBe('simulated');
+
+    const aliasPos = await getCurrentPosition(teeHoyo1);
+    expect(aliasPos.lng).toBe(teeHoyo1.lng);
+
+    let watchedCoord = { lat: 0, lng: 0 };
+    const stopWatch = await watchPosition((updated) => {
+      watchedCoord = { lat: updated.lat, lng: updated.lng };
+    }, teeHoyo1);
+    expect(watchedCoord).toEqual(teeHoyo1);
+    await stopWatch();
   });
 
   it('persiste golpes de marcador offline, gestiona la cola pending->synced y cachea hoyos', async () => {
@@ -113,6 +127,10 @@ describe('Capacitor Config & Wrappers Nativos (Geolocation, SQLite Offline, Push
     const cachedHoles = await getCachedCourseHoles('course-1');
     expect(cachedHoles).toHaveLength(1);
     expect(cachedHoles[0].par).toBe(4);
+
+    await cacheCourseData('course-2', cachedHoles);
+    const cachedData = await getCachedCourseData('course-2');
+    expect(cachedData).toHaveLength(1);
   });
 
   it('valida rangos de hoyos y golpes en el marcador offline', async () => {

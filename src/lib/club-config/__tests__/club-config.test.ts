@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   buildClubCssRootBlock,
@@ -9,7 +11,7 @@ import {
   listRegisteredClubIds,
   validateClubConfig,
 } from '../index';
-import { parseCliArgs } from '../../../../scripts/configure-club';
+import { configureClub, parseCliArgs } from '../../../../scripts/configure-club';
 
 describe('Motor White-Label Multi-Club (club-config)', () => {
   it('registra los clubes demo-club y pinos-golf en el catálogo', () => {
@@ -101,5 +103,43 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
       clubId: 'pinos-golf',
       environment: 'production',
     });
+  });
+
+  it('ejecuta configureClub generando artefactos para pinos-golf y restaurando demo-club', () => {
+    const pinosResult = configureClub({
+      clubId: 'pinos-golf',
+      environment: 'production',
+    });
+    expect(pinosResult.appId).toBe('com.birdie.pinosgolf');
+    expect(pinosResult.domain).toBe('app.lospinosgolf.com');
+    expect(fs.existsSync(pinosResult.generatedConfigPath)).toBe(true);
+
+    // Restaurar demo-club en staging por defecto
+    const demoResult = configureClub({
+      clubId: 'demo-club',
+      environment: 'staging',
+    });
+    expect(demoResult.appId).toBe('com.birdie.valleverde');
+    expect(demoResult.domain).toBe('staging.valleverde.birdie.app');
+  });
+
+  it('verifica que los workflows de GitHub Actions incluyan todos los clubes registrados y los tests pgTAP', () => {
+    const ciYml = fs.readFileSync(
+      path.resolve(process.cwd(), '.github/workflows/ci.yml'),
+      'utf-8'
+    );
+    expect(ciYml).toContain('npm run typecheck');
+    expect(ciYml).toContain('npm run test');
+    expect(ciYml).toContain('npm run build');
+    expect(ciYml).toContain('supabase test db');
+
+    const apkYml = fs.readFileSync(
+      path.resolve(process.cwd(), '.github/workflows/build-club-apk.yml'),
+      'utf-8'
+    );
+    for (const clubId of listRegisteredClubIds()) {
+      expect(apkYml).toContain(`- ${clubId}`);
+    }
+    expect(apkYml).toContain('./gradlew assembleDebug');
   });
 });

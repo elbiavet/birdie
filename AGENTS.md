@@ -47,6 +47,20 @@ Antes de implementar cualquier funcionalidad, corrección o cambio arquitectóni
 
 ---
 
+## 2B. Revisión Obligatoria de Cierre de Fase
+
+Al terminar cada fase de [`BACKLOG.md`](./BACKLOG.md), **antes de dar la fase por cerrada**, es obligatorio ejecutar una revisión de cierre cumpliendo estos 5 puntos:
+
+1. **Auditoría contra criterios de aceptación**: Compara el trabajo realizado con cada tarea y criterio de verificación de la fase en `BACKLOG.md`. Actualiza el estado real de cada tarea y no marques como `completada` ninguna tarea que tenga requisitos parciales o sin verificar.
+2. **Cobertura de tests por cambio de comportamiento**: Comprueba que cada cambio de comportamiento implementado cuenta con un test automatizado adecuado. Añade o actualiza los tests que falten, ejecútalos y registra comando y resultado en `BACKLOG.md`. Si algún comportamiento no puede probarse automáticamente en el entorno local (ej. hardware nativo Android o demonio Docker/`supabase` CLI no instalado), documenta explícitamente por qué y cómo se verificó.
+3. **Documentación y separación entre Reglas (`AGENTS.md`) y Skills (`.agents/skills/`)**:
+   - Mantén en `AGENTS.md` las **reglas generales y permanentes** del proyecto.
+   - Coloca en la skill del proyecto ([`.agents/skills/birdie-workflows/SKILL.md`](./.agents/skills/birdie-workflows/SKILL.md)) las **instrucciones detalladas paso a paso** de flujos de trabajo reutilizables (alta de clubes white-label, creación de migraciones con RLS/`pgTAP`, y checklist de cierre de fase), evitando duplicar contenido o añadir información no confirmada.
+4. **Integridad del Backlog**: Si la revisión detecta trabajo faltante, añádelo como tarea explícita en `BACKLOG.md` y no cierres la fase hasta resolverlo o dejar claramente registrado el bloqueo.
+5. **Informe de Cierre de Fase**: Entrega un resumen final detallando qué se revisó, qué tests pasaron o fallaron, qué se actualizó en `AGENTS.md`, en las skills y en `BACKLOG.md`, y dictamina si la fase queda formalmente cerrada.
+
+---
+
 ## 3. Convenciones de Código y Git
 
 - **Commits pequeños y ramas cortas**: Cada tarea o subgrupo lógico verificable debe corresponder a un commit atómico y descriptivo (`feat:`, `fix:`, `test:`, `chore:`, `docs:`).
@@ -57,17 +71,18 @@ Antes de implementar cualquier funcionalidad, corrección o cambio arquitectóni
 
 ## 4. Comandos de Prueba y Verificación del Proyecto
 
-> **Regla**: No inventes comandos de prueba. Revisa siempre `package.json` y `supabase/config.toml` antes de ejecutar tests.
+> **Regla**: No inventes comandos de prueba. Revisa siempre `package.json` y `supabase/config.toml` antes de ejecutar tests. Para procedimientos paso a paso consulta la skill [`.agents/skills/birdie-workflows/SKILL.md`](./.agents/skills/birdie-workflows/SKILL.md).
 
-### Estado Actual Descubierto en el Repositorio
-- **Comandos oficiales registrados en `package.json` (`F1.1-T02`)**:
+### Estado Actual Confirmado en el Repositorio
+- **Comandos oficiales registrados en `package.json`**:
   - `npm run typecheck`: Ejecuta `tsc --noEmit`.
-  - `npm run test`: Ejecuta `vitest run`.
+  - `npm run test`: Ejecuta `vitest run` (tests unitarios, integración y auditoría estática de migraciones SQL/RLS/`pgTAP`).
   - `npm run lint`: Ejecuta `next lint`.
-  - `npm run build`: Ejecuta `next build` (con exportación estática `output: 'export'` por defecto).
-  - `npm run configure:club`: Ejecuta `tsx scripts/configure-club.ts` (pendiente de implementar en `F1.2-T05`).
+  - `npm run build`: Ejecuta `next build` (con exportación estática `output: 'export'` en `out/`).
+  - `npm run build:apk`: Ejecuta `CAPACITOR_BUILD=true next build`.
+  - `npm run configure:club`: Ejecuta `tsx scripts/configure-club.ts` (acepta `club=<clubId> env=<staging|production>` o `--club=<clubId> --env=<staging|production>`).
   - `npm run cap:sync`: Ejecuta `cap sync android`.
-- **Supuestos y entorno local detectados**:
-  - `git` (`2.45.1.windows.1`) está disponible en el entorno.
-  - Los comandos de Node/npm (`npm`, `npx`, `tsc`, `vitest`) requieren ejecución fuera del sandbox (`BypassSandbox: true`) debido a que `node.exe` reside en NVM for Windows fuera del directorio del proyecto.
-  - `supabase/config.toml` se inicializará en la tarea `F1.3-T01`.
+- **Entorno local y limitaciones confirmadas**:
+  - `git` (`2.45.1.windows.1`) está disponible; operaciones de escritura en `.git/` y `git push` requieren `BypassSandbox: true` en este entorno Windows.
+  - Los comandos de Node/npm (`npm`, `npx`, `tsc`, `vitest`) requieren `BypassSandbox: true` porque `node.exe` está gestionado por NVM for Windows fuera del directorio del proyecto.
+  - El CLI local `supabase` no está instalado en la máquina Windows local: la validación de cobertura RLS (25/25 tablas) y paridad de planes `pgTAP` se ejecuta localmente con `npm run test` (`migrations-rls-audit.test.ts`), mientras que `supabase test db` se ejecuta contra PostgreSQL real en GitHub Actions (`.github/workflows/ci.yml`).

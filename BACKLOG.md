@@ -96,6 +96,12 @@
 | `F1.6-T01` | Crear workflow `.github/workflows/ci.yml` que ejecute linter, `typecheck`, tests unitarios (`vitest`), tests de base de datos `pgTAP` (`supabase test db`) y verificación de compilación en cada cambio. | `completada` | Archivo `.github/workflows/ci.yml` creado con jobs separados de calidad de código y tests SQL `pgTAP`. | **Ejecutado**: Sí (`Test-Path .github/workflows/ci.yml`). **Resultado**: PASS — Jobs `quality-and-build` y `supabase-pgtap` configurados. |
 | `F1.6-T02` | Crear workflow `.github/workflows/build-club-apk.yml` con estrategia matricial por club (`demo-club`, `pinos-golf`) y selección de entorno (`staging`, `production`) que ejecuta `configure:club`, `next build`, `npx cap sync android` y `./gradlew assembleRelease` / `assembleDebug`. | `completada` | Archivo `.github/workflows/build-club-apk.yml` creado y parametrizado por club y entorno. | **Ejecutado**: Sí (`Test-Path .github/workflows/build-club-apk.yml`). **Resultado**: PASS — Workflow matricial por club y entorno (`staging` / `production`) configurado. |
 | `F1.6-T03` | **[TEST]** Ejecutar verificación integral de cierre de la Fase 1: cambio de club con `configure:club` (`demo-club` y `pinos-golf`), `npm run typecheck`, `npm run lint`, `npm run test` y compilación estática `npm run build`. | `completada` | Todos los comandos de verificación finalizan sin errores y generan la exportación estática lista para Capacitor y Vercel. | **Ejecutado**: Sí (`npm run configure:club`, `npm run typecheck`, `npm run test`, `npm run build`). **Resultado**: PASS — `22/22` tests en verde; `next build` exportó `out/` (`6/6` páginas estáticas) con linting y typecheck integrados. |
+| `F1.6-T04` | **[REVISIÓN DE CIERRE FASE 1]** Auditar criterios de aceptación de `F1.1` a `F1.6`, completar funciones/tests faltantes (`watchPosition`, `cacheCourseData`, test de `configureClub` y workflows CI), actualizar `AGENTS.md` y crear skill reutilizable en `.agents/skills/`. | `completada` | 100% de criterios de aceptación cubiertos por código y tests, `AGENTS.md` y skill actualizados. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`). **Resultado**: PASS — `5 passed (5)` archivos, `24 passed (24)` tests; reglas de cierre en `AGENTS.md` y skill `.agents/skills/birdie-workflows/SKILL.md` creadas. |
+
+> **Estado de la Fase 1**: **CERRADA (31/31 tareas completadas y verificadas)**.
+> - **Nota sobre verificaciones dependientes de entorno externo**:
+>   1. **Tests SQL `pgTAP` contra motor PostgreSQL vivo (`supabase test db`)**: El binario `supabase` CLI / Docker no está instalado localmente en Windows; se verificó localmente mediante la suite automatizada `migrations-rls-audit.test.ts` (que comprueba las 5 migraciones, las 25 tablas con `ENABLE ROW LEVEL SECURITY`, sus políticas y la paridad exacta de `SELECT plan(N)` en los 3 archivos `pgTAP`) y quedó configurado el job `supabase-pgtap` en `.github/workflows/ci.yml`.
+>   2. **Hardware nativo Android (GPS físico, SQLite nativo JNI y FCM/APNs nativo)**: En entorno Node/Web local se verificó mediante los modos fallback y simulador en `capacitor-wrappers.test.ts`, y el compilador de APK quedó automatizado en `.github/workflows/build-club-apk.yml`.
 
 ---
 
@@ -109,6 +115,7 @@
 | `F2-T04` | Implementar Marcador Offline-First (`/scorecard`) con persistencia en SQLite local, cálculo Stableford/Stroke Play y cola de sincronización con Supabase. | `pendiente` | Registro de golpes, putts, FIR y GIR funciona sin red y sincroniza al recuperar conexión. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F2-T05` | Implementar módulo de Estadísticas (`/stats`) con evolución de hándicap, porcentaje FIR, GIR, media de putts y distribución de golpes. | `pendiente` | Vista `/stats` calcula y muestra métricas reales a partir de las rondas jugadas. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F2-T06` | **[TEST]** Crear y ejecutar tests unitarios para cálculo GPS (Haversine), cálculo de puntos Stableford/Playing Handicap y cola de sincronización offline. | `pendiente` | Todos los tests matemáticos de golf y sincronización pasan al 100%. | **Ejecutado**: No — Pendiente de iniciar tarea. |
+| `F2-T07` | **[REVISIÓN DE CIERRE FASE 2]** Auditar criterios de aceptación de la Fase 2, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog antes de cerrar la fase. | `pendiente` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 
 ---
 
@@ -121,6 +128,7 @@
 | `F3-T03` | Implementar módulo de Torneos y Resultados (`/tournaments`) con inscripción, orden de salidas y Leaderboard en vivo (Scratch / Hándicap / Stableford). | `pendiente` | Clasificación ordenada automáticamente según modalidad del torneo. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F3-T04` | Implementar módulo de Eventos Especiales (`/events`) con detalle del evento y confirmación de asistencia (RSVP). | `pendiente` | Jugadores pueden confirmar/cancelar asistencia y ver plazas disponibles. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F3-T05` | **[TEST]** Crear y ejecutar tests de lógica de reservas (colisiones de cupo), ordenación de Leaderboard de torneos y políticas RLS asociadas. | `pendiente` | Tests unitarios y de integración de reservas y torneos en verde. | **Ejecutado**: No — Pendiente de iniciar tarea. |
+| `F3-T06` | **[REVISIÓN DE CIERRE FASE 3]** Auditar criterios de aceptación de la Fase 3, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog antes de cerrar la fase. | `pendiente` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 
 ---
 
@@ -134,6 +142,7 @@
 | `F4-T04` | Implementar Chat con el Administrador (`/admin-chat`) en tiempo real con aislamiento privado por jugador. | `pendiente` | Canal bidireccional Realtime entre el jugador y los usuarios `club_admin`/`superadmin`. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F4-T05` | Implementar Panel de Administración (`/admin`) protegido por rol (`club_admin` y `superadmin`) para gestionar noticias, torneos, reservas y chats. | `pendiente` | Usuarios `player` no tienen acceso; administradores pueden gestionar contenido del club. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F4-T06` | **[TEST]** Crear y ejecutar tests de control de acceso por rol en UI/API y tests de privacidad del chat con el administrador. | `pendiente` | Tests confirman que un jugador nunca puede leer salas de `admin-chat` de otro socio. | **Ejecutado**: No — Pendiente de iniciar tarea. |
+| `F4-T07` | **[REVISIÓN DE CIERRE FASE 4]** Auditar criterios de aceptación de la Fase 4, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog antes de cerrar la fase. | `pendiente` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 
 ---
 
@@ -144,3 +153,4 @@
 | `F5-T01` | Implementar registro de tokens en `@capacitor/push-notifications` y Edge Function `supabase/functions/send-push-notification/` (FCM y APNs). | `pendiente` | Token guardado en `device_push_tokens` y payload FCM/APNs generado según plataforma. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F5-T02` | Configurar sincronización del proyecto Android (`/android`) por club (`demo-club` y `pinos-golf`) con iconos, splash y `google-services.json`. | `pendiente` | Directorio `android/` sincronizado con el `applicationId` específico del club activo. | **Ejecutado**: No — Pendiente de iniciar tarea. |
 | `F5-T03` | **[TEST]** Ejecutar prueba integral de extremo a extremo (build multi-club para `demo-club` y `pinos-golf`, validación de artefactos y tests). | `pendiente` | Compilación limpia para ambos clubes en modo `staging` y `production`. | **Ejecutado**: No — Pendiente de iniciar tarea. |
+| `F5-T04` | **[REVISIÓN DE CIERRE FASE 5]** Auditar criterios de aceptación de la Fase 5, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog antes de cerrar el proyecto. | `pendiente` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: No — Pendiente de iniciar tarea. |

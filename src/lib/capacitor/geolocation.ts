@@ -134,3 +134,76 @@ export async function getCurrentGpsPosition(
     source: 'simulated',
   };
 }
+
+export const getCurrentPosition = getCurrentGpsPosition;
+
+/**
+ * Suscribe a cambios de posición GPS en tiempo real (para seguimiento en el hoyo),
+ * devolviendo una función de limpieza para detener la escucha.
+ */
+export async function watchPosition(
+  onUpdate: (pos: GpsPosition) => void,
+  fallbackCoords: ClubCoordinates = { lat: 40.4682, lng: -3.7815 }
+): Promise<() => Promise<void>> {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const watchId = await Geolocation.watchPosition(
+        { enableHighAccuracy: true },
+        (pos) => {
+          if (pos) {
+            onUpdate({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracyMeters: pos.coords.accuracy ?? null,
+              timestamp: pos.timestamp,
+              source: 'native',
+            });
+          }
+        }
+      );
+      return async () => {
+        await Geolocation.clearWatch({ id: watchId });
+      };
+    }
+
+    if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          onUpdate({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracyMeters: pos.coords.accuracy ?? null,
+            timestamp: pos.timestamp,
+            source: 'web',
+          });
+        },
+        () => {
+          onUpdate({
+            lat: fallbackCoords.lat,
+            lng: fallbackCoords.lng,
+            accuracyMeters: 5,
+            timestamp: Date.now(),
+            source: 'simulated',
+          });
+        },
+        { enableHighAccuracy: true }
+      );
+      return async () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
+  } catch {
+    // Fallback simulado
+  }
+
+  onUpdate({
+    lat: fallbackCoords.lat,
+    lng: fallbackCoords.lng,
+    accuracyMeters: 5,
+    timestamp: Date.now(),
+    source: 'simulated',
+  });
+
+  return async () => {};
+}
+

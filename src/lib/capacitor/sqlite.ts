@@ -239,6 +239,9 @@ export async function getCachedCourseHoles(
   return [];
 }
 
+export const cacheCourseData = cacheCourseHoles;
+export const getCachedCourseData = getCachedCourseHoles;
+
 /**
  * Limpia los datos offline almacenados (útil para tests y cierre de sesión).
  */
