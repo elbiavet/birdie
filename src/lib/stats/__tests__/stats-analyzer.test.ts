@@ -1,15 +1,23 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   computePlayerStatistics,
   DEMO_HISTORICAL_HOLE_SAMPLES,
   type AnalyzedHoleSample,
 } from '../analyzer';
 import { HoleGpsPanel } from '@/components/modules/scorecard/HoleGpsPanel';
+import { ClubProvider } from '@/components/providers/ClubProvider';
+import ClubsDirectoryPage from '@/app/(main)/clubs/page';
+import ScorecardAndGpsPage from '@/app/(main)/scorecard/page';
+import PlayerStatsPage from '@/app/(main)/stats/page';
 import { getCourseById } from '@/lib/golf-api';
 
-describe('Analizador de Estadísticas Deportivas y Panel GPS (Subfases 2.4 y 2.5)', () => {
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/scorecard',
+}));
+
+describe('Analizador de Estadísticas Deportivas, Panel GPS y Pantallas Fase 2 (Subfases 2.2, 2.4 y 2.5)', () => {
   it('devuelve métricas en cero cuando no hay muestras de hoyos', () => {
     const empty = computePlayerStatistics([]);
     expect(empty.roundsCount).toBe(0);
@@ -79,19 +87,13 @@ describe('Analizador de Estadísticas Deportivas y Panel GPS (Subfases 2.4 y 2.5
 
     expect(stats.roundsCount).toBe(1);
     expect(stats.holesCount).toBe(4);
-    // FIR: 2 de 3 hoyos elegibles (H1 sí, H2 no, H4 sí) = 66.7%
     expect(stats.fairwayHitPercentage).toBe(66.7);
-    // GIR: 2 de 4 hoyos (H1 y H4) = 50%
     expect(stats.girPercentage).toBe(50);
-    // Scrambling: de los 2 hoyos sin GIR (H2 y H3), H2 salvó el Par -> 50%
     expect(stats.scramblingPercentage).toBe(50);
-    // Sand Save: 1 de 2 (H2 sí, H3 no) -> 50%
     expect(stats.sandSavePercentage).toBe(50);
-    // Medias por par
     expect(stats.par3AverageStrokes).toBe(4);
     expect(stats.par4AverageStrokes).toBe(3.5);
     expect(stats.par5AverageStrokes).toBe(3);
-    // Distribución
     expect(stats.distribution.eaglesOrBetter).toBe(1);
     expect(stats.distribution.birdies).toBe(1);
     expect(stats.distribution.pars).toBe(1);
@@ -107,7 +109,7 @@ describe('Analizador de Estadísticas Deportivas y Panel GPS (Subfases 2.4 y 2.5
     expect(stats.averageStablefordPer18).toBe(45);
   });
 
-  it('renderiza HoleGpsPanel mostrando distancias a Frente, Centro y Fondo de Green del hoyo activo', () => {
+  it('renderiza HoleGpsPanel mostrando distancias a Frente, Centro, Fondo de Green y POIs del hoyo activo', () => {
     const course = getCourseById('golfapi_course_1024')!;
     const html = renderToStaticMarkup(
       React.createElement(HoleGpsPanel, { hole: course.holes[0] })
@@ -117,5 +119,39 @@ describe('Analizador de Estadísticas Deportivas y Panel GPS (Subfases 2.4 y 2.5
     expect(html).toContain('Frente Green');
     expect(html).toContain('Centro Bandera');
     expect(html).toContain('Fondo Green');
+    expect(html).toContain('Bunker Izquierdo Green');
+    expect(html).toContain('Caída de Drive / Dogleg');
+  });
+
+  it('renderiza las páginas /clubs, /scorecard y /stats dentro de ClubProvider mostrando datos del recorrido, marcador y analítica', () => {
+    const clubsHtml = renderToStaticMarkup(
+      React.createElement(
+        ClubProvider,
+        { initialClubId: 'demo-club', children: React.createElement(ClubsDirectoryPage) }
+      )
+    );
+    expect(clubsHtml).toContain('Directorio de Clubes y Campos');
+    expect(clubsHtml).toContain('Primera Vuelta — IDA');
+    expect(clubsHtml).toContain('Segunda Vuelta — VUELTA');
+
+    const scorecardHtml = renderToStaticMarkup(
+      React.createElement(
+        ClubProvider,
+        { initialClubId: 'demo-club', children: React.createElement(ScorecardAndGpsPage) }
+      )
+    );
+    expect(scorecardHtml).toContain('Marcador Digital y Telémetro GPS');
+    expect(scorecardHtml).toContain('Guardar Hoyo 1 en SQLite Offline');
+    expect(scorecardHtml).toContain('Resumen de Tarjeta en Vivo');
+
+    const statsHtml = renderToStaticMarkup(
+      React.createElement(
+        ClubProvider,
+        { initialClubId: 'demo-club', children: React.createElement(PlayerStatsPage) }
+      )
+    );
+    expect(statsHtml).toContain('Estadísticas de Rendimiento');
+    expect(statsHtml).toContain('Rendimiento por Par de Hoyo');
+    expect(statsHtml).toContain('Distribución de Resultados por Hoyo');
   });
 });

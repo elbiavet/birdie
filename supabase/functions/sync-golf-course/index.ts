@@ -123,6 +123,70 @@ Deno.serve(async (req: Request) => {
       throw new Error(courseError?.message ?? 'Error al guardar el campo en public.courses');
     }
 
+    // 4. Sincronizar barras de salida en public.course_tees
+    if (Array.isArray(externalCourse.tees) && externalCourse.tees.length > 0) {
+      const teeRows = externalCourse.tees.map(
+        (t: {
+          teeName: string;
+          teeColor?: string;
+          gender?: string;
+          courseRating: number;
+          slopeRating: number;
+          totalMeters: number;
+        }) => ({
+          course_id: upsertedCourse.id,
+          name: t.teeName,
+          color_hex: t.teeColor ?? '#FACC15',
+          gender: t.gender ?? 'mixed',
+          course_rating: t.courseRating,
+          slope_rating: t.slopeRating,
+          total_distance_meters: t.totalMeters,
+        })
+      );
+
+      await supabase.from('course_tees').insert(teeRows);
+    }
+
+    // 5. Upsert de los hoyos y coordenadas GPS en public.course_holes
+    if (Array.isArray(externalCourse.holes) && externalCourse.holes.length > 0) {
+      const holeRows = externalCourse.holes.map(
+        (h: {
+          hole: number;
+          par: number;
+          handicap: number;
+          whiteMeters?: number;
+          yellowMeters: number;
+          blueMeters?: number;
+          redMeters?: number;
+          greenFrontLat: number;
+          greenFrontLng: number;
+          greenCenterLat: number;
+          greenCenterLng: number;
+          greenBackLat: number;
+          greenBackLng: number;
+        }) => ({
+          course_id: upsertedCourse.id,
+          hole_number: h.hole,
+          par: h.par,
+          stroke_index: h.handicap,
+          distance_white_meters: h.whiteMeters ?? h.yellowMeters + 15,
+          distance_yellow_meters: h.yellowMeters,
+          distance_blue_meters: h.blueMeters ?? Math.max(90, h.yellowMeters - 25),
+          distance_red_meters: h.redMeters ?? Math.max(80, h.yellowMeters - 45),
+          green_front_lat: h.greenFrontLat,
+          green_front_lng: h.greenFrontLng,
+          green_center_lat: h.greenCenterLat,
+          green_center_lng: h.greenCenterLng,
+          green_back_lat: h.greenBackLat,
+          green_back_lng: h.greenBackLng,
+        })
+      );
+
+      await supabase
+        .from('course_holes')
+        .upsert(holeRows, { onConflict: 'course_id,hole_number' });
+    }
+
     return new Response(
       JSON.stringify({
         status: 'synced',

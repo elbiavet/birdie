@@ -71,7 +71,8 @@ Antes de dar por cerrada cualquier fase en [`BACKLOG.md`](../../../BACKLOG.md):
 1. **Contrastar tareas y criterios de aceptación**:
    - Lee todas las filas de la fase en `BACKLOG.md` y verifica que cada archivo, función o ruta nombrada en la columna `Criterio de Verificación` exista con ese nombre exacto.
 2. **Auditar cobertura de tests por cambio de comportamiento**:
-   - Comprueba que cada función o flujo nuevo tenga su test en `__tests__/`.
+   - Comprueba que cada función exportada, rama de error, Edge Function y pantalla nueva (`renderToStaticMarkup` envuelto en `<ClubProvider>`) tenga su test en `__tests__/`.
+   - Si se añadieron nuevas páginas en `src/app/`, limpia la caché incremental `.next` antes de compilar la exportación estática para evitar manifiestos obsoletos de Route Groups en Next.js 15 (`if (Test-Path .next) { Remove-Item -Recurse -Force .next }`).
    - Ejecuta la batería completa de validación:
      ```powershell
      npm run typecheck

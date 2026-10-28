@@ -66,6 +66,7 @@ Al terminar cada fase de [`BACKLOG.md`](./BACKLOG.md), **antes de dar la fase po
 - **Commits pequeños y ramas cortas**: Cada tarea o subgrupo lógico verificable debe corresponder a un commit atómico y descriptivo (`feat:`, `fix:`, `test:`, `chore:`, `docs:`).
 - **Aislamiento White-Label**: Prohibido hardcodear nombres de clubes, colores, dominios o IDs de paquete Android dentro de `src/`. Todo debe leerse desde `/clubs/<clubId>/config.json` y variables de entorno.
 - **Seguridad por Defecto (RLS)**: Ninguna tabla en el esquema `public` de Supabase puede crearse sin `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` y sus respectivas políticas para `player`, `club_admin` y `superadmin`, acompañadas de su test en `supabase/tests/database/`.
+- **Cobertura por Cambio de Comportamiento**: Toda función exportada de dominio (`src/lib/`), Edge Function (`supabase/functions/`) y pantalla nueva en `src/app/` debe contar con verificaciones automatizadas en Vitest (incluyendo casos de error/bordes y renderizado SSR dentro de `ClubProvider`).
 
 ---
 
