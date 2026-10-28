@@ -202,6 +202,19 @@
 
 ---
 
+## Fase 3D: Resolución de Ruta de Entrada `'/en/home/'` y Alias de Inicio
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F3D-T01` | Crear las rutas de entrada y alias de Inicio compatibles con exportación estática (`output: 'export'`) en `src/app/en/home/page.tsx`, `src/app/es/home/page.tsx`, `src/app/en/page.tsx`, `src/app/es/page.tsx` y `src/app/home/page.tsx` que rendericen `DashboardPage` directamente y normalicen la URL a `'/'` vía `window.history.replaceState` sin provocar bucles de redirección `301`/`308` de caché del navegador. | `completada` | Al entrar a `/en/home/`, `/es/home/`, `/home/`, `/en/` o `/es/` se renderiza inmediatamente la página de Inicio (`DashboardPage`). | **Ejecutado**: Sí (creadas las 5 rutas de alias y normalización `replaceState` en `src/app/page.tsx`). **Resultado**: PASS — Rutas de inicio activas. |
+| `F3D-T02` | Implementar `src/app/not-found.tsx` con detección de alias de inicio (`isHomeAliasPath`) en `src/components/layout/AppShell.tsx` para que cualquier ruta de inicio o con prefijo de idioma resalte `Inicio` en el menú lateral/inferior y nunca muestre el `404 This page could not be found.` por defecto de Next.js. | `completada` | `isHomeAliasPath('/en/home/')` devuelve `true`, `AppShell` marca `Inicio` como activo en `/en/home/` y `not-found.tsx` muestra el Inicio si la ruta es un alias o una vista white-label del club en caso contrario. | **Ejecutado**: Sí (implementados `isHomeAliasPath` en `AppShell.tsx` y `src/app/not-found.tsx`). **Resultado**: PASS — Detección de alias y fallback de inicio implementados. |
+| `F3D-T03` | **[TEST]** Añadir tests automatizados en `src/components/__tests__/app-shell-and-profile.test.tsx` verificando `isHomeAliasPath`, el renderizado SSR de `/en/home/page.tsx` y `not-found.tsx` dentro de `ClubProvider` + `AppShell` (con exactamente 1 `<header>` y 1 `<aside>`), y ejecutar `npm run typecheck`, `npm run test` y `npm run build`. | `completada` | Tests unitarios/SSR en verde y archivo `out/en/home/index.html` generado con la página de Inicio completa. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`, e inspección de `out/en/home/index.html`). **Resultado**: PASS — `9/9` suites (`51/51` tests) en verde; `18/18` páginas estáticas exportadas en `out/` incluyendo `/en/home`, `/es/home`, `/home`, `/en` y `/es`. |
+| `F3D-T04` | **[REVISIÓN DE CIERRE FASE 3D]** Auditar criterios de aceptación de la Fase 3D, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog. | `completada` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`). **Resultado**: PASS — `4/4` tareas completadas y Fase 3D cerrada. |
+
+> **Estado de la Fase 3D**: **CERRADA (4/4 tareas completadas y verificadas)**.
+
+---
+
 ## Fase 4: Comunidad, Tiempo Real y Administración
 
 | ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |

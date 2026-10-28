@@ -2,9 +2,15 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { getClubConfig } from '@/lib/club-config';
-import { AppShell, resolveNavigationItems } from '@/components/layout/AppShell';
+import {
+  AppShell,
+  isHomeAliasPath,
+  resolveNavigationItems,
+} from '@/components/layout/AppShell';
 import { ClubProvider } from '@/components/providers/ClubProvider';
 import DashboardPage from '@/app/page';
+import EnHomePage from '@/app/en/home/page';
+import NotFoundPage from '@/app/not-found';
 import ProfilePage from '@/app/(main)/profile/page';
 import {
   calculatePlayingHandicap,
@@ -127,5 +133,44 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect((nestedShellHtml.match(/<header/g) ?? []).length).toBe(1);
     expect((nestedShellHtml.match(/<aside/g) ?? []).length).toBe(1);
     expect(nestedShellHtml).toContain('Contenido Único');
+  });
+
+  it('resuelve la ruta /en/home/ y variantes de inicio mostrando la página de Inicio sin error 404', () => {
+    expect(isHomeAliasPath('/')).toBe(true);
+    expect(isHomeAliasPath('/en/home/')).toBe(true);
+    expect(isHomeAliasPath('/en/home')).toBe(true);
+    expect(isHomeAliasPath('/es/home/')).toBe(true);
+    expect(isHomeAliasPath('/home/')).toBe(true);
+    expect(isHomeAliasPath('/en/')).toBe(true);
+    expect(isHomeAliasPath('/es/')).toBe(true);
+    expect(isHomeAliasPath('/scorecard')).toBe(false);
+    expect(isHomeAliasPath('/bookings')).toBe(false);
+
+    const enHomeHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement(EnHomePage),
+        }),
+      })
+    );
+    expect(enHomeHtml).toContain('Bienvenido,');
+    expect(enHomeHtml).toContain('Iniciar Vuelta (Marcador + GPS)');
+    expect(enHomeHtml).not.toContain('This page could not be found');
+    expect((enHomeHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((enHomeHtml.match(/<aside/g) ?? []).length).toBe(1);
+
+    const notFoundOnAliasHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement(NotFoundPage),
+        }),
+      })
+    );
+    expect(notFoundOnAliasHtml).toContain('Bienvenido,');
+    expect(notFoundOnAliasHtml).not.toContain('This page could not be found');
+    expect((notFoundOnAliasHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((notFoundOnAliasHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import {
   Activity,
@@ -14,12 +14,22 @@ import {
   User,
 } from 'lucide-react';
 import { useClub } from '@/components/providers/ClubProvider';
-import { resolveNavigationItems } from '@/components/layout/AppShell';
+import { isHomeAliasPath, resolveNavigationItems } from '@/components/layout/AppShell';
 import { calculatePlayingHandicap } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const { club, profile, isOnline } = useClub();
   const enabledNavItems = resolveNavigationItems(club, profile.role);
+
+  useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.pathname !== '/' &&
+      isHomeAliasPath(window.location.pathname)
+    ) {
+      window.history.replaceState(null, '', '/');
+    }
+  }, []);
 
   const playingHcpYellow = calculatePlayingHandicap({
     handicapIndex: profile.handicapIndex,

@@ -138,6 +138,19 @@ export const ALL_NAVIGATION_ITEMS: readonly NavItem[] = [
 ] as const;
 
 /**
+ * Determina si una ruta corresponde al Inicio o a un alias/prefijo de idioma de inicio
+ * (por ejemplo '/', '/home', '/home/', '/en', '/en/', '/en/home', '/en/home/', '/es/home/').
+ */
+export function isHomeAliasPath(pathname?: string | null): boolean {
+  if (!pathname || pathname === '/') {
+    return true;
+  }
+  return /^\/(?:home\/?|(?:[a-z]{2}(?:-[a-zA-Z]{2})?)(?:\/home)?\/?)$/.test(
+    pathname.trim()
+  );
+}
+
+/**
  * Filtra los elementos de navegación según las funcionalidades ('features') activas en la
  * configuración white-label del club y el rol del usuario autenticado.
  */
@@ -315,8 +328,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {navItems.map((item) => {
               const Icon = getNavIcon(item.id);
               const isActive =
-                pathname === item.href ||
-                (item.href !== '/' && pathname?.startsWith(item.href));
+                item.href === '/'
+                  ? isHomeAliasPath(pathname)
+                  : pathname === item.href || Boolean(pathname?.startsWith(item.href));
 
               return (
                 <Link
@@ -352,8 +366,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {navItems.slice(0, 5).map((item) => {
           const Icon = getNavIcon(item.id);
           const isActive =
-            pathname === item.href ||
-            (item.href !== '/' && pathname?.startsWith(item.href));
+            item.href === '/'
+              ? isHomeAliasPath(pathname)
+              : pathname === item.href || Boolean(pathname?.startsWith(item.href));
           return (
             <Link
               key={item.id}
