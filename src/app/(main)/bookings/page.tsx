@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
-  cancelTeeTimeBooking,
   getAvailableSeatsInSlot,
   getBookedPlayersInSlot,
   INITIAL_TEE_TIME_SLOTS,
-  resolvePersistenceMetadata,
+  loadTeeTimeSlots,
+  submitCancelTeeTimeBooking,
   submitTeeTimeBooking,
   type TeeTimeSlot,
 } from '@/lib/competition';
@@ -26,7 +26,9 @@ export default function TeeTimeBookingsPage() {
   const { club, profile } = useClub();
   const [slots, setSlots] = useState<TeeTimeSlot[]>(INITIAL_TEE_TIME_SLOTS);
   const [selectedDate, setSelectedDate] = useState<string>('2026-11-01');
-  const [selectedSlotId, setSelectedSlotId] = useState<string>('slot-2026-11-01-0840');
+  const [selectedSlotId, setSelectedSlotId] = useState<string>(
+    INITIAL_TEE_TIME_SLOTS[1].id
+  );
   const [playersCount, setPlayersCount] = useState<number>(2);
   const [buggyRequested, setBuggyRequested] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
@@ -34,6 +36,30 @@ export default function TeeTimeBookingsPage() {
     type: 'ok' | 'error';
     message: string;
   } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadTeeTimeSlots()
+      .then(({ slots: remoteSlots }) => {
+        if (!active || remoteSlots.length === 0) return;
+        setSlots(remoteSlots);
+        setSelectedDate(remoteSlots[0].slotDate);
+        setSelectedSlotId(remoteSlots[0].id);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setFeedback({
+          type: 'error',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'No se pudieron sincronizar las franjas desde Supabase.',
+        });
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const availableDates = useMemo(
     () => Array.from(new Set(slots.map((s) => s.slotDate))),
@@ -81,11 +107,15 @@ export default function TeeTimeBookingsPage() {
     }
   };
 
-  const handleCancelBooking = (bookingId: string) => {
+  const handleCancelBooking = async (bookingId: string) => {
     try {
-      const next = cancelTeeTimeBooking(slots, bookingId, profile.id, profile.role);
-      const meta = resolvePersistenceMetadata();
-      setSlots(next);
+      const { updatedSlots, meta } = await submitCancelTeeTimeBooking(
+        slots,
+        bookingId,
+        profile.id,
+        profile.role
+      );
+      setSlots(updatedSlots);
       setFeedback({
         type: 'ok',
         message: `Reserva cancelada y plazas liberadas. ${meta.notice}`,

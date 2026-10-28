@@ -509,6 +509,144 @@ export function upsertEventRsvp(
   return { updatedEvents, assignedStatus };
 }
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Comprueba si un identificador tiene formato UUID RFC-4122 compatible con las claves primarias/foráneas de PostgreSQL.
+ */
+export function isValidUuid(value: string): boolean {
+  return typeof value === 'string' && UUID_REGEX.test(value.trim());
+}
+
+/**
+ * Carga las franjas de salida (Tee Times) y sus reservas reales desde Supabase cuando está configurado,
+ * o devuelve el catálogo semilla con UUIDs válidos en modo demo local.
+ */
+export async function loadTeeTimeSlots(
+  customClient?: ReturnType<typeof getSupabaseClient>
+): Promise<{
+  slots: TeeTimeSlot[];
+  meta: ActionPersistenceMetadata;
+}> {
+  const supabase = customClient !== undefined ? customClient : getSupabaseClient();
+  if (!supabase) {
+    return {
+      slots: INITIAL_TEE_TIME_SLOTS,
+      meta: resolvePersistenceMetadata(false),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('tee_time_slots')
+    .select(
+      'id, course_id, slot_date, slot_time, max_players, is_blocked, price_eur, bookings(id, slot_id, booked_by, players_count, buggy_requested, notes, status, created_at, profiles:booked_by(full_name))'
+    )
+    .order('slot_date', { ascending: true })
+    .order('slot_time', { ascending: true });
+
+  if (error) {
+    throw new Error(`Error al cargar franjas de salida desde Supabase: ${error.message}`);
+  }
+
+  const mappedSlots: TeeTimeSlot[] = (data ?? []).map((row: Record<string, unknown>) => {
+    const rawBookings = Array.isArray(row.bookings) ? row.bookings : [];
+    const rawTime = String(row.slot_time ?? '09:00');
+    return {
+      id: String(row.id),
+      courseExternalId: String(row.course_id ?? ''),
+      slotDate: String(row.slot_date ?? ''),
+      slotTime: rawTime.slice(0, 5),
+      maxPlayers: Number(row.max_players ?? 4),
+      isBlocked: Boolean(row.is_blocked),
+      greenFeeEuros: Number(row.price_eur ?? 0),
+      bookings: rawBookings.map((b: Record<string, unknown>) => {
+        const profileObj = b.profiles as { full_name?: string } | null | undefined;
+        return {
+          id: String(b.id),
+          slotId: String(b.slot_id ?? row.id),
+          userId: String(b.booked_by),
+          userName: profileObj?.full_name ?? 'Socio del Club',
+          playersCount: (Number(b.players_count ?? 1) as 1 | 2 | 3 | 4),
+          buggyRequested: Boolean(b.buggy_requested),
+          notes: String(b.notes ?? ''),
+          status: b.status === 'cancelled' ? 'cancelled' : 'confirmed',
+          createdAt: String(b.created_at ?? new Date().toISOString()),
+        };
+      }),
+    };
+  });
+
+  return {
+    slots: mappedSlots,
+    meta: resolvePersistenceMetadata(true),
+  };
+}
+
+/**
+ * Carga los eventos especiales y sus confirmaciones RSVP reales desde Supabase cuando está configurado,
+ * o devuelve el catálogo semilla con UUIDs válidos en modo demo local.
+ */
+export async function loadSpecialEvents(
+  customClient?: ReturnType<typeof getSupabaseClient>
+): Promise<{
+  events: SpecialEventItem[];
+  meta: ActionPersistenceMetadata;
+}> {
+  const supabase = customClient !== undefined ? customClient : getSupabaseClient();
+  if (!supabase) {
+    return {
+      events: INITIAL_SPECIAL_EVENTS,
+      meta: resolvePersistenceMetadata(false),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('special_events')
+    .select(
+      'id, title, description, event_date, location, capacity, price_eur, event_rsvps(user_id, guests_count, status, created_at, profiles:user_id(full_name))'
+    )
+    .order('event_date', { ascending: true });
+
+  if (error) {
+    throw new Error(`Error al cargar eventos especiales desde Supabase: ${error.message}`);
+  }
+
+  const mappedEvents: SpecialEventItem[] = (data ?? []).map((row: Record<string, unknown>) => {
+    const rawIso = String(row.event_date ?? new Date().toISOString());
+    const [datePart, timePartRaw] = rawIso.split('T');
+    const timePart = (timePartRaw ?? '12:00').slice(0, 5);
+    const rawRsvps = Array.isArray(row.event_rsvps) ? row.event_rsvps : [];
+
+    return {
+      id: String(row.id),
+      title: String(row.title ?? ''),
+      description: String(row.description ?? ''),
+      eventDate: datePart || rawIso.slice(0, 10),
+      eventTime: timePart,
+      location: String(row.location ?? ''),
+      category: 'Jornada Social',
+      priceEuros: Number(row.price_eur ?? 0),
+      maxCapacity: Number(row.capacity ?? 100),
+      rsvps: rawRsvps.map((r: Record<string, unknown>) => {
+        const profileObj = r.profiles as { full_name?: string } | null | undefined;
+        return {
+          userId: String(r.user_id),
+          userName: profileObj?.full_name ?? 'Socio del Club',
+          guestsCount: Number(r.guests_count ?? 0),
+          status: (r.status as EventRsvpStatus) ?? 'attending',
+          updatedAt: String(r.created_at ?? new Date().toISOString()),
+        };
+      }),
+    };
+  });
+
+  return {
+    events: mappedEvents,
+    meta: resolvePersistenceMetadata(true),
+  };
+}
+
 /**
  * Ejecuta una reserva de Tee Time contra el servidor Supabase si está configurado
  * (donde el trigger `trg_bookings_enforce_slot_capacity` valida el aforo de forma atómica con `FOR UPDATE`),
@@ -516,14 +654,15 @@ export function upsertEventRsvp(
  */
 export async function submitTeeTimeBooking(
   slots: TeeTimeSlot[],
-  input: CreateTeeTimeBookingInput
+  input: CreateTeeTimeBookingInput,
+  customClient?: ReturnType<typeof getSupabaseClient>
 ): Promise<{
   updatedSlots: TeeTimeSlot[];
   createdBooking: TeeTimeBookingRecord;
   meta: ActionPersistenceMetadata;
 }> {
   const localResult = createTeeTimeBooking(slots, input);
-  const supabase = getSupabaseClient();
+  const supabase = customClient !== undefined ? customClient : getSupabaseClient();
 
   if (!supabase) {
     return {
@@ -532,21 +671,95 @@ export async function submitTeeTimeBooking(
     };
   }
 
-  const { error } = await supabase.from('bookings').insert({
-    slot_id: input.slotId,
-    booked_by: input.userId,
-    players_count: input.playersCount,
-    buggy_requested: Boolean(input.buggyRequested),
-    notes: input.notes ?? null,
-    status: 'confirmed',
-  });
+  if (!isValidUuid(input.slotId) || !isValidUuid(input.userId)) {
+    throw new Error(
+      'Identificador inválido para Supabase: slot_id y booked_by deben ser UUID válidos de base de datos.'
+    );
+  }
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert({
+      slot_id: input.slotId,
+      booked_by: input.userId,
+      players_count: input.playersCount,
+      buggy_requested: Boolean(input.buggyRequested),
+      notes: input.notes ?? null,
+      status: 'confirmed',
+    })
+    .select('id, created_at')
+    .single();
 
   if (error) {
     throw new Error(`Error del servidor al confirmar reserva: ${error.message}`);
   }
 
+  const persistedBooking: TeeTimeBookingRecord = {
+    ...localResult.createdBooking,
+    id: data?.id ? String(data.id) : localResult.createdBooking.id,
+    createdAt: data?.created_at
+      ? String(data.created_at)
+      : localResult.createdBooking.createdAt,
+  };
+
+  const updatedSlots = localResult.updatedSlots.map((slot) =>
+    slot.id === input.slotId
+      ? {
+          ...slot,
+          bookings: slot.bookings.map((b) =>
+            b.id === localResult.createdBooking.id ? persistedBooking : b
+          ),
+        }
+      : slot
+  );
+
   return {
-    ...localResult,
+    updatedSlots,
+    createdBooking: persistedBooking,
+    meta: resolvePersistenceMetadata(true),
+  };
+}
+
+/**
+ * Cancela una reserva de Tee Time aplicando validación de permisos RLS y sincronizando con Supabase cuando está configurado.
+ */
+export async function submitCancelTeeTimeBooking(
+  slots: TeeTimeSlot[],
+  bookingId: string,
+  actorUserId: string,
+  actorRole: UserRole,
+  customClient?: ReturnType<typeof getSupabaseClient>
+): Promise<{
+  updatedSlots: TeeTimeSlot[];
+  meta: ActionPersistenceMetadata;
+}> {
+  const updatedSlots = cancelTeeTimeBooking(slots, bookingId, actorUserId, actorRole);
+  const supabase = customClient !== undefined ? customClient : getSupabaseClient();
+
+  if (!supabase) {
+    return {
+      updatedSlots,
+      meta: resolvePersistenceMetadata(false),
+    };
+  }
+
+  if (!isValidUuid(bookingId)) {
+    throw new Error(
+      'Identificador inválido para Supabase: el ID de la reserva a cancelar debe ser un UUID válido.'
+    );
+  }
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status: 'cancelled' })
+    .eq('id', bookingId);
+
+  if (error) {
+    throw new Error(`Error del servidor al cancelar reserva: ${error.message}`);
+  }
+
+  return {
+    updatedSlots,
     meta: resolvePersistenceMetadata(true),
   };
 }
@@ -564,20 +777,27 @@ export async function submitEventRsvp(
     userName: string;
     guestsCount: number;
     desiredStatus: 'attending' | 'cancelled';
-  }
+  },
+  customClient?: ReturnType<typeof getSupabaseClient>
 ): Promise<{
   updatedEvents: SpecialEventItem[];
   assignedStatus: EventRsvpStatus;
   meta: ActionPersistenceMetadata;
 }> {
   const localResult = upsertEventRsvp(events, params);
-  const supabase = getSupabaseClient();
+  const supabase = customClient !== undefined ? customClient : getSupabaseClient();
 
   if (!supabase) {
     return {
       ...localResult,
       meta: resolvePersistenceMetadata(false),
     };
+  }
+
+  if (!isValidUuid(params.eventId) || !isValidUuid(params.userId)) {
+    throw new Error(
+      'Identificador inválido para Supabase: event_id y user_id deben ser UUID válidos de base de datos.'
+    );
   }
 
   const { data, error } = await supabase
@@ -601,20 +821,31 @@ export async function submitEventRsvp(
   const serverAssignedStatus =
     (data?.status as EventRsvpStatus | undefined) ?? localResult.assignedStatus;
 
+  const reconciledEvents = localResult.updatedEvents.map((ev) =>
+    ev.id === params.eventId
+      ? {
+          ...ev,
+          rsvps: ev.rsvps.map((r) =>
+            r.userId === params.userId ? { ...r, status: serverAssignedStatus } : r
+          ),
+        }
+      : ev
+  );
+
   return {
-    updatedEvents: localResult.updatedEvents,
+    updatedEvents: reconciledEvents,
     assignedStatus: serverAssignedStatus,
     meta: resolvePersistenceMetadata(true),
   };
 }
 
 // ============================================================================
-// 5. CATÁLOGOS SEMILLA PARA RESERVAS, CALENDARIO, TORNEOS Y EVENTOS
+// 5. CATÁLOGOS SEMILLA CON UUIDs RFC-4122 VÁLIDOS
 // ============================================================================
 
 export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
   {
-    id: 'slot-2026-11-01-0830',
+    id: '33333333-3333-4333-8333-000000000830',
     courseExternalId: 'golfapi_course_1024',
     slotDate: '2026-11-01',
     slotTime: '08:30',
@@ -623,8 +854,8 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     greenFeeEuros: 45,
     bookings: [
       {
-        id: 'bk-seed-1',
-        slotId: 'slot-2026-11-01-0830',
+        id: '44444444-4444-4444-8444-000000000001',
+        slotId: '33333333-3333-4333-8333-000000000830',
         userId: 'aaaa0000-0000-0000-0000-000000000002',
         userName: 'Carlos Mendoza',
         playersCount: 2,
@@ -636,7 +867,7 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     ],
   },
   {
-    id: 'slot-2026-11-01-0840',
+    id: '33333333-3333-4333-8333-000000000840',
     courseExternalId: 'golfapi_course_1024',
     slotDate: '2026-11-01',
     slotTime: '08:40',
@@ -646,7 +877,7 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     bookings: [],
   },
   {
-    id: 'slot-2026-11-01-0850',
+    id: '33333333-3333-4333-8333-000000000850',
     courseExternalId: 'golfapi_course_1024',
     slotDate: '2026-11-01',
     slotTime: '08:50',
@@ -655,8 +886,8 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     greenFeeEuros: 55,
     bookings: [
       {
-        id: 'bk-seed-2',
-        slotId: 'slot-2026-11-01-0850',
+        id: '44444444-4444-4444-8444-000000000002',
+        slotId: '33333333-3333-4333-8333-000000000850',
         userId: 'aaaa0000-0000-0000-0000-000000000001',
         userName: 'Alejandro García',
         playersCount: 3,
@@ -668,7 +899,7 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     ],
   },
   {
-    id: 'slot-2026-11-01-0900',
+    id: '33333333-3333-4333-8333-000000000900',
     courseExternalId: 'golfapi_course_1024',
     slotDate: '2026-11-01',
     slotTime: '09:00',
@@ -678,7 +909,7 @@ export const INITIAL_TEE_TIME_SLOTS: TeeTimeSlot[] = [
     bookings: [],
   },
   {
-    id: 'slot-2026-11-02-0930',
+    id: '33333333-3333-4333-8333-000000000930',
     courseExternalId: 'golfapi_course_1024',
     slotDate: '2026-11-02',
     slotTime: '09:30',
@@ -844,7 +1075,7 @@ export const INITIAL_TOURNAMENTS: TournamentDefinition[] = [
 
 export const INITIAL_SPECIAL_EVENTS: SpecialEventItem[] = [
   {
-    id: 'ev-gala-2026',
+    id: '55555555-5555-4555-8555-000000000001',
     title: 'Cena Anual de Gala y Entrega de Trofeos',
     description:
       'Velada de clausura de la temporada oficial con entrega de premios a los campeones del ranking anual, cóctel en terraza y música en directo.',
@@ -856,14 +1087,14 @@ export const INITIAL_SPECIAL_EVENTS: SpecialEventItem[] = [
     maxCapacity: 80,
     rsvps: [
       {
-        userId: 'p-201',
+        userId: 'aaaa0000-0000-0000-0000-000000000201',
         userName: 'Elena Ruiz',
         guestsCount: 1,
         status: 'attending',
         updatedAt: '2026-10-20T18:00:00Z',
       },
       {
-        userId: 'p-202',
+        userId: 'aaaa0000-0000-0000-0000-000000000002',
         userName: 'Carlos Mendoza',
         guestsCount: 2,
         status: 'attending',
@@ -872,7 +1103,7 @@ export const INITIAL_SPECIAL_EVENTS: SpecialEventItem[] = [
     ],
   },
   {
-    id: 'ev-clinic-shortgame',
+    id: '55555555-5555-4555-8555-000000000002',
     title: 'Masterclass de Juego Corto y Salidas de Bunker',
     description:
       'Clínic intensivo de 2 horas con el Head Pro del club enfocado en control de spin en wedges de 30-70 metros y recuperación desde arena compacta.',
@@ -884,14 +1115,14 @@ export const INITIAL_SPECIAL_EVENTS: SpecialEventItem[] = [
     maxCapacity: 8,
     rsvps: [
       {
-        userId: 'p-201',
+        userId: 'aaaa0000-0000-0000-0000-000000000201',
         userName: 'Elena Ruiz',
         guestsCount: 0,
         status: 'attending',
         updatedAt: '2026-10-22T09:00:00Z',
       },
       {
-        userId: 'p-203',
+        userId: 'aaaa0000-0000-0000-0000-000000000203',
         userName: 'Javier Ortega',
         guestsCount: 1,
         status: 'attending',

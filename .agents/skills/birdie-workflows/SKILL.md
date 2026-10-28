@@ -94,7 +94,7 @@ Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la ló
 1. **Normalización compartida y sincronización transaccional (`src/lib/golf-api/normalizer.ts`)**:
    - Todo payload externo de `golfapi.io` / `GolfCourseAPI` debe validarse y normalizarse con `normalizeExternalCoursePayload` y `buildSupabaseCourseSyncBundle` en [`src/lib/golf-api/normalizer.ts`](../../../src/lib/golf-api/normalizer.ts), que es la **fuente única de verdad** compartida entre el cliente Next.js (`src/lib/golf-api/index.ts`) y la Edge Function Deno (`supabase/functions/sync-golf-course/index.ts`).
    - El normalizador exige 9 o 18 hoyos con `strokeIndex` únicos, coordenadas GPS en rango (`-90..90` / `-180..180`), `slopeRating` (`55..155`) y deduplicación de barras por `(name, gender)`.
-   - La Edge Function persiste el campo invocando la función RPC transaccional `public.sync_golf_course_atomic(p_course, p_tees, p_holes)` en PostgreSQL (`ON CONFLICT (course_id, name, gender) DO UPDATE` y `ON CONFLICT (course_id, hole_number) DO UPDATE`) para impedir tees duplicados o campos parcialmente sincronizados.
+   - La Edge Function persiste el campo invocando la función RPC transaccional `public.sync_golf_course_atomic(p_course, p_tees, p_holes)` en PostgreSQL, la cual ejecuta `DELETE FROM public.course_tees` y `DELETE FROM public.course_holes` para eliminar barras y hoyos obsoletos que ya no vengan en el payload antes de hacer `INSERT ... ON CONFLICT (course_id, name, gender) DO UPDATE` y `ON CONFLICT (course_id, hole_number) DO UPDATE`.
 2. **Caché offline y conexión nativa SQLite (`src/lib/capacitor/sqlite.ts`)**:
    - `initOfflineDatabase()` abre y almacena la instancia singleton `SQLiteDBConnection` en Android nativo (`@capacitor-community/sqlite`), reutilizada por todas las operaciones CRUD (`saveOfflineHoleScore`, `getOfflineRoundScores`, `getPendingSyncScores`, `markScoreAsSynced`, `cacheCourseData`, `getCachedCourseData`, `clearOfflineStore`), manteniendo el fallback en memoria para Web/SSR.
    - Invoca `syncCourseToOfflineCache(courseId)` para persistir los hoyos antes de iniciar una ronda sin cobertura.
@@ -110,13 +110,15 @@ Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la ló
 
 Sigue estos pasos cuando modifiques o extiendas los módulos de Reservas (`/bookings`), Calendario (`/calendar`), Torneos (`/tournaments`) o Eventos (`/events`):
 
-1. **Reservas de Tee Times (`createTeeTimeBooking` / `submitTeeTimeBooking` / `cancelTeeTimeBooking`)**:
+1. **Reservas de Tee Times (`loadTeeTimeSlots` / `createTeeTimeBooking` / `submitTeeTimeBooking` / `submitCancelTeeTimeBooking`)**:
+   - En montaje de `/bookings`, invoca siempre `loadTeeTimeSlots()` para sustituir el catálogo semilla por las filas reales de `public.tee_time_slots` y `public.bookings` con sus UUIDs reales cuando Supabase está configurado. Todas las semillas deben usar UUIDs RFC-4122 válidos (`isValidUuid`).
    - Verifica en cliente `playersCount` entre `1` y `4`, que `slot.isBlocked` sea `false` y que `playersCount <= getAvailableSeatsInSlot(slot)`.
    - En PostgreSQL (`20261027000004_tournaments_bookings_events.sql`), el trigger `trg_bookings_enforce_slot_capacity` (`public.enforce_tee_time_slot_capacity`) bloquea la fila de `tee_time_slots` con `FOR UPDATE` para garantizar que dos solicitudes simultáneas nunca superen `max_players`.
    - En `public.hole_scores` (`20261027000003_scorecards_and_stats.sql`), las políticas RLS de `INSERT`/`UPDATE` exigen `player_id = auth.uid()` (o rol admin) y el trigger `trg_hole_scores_immutable_identity` impide mutar `player_id`, `round_id` o `hole_number`.
 2. **Clasificación de Torneos (`rankTournamentLeaderboard`)**:
    - Soporta las 3 modalidades (`stableford`, `stroke_play_net`, `stroke_play_gross`) aplicando desempate automático por segunda vuelta (`backNineStablefordPoints`) y menor `playingHandicap`.
-3. **Eventos Especiales y Lista de Espera Atómica (`upsertEventRsvp` / `submitEventRsvp`)**:
+3. **Eventos Especiales y Lista de Espera Atómica (`loadSpecialEvents` / `upsertEventRsvp` / `submitEventRsvp`)**:
+   - En montaje de `/events`, invoca `loadSpecialEvents()` para cargar los eventos y RSVPs reales con sus UUIDs desde `public.special_events` y `public.event_rsvps` cuando Supabase está configurado.
    - Tanto la interfaz como la restricción `CHECK (guests_count BETWEEN 0 AND 3)` en `public.event_rsvps` limitan los acompañantes a `0..3`.
    - El trigger `trg_event_rsvps_enforce_capacity` (`public.enforce_event_rsvp_capacity`) bloquea `public.special_events` con `FOR UPDATE` en servidor y degrada automáticamente `status` a `'waitlist'` si `asistentes_confirmados + 1 + guests_count > capacity`.
 4. **Transparencia Demo vs. Producción (`resolvePersistenceMetadata`)**:

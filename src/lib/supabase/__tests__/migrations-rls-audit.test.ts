@@ -101,9 +101,15 @@ describe('Auditoría de Esquema Supabase, RLS y Suite pgTAP', () => {
   });
 
   it('verifica las protecciones de integridad de Fase 3B (RPC transaccional de campos, RLS estricto e inmutabilidad en hole_scores, y triggers FOR UPDATE de aforo en bookings y event_rsvps)', () => {
-    // Hallazgo 7: RPC transaccional sync_golf_course_atomic y unicidad de tees
+    // Hallazgo 7 y Hallazgo Pendiente 2: RPC transaccional sync_golf_course_atomic, unicidad de tees y eliminación de barras/hoyos obsoletos
     expect(combinedMigrationsSql).toContain(
       'CREATE OR REPLACE FUNCTION public.sync_golf_course_atomic('
+    );
+    expect(combinedMigrationsSql).toContain(
+      'DELETE FROM public.course_tees ct'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'DELETE FROM public.course_holes ch'
     );
     expect(combinedMigrationsSql).toContain(
       'ON CONFLICT (course_id, name, gender) DO UPDATE'

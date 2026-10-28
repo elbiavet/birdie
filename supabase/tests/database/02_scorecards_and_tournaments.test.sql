@@ -4,7 +4,7 @@
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgtap;
-SELECT plan(13);
+SELECT plan(14);
 
 -- 1. Preparar usuarios y datos de prueba
 INSERT INTO auth.users (id, email, raw_app_meta_data)
@@ -177,6 +177,31 @@ SELECT lives_ok(
 SELECT lives_ok(
   $$UPDATE public.tournaments SET status = 'completed' WHERE id = 'eeee0000-0000-0000-0000-000000000001'$$,
   'El club_admin puede actualizar el estado de un torneo a completed'
+);
+
+-- Test 14: sync_golf_course_atomic reemplaza y elimina barras y hoyos obsoletos cuando se vuelve a sincronizar el campo
+SELECT public.sync_golf_course_atomic(
+  '{"external_golf_api_id": "golfapi_atomic_test", "name": "Campo Atómico", "club_name": "Club Atómico", "holes_count": 9, "par_total": 36}'::jsonb,
+  '[{"name": "Blancas", "gender": "men", "course_rating": 72.0, "slope_rating": 130, "total_distance_meters": 3000}, {"name": "Amarillas", "gender": "mixed", "course_rating": 70.0, "slope_rating": 122, "total_distance_meters": 2800}]'::jsonb,
+  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_yellow_meters": 350}, {"hole_number": 10, "par": 4, "stroke_index": 2, "distance_yellow_meters": 360}]'::jsonb
+);
+
+SELECT public.sync_golf_course_atomic(
+  '{"external_golf_api_id": "golfapi_atomic_test", "name": "Campo Atómico", "club_name": "Club Atómico", "holes_count": 9, "par_total": 36}'::jsonb,
+  '[{"name": "Amarillas", "gender": "mixed", "course_rating": 70.5, "slope_rating": 124, "total_distance_meters": 2820}]'::jsonb,
+  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_yellow_meters": 355}]'::jsonb
+);
+
+SELECT is(
+  (
+    SELECT (
+      (SELECT count(*)::int FROM public.course_tees ct JOIN public.courses c ON c.id = ct.course_id WHERE c.external_golf_api_id = 'golfapi_atomic_test') = 1
+      AND
+      (SELECT count(*)::int FROM public.course_holes ch JOIN public.courses c ON c.id = ch.course_id WHERE c.external_golf_api_id = 'golfapi_atomic_test') = 1
+    )
+  ),
+  true,
+  'sync_golf_course_atomic elimina barras (course_tees) y hoyos (course_holes) obsoletos que ya no vienen en el nuevo lote'
 );
 
 SELECT * FROM finish();

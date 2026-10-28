@@ -217,6 +217,16 @@ BEGIN
 
   -- Upsert idempotente de barras de salida sin duplicar (UNIQUE (course_id, name, gender))
   IF jsonb_typeof(p_tees) = 'array' AND jsonb_array_length(p_tees) > 0 THEN
+    -- Eliminar barras de salida obsoletas que ya no vengan en la respuesta actual del proveedor
+    DELETE FROM public.course_tees ct
+    WHERE ct.course_id = v_course_id
+      AND NOT EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(p_tees) AS t
+        WHERE ct.name = (t->>'name')
+          AND ct.gender = COALESCE(t->>'gender', 'mixed')
+      );
+
     INSERT INTO public.course_tees (
       course_id,
       name,
@@ -242,8 +252,17 @@ BEGIN
       total_distance_meters = EXCLUDED.total_distance_meters;
   END IF;
 
-  -- Upsert idempotente de hoyos (UNIQUE (course_id, hole_number))
+  -- Upsert idempotente de hoyos (UNIQUE (course_id, hole_number)) y limpieza de hoyos obsoletos
   IF jsonb_typeof(p_holes) = 'array' AND jsonb_array_length(p_holes) > 0 THEN
+    -- Eliminar hoyos obsoletos que existieran previamente para este campo y no aparezcan en el nuevo lote
+    DELETE FROM public.course_holes ch
+    WHERE ch.course_id = v_course_id
+      AND NOT EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(p_holes) AS h
+        WHERE ch.hole_number = (h->>'hole_number')::INT
+      );
+
     INSERT INTO public.course_holes (
       course_id,
       hole_number,

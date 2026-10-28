@@ -12,10 +12,14 @@ import {
   INITIAL_SPECIAL_EVENTS,
   INITIAL_TEE_TIME_SLOTS,
   INITIAL_TOURNAMENTS,
+  isValidUuid,
   joinOpenMatch,
+  loadSpecialEvents,
+  loadTeeTimeSlots,
   rankTournamentLeaderboard,
   registerPlayerInTournament,
   resolvePersistenceMetadata,
+  submitCancelTeeTimeBooking,
   submitEventRsvp,
   submitTeeTimeBooking,
   upsertEventRsvp,
@@ -74,7 +78,7 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     // Rechaza franja bloqueada (09:00)
     expect(() =>
       createTeeTimeBooking(INITIAL_TEE_TIME_SLOTS, {
-        slotId: 'slot-2026-11-01-0900',
+        slotId: '33333333-3333-4333-8333-000000000900',
         userId: 'user-nuevo',
         userName: 'Socio Nuevo',
         playersCount: 2,
@@ -84,7 +88,7 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     // Rechaza número de jugadores fuera de 1..4 y slot inexistente
     expect(() =>
       createTeeTimeBooking(INITIAL_TEE_TIME_SLOTS, {
-        slotId: 'slot-2026-11-01-0840',
+        slotId: '33333333-3333-4333-8333-000000000840',
         userId: 'user-nuevo',
         userName: 'Socio Nuevo',
         playersCount: 5,
@@ -110,11 +114,11 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
         'player'
       )
     ).toThrow(/No se encontró la reserva/);
-    // Intento de un player ajeno de cancelar la reserva 'bk-seed-1' (de Carlos Mendoza)
+    // Intento de un player ajeno de cancelar la reserva '44444444-4444-4444-8444-000000000001' (de Carlos Mendoza)
     expect(() =>
       cancelTeeTimeBooking(
         INITIAL_TEE_TIME_SLOTS,
-        'bk-seed-1',
+        '44444444-4444-4444-8444-000000000001',
         'otro-jugador-id',
         'player'
       )
@@ -123,7 +127,7 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     // El propietario sí puede cancelar su reserva
     const afterOwnerCancel = cancelTeeTimeBooking(
       INITIAL_TEE_TIME_SLOTS,
-      'bk-seed-1',
+      '44444444-4444-4444-8444-000000000001',
       'aaaa0000-0000-0000-0000-000000000002',
       'player'
     );
@@ -132,7 +136,7 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     // Un club_admin puede cancelar la reserva de cualquier socio
     const afterAdminCancel = cancelTeeTimeBooking(
       INITIAL_TEE_TIME_SLOTS,
-      'bk-seed-2',
+      '44444444-4444-4444-8444-000000000002',
       'admin-id',
       'club_admin'
     );
@@ -385,7 +389,23 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     expect((eventsHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
 
-  it('diferencia explícitamente entre modo demo en memoria y persistencia confirmada en Supabase (Hallazgo 10)', async () => {
+  it('diferencia explícitamente entre modo demo en memoria y persistencia confirmada en Supabase, validando UUIDs reales y cargando filas desde Supabase (Hallazgo 10 y Hallazgo Pendiente 1)', async () => {
+    // Todas las semillas tienen UUIDs RFC-4122 válidos compatibles con PostgreSQL
+    for (const slot of INITIAL_TEE_TIME_SLOTS) {
+      expect(isValidUuid(slot.id)).toBe(true);
+      for (const bk of slot.bookings) {
+        expect(isValidUuid(bk.id)).toBe(true);
+        expect(isValidUuid(bk.slotId)).toBe(true);
+        expect(isValidUuid(bk.userId)).toBe(true);
+      }
+    }
+    for (const ev of INITIAL_SPECIAL_EVENTS) {
+      expect(isValidUuid(ev.id)).toBe(true);
+      for (const r of ev.rsvps) {
+        expect(isValidUuid(r.userId)).toBe(true);
+      }
+    }
+
     const demoMeta = resolvePersistenceMetadata(false);
     expect(demoMeta.persistence).toBe('demo_memory_only');
     expect(demoMeta.persistedToBackend).toBe(false);
@@ -397,8 +417,8 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
 
     // En entorno de test sin credenciales Supabase, submitTeeTimeBooking y submitEventRsvp informan modo demo y persistedToBackend=false
     const bookingRes = await submitTeeTimeBooking(INITIAL_TEE_TIME_SLOTS, {
-      slotId: 'slot-2026-11-01-0840',
-      userId: 'user-demo-persist',
+      slotId: '33333333-3333-4333-8333-000000000840',
+      userId: 'aaaa0000-0000-0000-0000-000000000001',
       userName: 'Socio Demo',
       playersCount: 2,
     });
@@ -407,12 +427,171 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
 
     const rsvpRes = await submitEventRsvp(INITIAL_SPECIAL_EVENTS, {
       eventId: INITIAL_SPECIAL_EVENTS[0].id,
-      userId: 'user-demo-persist',
+      userId: 'aaaa0000-0000-0000-0000-000000000001',
       userName: 'Socio Demo',
       guestsCount: 2,
       desiredStatus: 'attending',
     });
     expect(rsvpRes.meta.persistence).toBe('demo_memory_only');
     expect(rsvpRes.meta.persistedToBackend).toBe(false);
+
+    // Con cliente Supabase activo: carga filas reales con UUIDs de BD, persiste reservas/RSVPs y rechaza IDs no-UUID
+    const mockDbSlotId = '77777777-7777-4777-8777-000000000001';
+    const mockDbEventId = '88888888-8888-4888-8888-000000000001';
+    const mockDbBookingId = '99999999-9999-4999-8999-000000000099';
+    const validUserUuid = 'aaaa0000-0000-0000-0000-000000000001';
+
+    const mockSupabaseClient = {
+      from: (table: string) => {
+        if (table === 'tee_time_slots') {
+          return {
+            select: () => ({
+              order: () => ({
+                order: async () => ({
+                  data: [
+                    {
+                      id: mockDbSlotId,
+                      course_id: '11111111-1111-1111-1111-111111111101',
+                      slot_date: '2026-11-15',
+                      slot_time: '09:10:00',
+                      max_players: 4,
+                      is_blocked: false,
+                      price_eur: 50,
+                      bookings: [],
+                    },
+                  ],
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'special_events') {
+          return {
+            select: () => ({
+              order: async () => ({
+                data: [
+                  {
+                    id: mockDbEventId,
+                    title: 'Torneo Social BD',
+                    description: 'Evento cargado desde Supabase con UUID real',
+                    event_date: '2026-11-20T19:00:00Z',
+                    location: 'Casa Club',
+                    capacity: 40,
+                    price_eur: 30,
+                    event_rsvps: [],
+                  },
+                ],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'bookings') {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: async () => ({
+                  data: {
+                    id: mockDbBookingId,
+                    created_at: '2026-10-28T10:00:00Z',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+            update: () => ({
+              eq: async () => ({ error: null }),
+            }),
+          };
+        }
+        if (table === 'event_rsvps') {
+          return {
+            upsert: () => ({
+              select: () => ({
+                single: async () => ({
+                  data: { status: 'waitlist' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        throw new Error(`Tabla no esperada: ${table}`);
+      },
+    } as unknown as ReturnType<typeof import('@/lib/supabase/client').getSupabaseClient>;
+
+    const loadedSlots = await loadTeeTimeSlots(mockSupabaseClient);
+    expect(loadedSlots.meta.persistedToBackend).toBe(true);
+    expect(loadedSlots.slots).toHaveLength(1);
+    expect(loadedSlots.slots[0].id).toBe(mockDbSlotId);
+
+    const remoteBooking = await submitTeeTimeBooking(
+      loadedSlots.slots,
+      {
+        slotId: mockDbSlotId,
+        userId: validUserUuid,
+        userName: 'Socio Real',
+        playersCount: 2,
+      },
+      mockSupabaseClient
+    );
+    expect(remoteBooking.meta.persistedToBackend).toBe(true);
+    expect(remoteBooking.createdBooking.id).toBe(mockDbBookingId);
+
+    const remoteCancel = await submitCancelTeeTimeBooking(
+      remoteBooking.updatedSlots,
+      mockDbBookingId,
+      validUserUuid,
+      'player',
+      mockSupabaseClient
+    );
+    expect(remoteCancel.meta.persistedToBackend).toBe(true);
+
+    const loadedEvents = await loadSpecialEvents(mockSupabaseClient);
+    expect(loadedEvents.meta.persistedToBackend).toBe(true);
+    expect(loadedEvents.events[0].id).toBe(mockDbEventId);
+
+    const remoteRsvp = await submitEventRsvp(
+      loadedEvents.events,
+      {
+        eventId: mockDbEventId,
+        userId: validUserUuid,
+        userName: 'Socio Real',
+        guestsCount: 1,
+        desiredStatus: 'attending',
+      },
+      mockSupabaseClient
+    );
+    expect(remoteRsvp.meta.persistedToBackend).toBe(true);
+    expect(remoteRsvp.assignedStatus).toBe('waitlist');
+
+    // Rechaza identificadores de demostración no-UUID cuando Supabase está configurado
+    await expect(
+      submitTeeTimeBooking(
+        loadedSlots.slots,
+        {
+          slotId: mockDbSlotId,
+          userId: 'id-no-uuid-demo',
+          userName: 'Socio',
+          playersCount: 1,
+        },
+        mockSupabaseClient
+      )
+    ).rejects.toThrow(/UUID válidos/);
+
+    await expect(
+      submitEventRsvp(
+        loadedEvents.events,
+        {
+          eventId: mockDbEventId,
+          userId: 'id-no-uuid-demo',
+          userName: 'Socio',
+          guestsCount: 0,
+          desiredStatus: 'attending',
+        },
+        mockSupabaseClient
+      )
+    ).rejects.toThrow(/UUID válidos/);
   });
 });

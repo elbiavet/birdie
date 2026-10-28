@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
   getConfirmedEventAttendeesCount,
   INITIAL_SPECIAL_EVENTS,
+  loadSpecialEvents,
   submitEventRsvp,
   type SpecialEventItem,
 } from '@/lib/competition';
@@ -27,6 +28,28 @@ export default function SpecialEventsPage() {
     type: 'ok' | 'error';
     message: string;
   } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    loadSpecialEvents()
+      .then(({ events: remoteEvents }) => {
+        if (!active || remoteEvents.length === 0) return;
+        setEvents(remoteEvents);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setBanner({
+          type: 'error',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'No se pudieron cargar los eventos especiales desde Supabase.',
+        });
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleRsvp = async (
     eventId: string,
