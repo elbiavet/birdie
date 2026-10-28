@@ -89,9 +89,13 @@ CREATE TABLE IF NOT EXISTS public.tee_time_slots (
   max_players INT NOT NULL DEFAULT 4 CHECK (max_players BETWEEN 1 AND 4),
   is_blocked BOOLEAN NOT NULL DEFAULT false,
   block_reason TEXT,
+  price_eur NUMERIC(6, 2) NOT NULL DEFAULT 45.00,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (course_id, slot_date, slot_time)
 );
+
+ALTER TABLE public.tee_time_slots
+  ADD COLUMN IF NOT EXISTS price_eur NUMERIC(6, 2) NOT NULL DEFAULT 45.00;
 
 CREATE TABLE IF NOT EXISTS public.bookings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

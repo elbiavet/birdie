@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "configure:club": "tsx scripts/configure-club.ts",
+    "verify:supabase": "tsx scripts/verify-supabase.ts",
     "cap:sync": "cap sync android"
   },
   "dependencies": {

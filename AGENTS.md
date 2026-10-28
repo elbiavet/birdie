@@ -82,6 +82,7 @@ Al terminar cada fase de [`BACKLOG.md`](./BACKLOG.md), **antes de dar la fase po
   - `npm run build`: Ejecuta `next build` (con exportación estática `output: 'export'` en `out/`).
   - `npm run build:apk`: Ejecuta `CAPACITOR_BUILD=true next build`.
   - `npm run configure:club`: Ejecuta `tsx scripts/configure-club.ts` (acepta `club=<clubId> env=<staging|production>` o `--club=<clubId> --env=<staging|production>`).
+  - `npm run verify:supabase`: Ejecuta `tsx scripts/verify-supabase.ts` (genera `supabase/full-setup.sql` y verifica en vivo contra el proyecto Supabase configurado en `.env.local` las semillas con UUIDs reales, la RPC `sync_golf_course_atomic`, los triggers `FOR UPDATE` de aforo y las políticas RLS de `hole_scores`).
   - `npm run cap:sync`: Ejecuta `cap sync android`.
 - **Entorno local y limitaciones confirmadas**:
   - `git` (`2.45.1.windows.1`) está disponible; operaciones de escritura en `.git/` y `git push` requieren `BypassSandbox: true` en este entorno Windows.

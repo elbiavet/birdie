@@ -50,6 +50,10 @@ DECLARE
   jwt_role TEXT;
   db_role public.user_role;
 BEGIN
+  IF (auth.jwt() ->> 'role') = 'service_role' THEN
+    RETURN 'superadmin'::public.user_role;
+  END IF;
+
   IF auth.uid() IS NULL THEN
     RETURN NULL;
   END IF;

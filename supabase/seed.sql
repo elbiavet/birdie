@@ -91,13 +91,36 @@ INSERT INTO public.tournaments (
 
 INSERT INTO public.special_events (
   id, title, description, event_date, location, capacity, price_eur, is_published
-) VALUES (
-  '44444444-4444-4444-4444-444444444401',
-  'Cena Anual de Gala y Entrega de Trofeos',
-  'Velada social de cierre de temporada con entrega de premios de la Orden de Mérito del club.',
-  now() + INTERVAL '14 days',
-  'Salón Principal — Casa Club',
-  120,
-  45.00,
-  true
-) ON CONFLICT (id) DO NOTHING;
+) VALUES
+  (
+    '55555555-5555-4555-8555-000000000001',
+    'Cena Anual de Gala y Entrega de Trofeos',
+    'Velada social de cierre de temporada con entrega de premios de la Orden de Mérito del club.',
+    now() + INTERVAL '14 days',
+    'Salón Principal — Casa Club',
+    80,
+    65.00,
+    true
+  ),
+  (
+    '55555555-5555-4555-8555-000000000002',
+    'Masterclass de Juego Corto y Salidas de Bunker',
+    'Clínic intensivo de 2 horas con el Head Pro del club enfocado en control de spin en wedges de 30-70 metros y recuperación desde arena compacta.',
+    now() + INTERVAL '7 days',
+    'Zona de Approach y Putting Green Sur',
+    8,
+    25.00,
+    true
+  )
+ON CONFLICT (id) DO NOTHING;
+
+-- 7. Franjas de salida iniciales (Tee Time Slots) con UUIDs RFC-4122 reales
+INSERT INTO public.tee_time_slots (
+  id, course_id, slot_date, slot_time, max_players, is_blocked, price_eur
+) VALUES
+  ('33333333-3333-4333-8333-000000000830', '11111111-1111-1111-1111-111111111101', '2026-11-01', '08:30', 4, false, 45.00),
+  ('33333333-3333-4333-8333-000000000840', '11111111-1111-1111-1111-111111111101', '2026-11-01', '08:40', 4, false, 45.00),
+  ('33333333-3333-4333-8333-000000000850', '11111111-1111-1111-1111-111111111101', '2026-11-01', '08:50', 4, false, 55.00),
+  ('33333333-3333-4333-8333-000000000900', '11111111-1111-1111-1111-111111111101', '2026-11-01', '09:00', 4, true,  55.00),
+  ('33333333-3333-4333-8333-000000000930', '11111111-1111-1111-1111-111111111101', '2026-11-02', '09:30', 4, false, 60.00)
+ON CONFLICT (course_id, slot_date, slot_time) DO NOTHING;

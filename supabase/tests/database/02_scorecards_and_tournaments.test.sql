@@ -183,13 +183,13 @@ SELECT lives_ok(
 SELECT public.sync_golf_course_atomic(
   '{"external_golf_api_id": "golfapi_atomic_test", "name": "Campo Atómico", "club_name": "Club Atómico", "holes_count": 9, "par_total": 36}'::jsonb,
   '[{"name": "Blancas", "gender": "men", "course_rating": 72.0, "slope_rating": 130, "total_distance_meters": 3000}, {"name": "Amarillas", "gender": "mixed", "course_rating": 70.0, "slope_rating": 122, "total_distance_meters": 2800}]'::jsonb,
-  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_yellow_meters": 350}, {"hole_number": 10, "par": 4, "stroke_index": 2, "distance_yellow_meters": 360}]'::jsonb
+  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_white_meters": 365, "distance_yellow_meters": 350, "distance_blue_meters": 325, "distance_red_meters": 305, "tee_lat": 40.4682, "tee_lng": -3.7815, "green_front_lat": 40.4691, "green_front_lng": -3.7802, "green_center_lat": 40.4692, "green_center_lng": -3.7801, "green_back_lat": 40.4693, "green_back_lng": -3.7800}, {"hole_number": 10, "par": 4, "stroke_index": 2, "distance_white_meters": 375, "distance_yellow_meters": 360, "distance_blue_meters": 335, "distance_red_meters": 315, "tee_lat": 40.4681, "tee_lng": -3.7817, "green_front_lat": 40.4673, "green_front_lng": -3.7824, "green_center_lat": 40.4672, "green_center_lng": -3.7825, "green_back_lat": 40.4671, "green_back_lng": -3.7826}]'::jsonb
 );
 
 SELECT public.sync_golf_course_atomic(
   '{"external_golf_api_id": "golfapi_atomic_test", "name": "Campo Atómico", "club_name": "Club Atómico", "holes_count": 9, "par_total": 36}'::jsonb,
   '[{"name": "Amarillas", "gender": "mixed", "course_rating": 70.5, "slope_rating": 124, "total_distance_meters": 2820}]'::jsonb,
-  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_yellow_meters": 355}]'::jsonb
+  '[{"hole_number": 1, "par": 4, "stroke_index": 1, "distance_white_meters": 370, "distance_yellow_meters": 355, "distance_blue_meters": 330, "distance_red_meters": 310, "tee_lat": 40.4682, "tee_lng": -3.7815, "green_front_lat": 40.4691, "green_front_lng": -3.7802, "green_center_lat": 40.4692, "green_center_lng": -3.7801, "green_back_lat": 40.4693, "green_back_lng": -3.7800}]'::jsonb
 );
 
 SELECT is(
