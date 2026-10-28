@@ -15,6 +15,9 @@ import {
   joinOpenMatch,
   rankTournamentLeaderboard,
   registerPlayerInTournament,
+  resolvePersistenceMetadata,
+  submitEventRsvp,
+  submitTeeTimeBooking,
   upsertEventRsvp,
 } from '../index';
 import { ClubProvider } from '@/components/providers/ClubProvider';
@@ -363,5 +366,36 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     );
     expect(eventsHtml).toContain('Eventos Especiales de');
     expect(eventsHtml).toContain('Cena Anual de Gala y Entrega de Trofeos');
+  });
+
+  it('diferencia explícitamente entre modo demo en memoria y persistencia confirmada en Supabase (Hallazgo 10)', async () => {
+    const demoMeta = resolvePersistenceMetadata(false);
+    expect(demoMeta.persistence).toBe('demo_memory_only');
+    expect(demoMeta.persistedToBackend).toBe(false);
+    expect(demoMeta.notice).toContain('MODO DEMO LOCAL');
+
+    const prodMeta = resolvePersistenceMetadata(true);
+    expect(prodMeta.persistence).toBe('persisted_remote');
+    expect(prodMeta.persistedToBackend).toBe(true);
+
+    // En entorno de test sin credenciales Supabase, submitTeeTimeBooking y submitEventRsvp informan modo demo y persistedToBackend=false
+    const bookingRes = await submitTeeTimeBooking(INITIAL_TEE_TIME_SLOTS, {
+      slotId: 'slot-2026-11-01-0840',
+      userId: 'user-demo-persist',
+      userName: 'Socio Demo',
+      playersCount: 2,
+    });
+    expect(bookingRes.meta.persistence).toBe('demo_memory_only');
+    expect(bookingRes.meta.persistedToBackend).toBe(false);
+
+    const rsvpRes = await submitEventRsvp(INITIAL_SPECIAL_EVENTS, {
+      eventId: INITIAL_SPECIAL_EVENTS[0].id,
+      userId: 'user-demo-persist',
+      userName: 'Socio Demo',
+      guestsCount: 2,
+      desiredStatus: 'attending',
+    });
+    expect(rsvpRes.meta.persistence).toBe('demo_memory_only');
+    expect(rsvpRes.meta.persistedToBackend).toBe(false);
   });
 });

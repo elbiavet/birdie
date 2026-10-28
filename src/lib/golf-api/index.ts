@@ -1,14 +1,21 @@
 import { cacheCourseData, type CachedCourseHole } from '@/lib/capacitor/sqlite';
 import { GOLF_API_COURSES_CATALOG } from './catalog';
+import {
+  buildSupabaseCourseSyncBundle,
+  normalizeExternalCoursePayload,
+} from './normalizer';
 import type {
   CourseNineTotals,
-  ExternalGolfApiRawPayload,
   GolfApiCourse,
   GolfApiHole,
 } from './types';
 
 export * from './types';
 export { GOLF_API_COURSES_CATALOG } from './catalog';
+export {
+  buildSupabaseCourseSyncBundle,
+  normalizeExternalCoursePayload,
+};
 
 /**
  * Busca campos en el directorio por texto libre (nombre del campo, nombre del club o ciudad)
@@ -89,86 +96,6 @@ export function calculateCourseNineTotals(
     outMeters,
     inMeters,
     totalMeters: outMeters + inMeters,
-  };
-}
-
-/**
- * Normaliza la carga útil cruda de un proveedor externo (golfapi.io / GolfCourseAPI)
- * al contrato interno desacoplado GolfApiCourse.
- */
-export function normalizeExternalCoursePayload(
-  raw: ExternalGolfApiRawPayload
-): GolfApiCourse {
-  if (!raw.courseID || !raw.courseName || !Array.isArray(raw.holes) || raw.holes.length === 0) {
-    throw new Error('Payload de Golf API inválido: faltan courseID, courseName u hoyos.');
-  }
-
-  const holes: GolfApiHole[] = raw.holes
-    .map((h) => ({
-      holeNumber: h.hole,
-      par: h.par,
-      strokeIndex: h.handicap,
-      distanceWhiteMeters: h.whiteMeters ?? h.yellowMeters + 15,
-      distanceYellowMeters: h.yellowMeters,
-      distanceBlueMeters: h.blueMeters ?? Math.max(90, h.yellowMeters - 25),
-      distanceRedMeters: h.redMeters ?? Math.max(80, h.yellowMeters - 45),
-      teeLat: h.teeLat ?? raw.lat,
-      teeLng: h.teeLng ?? raw.lng,
-      greenFrontLat: h.greenFrontLat,
-      greenFrontLng: h.greenFrontLng,
-      greenCenterLat: h.greenCenterLat,
-      greenCenterLng: h.greenCenterLng,
-      greenBackLat: h.greenBackLat,
-      greenBackLng: h.greenBackLng,
-      pois: [],
-    }))
-    .sort((a, b) => a.holeNumber - b.holeNumber);
-
-  const parTotal = holes.reduce((acc, h) => acc + h.par, 0);
-  const holesCount: 9 | 18 = holes.length <= 9 ? 9 : 18;
-
-  const tees =
-    raw.tees && raw.tees.length > 0
-      ? raw.tees.map((t, idx) => ({
-          id: t.teeID || `ext-tee-${idx + 1}`,
-          name: t.teeName,
-          colorHex: t.teeColor || '#FACC15',
-          gender: t.gender || 'mixed',
-          courseRating: t.courseRating,
-          slopeRating: t.slopeRating,
-          totalDistanceMeters: t.totalMeters,
-        }))
-      : [
-          {
-            id: 'ext-tee-default',
-            name: 'Amarillas',
-            colorHex: '#FACC15',
-            gender: 'mixed' as const,
-            courseRating: parTotal,
-            slopeRating: 125,
-            totalDistanceMeters: holes.reduce(
-              (acc, h) => acc + h.distanceYellowMeters,
-              0
-            ),
-          },
-        ];
-
-  return {
-    id: `ext-${raw.courseID}`,
-    externalGolfApiId: raw.courseID,
-    name: raw.courseName,
-    clubName: raw.clubName || raw.courseName,
-    city: raw.city || 'Desconocida',
-    country: raw.country || 'España',
-    holesCount,
-    parTotal,
-    latitude: raw.lat,
-    longitude: raw.lng,
-    address: raw.address || '',
-    phone: raw.phone || '',
-    website: raw.website || '',
-    tees,
-    holes,
   };
 }
 

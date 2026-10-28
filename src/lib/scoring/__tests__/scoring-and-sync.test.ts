@@ -138,12 +138,22 @@ describe('Motor Matemático de Golf (Stableford / WHS) y Cola Offline (Subfase 2
       ok: score.holeNumber === 1,
       error: score.holeNumber === 2 ? 'Timeout de red' : undefined,
     }));
+    expect(partialFlush.status).toBe('partial_or_failed');
     expect(partialFlush.attemptedCount).toBe(2);
     expect(partialFlush.syncedCount).toBe(1);
     expect(partialFlush.remainingPendingCount).toBe(1);
 
-    // Segundo intento con conexión restablecida vacía el pendiente restante
-    const finalFlush = await flushPendingScoresToSupabase();
+    // Si no se pasa uploader personalizado y no hay credenciales reales de Supabase, NO marca sincronización ficticia
+    const unconfiguredFlush = await flushPendingScoresToSupabase();
+    expect(unconfiguredFlush.status).toBe('skipped_unconfigured');
+    expect(unconfiguredFlush.syncedCount).toBe(0);
+    expect(unconfiguredFlush.remainingPendingCount).toBe(1);
+
+    // Segundo intento con uploader confirmado hacia Supabase vacía el pendiente restante
+    const finalFlush = await flushPendingScoresToSupabase(async () => ({
+      ok: true,
+    }));
+    expect(finalFlush.status).toBe('synced');
     expect(finalFlush.attemptedCount).toBe(1);
     expect(finalFlush.syncedCount).toBe(1);
     expect(finalFlush.remainingPendingCount).toBe(0);
@@ -151,5 +161,83 @@ describe('Motor Matemático de Golf (Stableford / WHS) y Cola Offline (Subfase 2
     const storedRound = await getOfflineRoundScores(roundId, playerId);
     expect(storedRound).toHaveLength(2);
     expect(storedRound.every((s) => s.syncStatus === 'synced')).toBe(true);
+  });
+
+  it('calcula correctamente rondas de 9 hoyos en recordHoleScoreOfflineFirst y protege la cola contra vaciados concurrentes y revisiones obsoletas', async () => {
+    const roundId = 'round-9holes-concurrency';
+    const playerId = 'player-demo-09';
+
+    // Ronda de 9 hoyos: Playing Handicap 11 en SI 1 recibe 2 golpes (1 base + 1 extra en los 2 primeros hoyos de los 9 jugados)
+    const nineHoleScore = await recordHoleScoreOfflineFirst({
+      roundId,
+      playerId,
+      holeNumber: 1,
+      par: 4,
+      strokeIndex: 1,
+      playingHandicap: 11,
+      holesCount: 9,
+      strokes: 4,
+      putts: 2,
+    });
+    expect(nineHoleScore.strokes).toBe(4);
+    expect(nineHoleScore.stablefordPoints).toBe(4);
+    expect(nineHoleScore.revision).toBe(1);
+
+    // 1. Prueba de mutex en vaciados concurrentes: dos llamadas simultáneas comparten la misma ejecución en vuelo
+    let uploaderCallCount = 0;
+    const slowUploader = async () => {
+      uploaderCallCount += 1;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      return { ok: true };
+    };
+
+    const [flushA, flushB] = await Promise.all([
+      flushPendingScoresToSupabase(slowUploader),
+      flushPendingScoresToSupabase(slowUploader),
+    ]);
+
+    expect(uploaderCallCount).toBe(1);
+    expect(flushA.syncedCount).toBe(1);
+    expect(flushB.syncedCount).toBe(1);
+
+    // 2. Prueba de control de versiones (revision): si el jugador edita el hoyo mientras se envía la revisión anterior, no se marca como 'synced'
+    const editV2 = await recordHoleScoreOfflineFirst({
+      roundId,
+      playerId,
+      holeNumber: 1,
+      par: 4,
+      strokeIndex: 1,
+      playingHandicap: 11,
+      holesCount: 9,
+      strokes: 5,
+      putts: 2,
+    });
+    expect(editV2.revision).toBe(2);
+    expect(editV2.syncStatus).toBe('pending');
+
+    const staleFlush = await flushPendingScoresToSupabase(async (snapshot) => {
+      expect(snapshot.revision).toBe(2);
+      // Mientras el envío de revision=2 está en vuelo, el usuario corrige el golpe a 6 (revision=3)
+      await recordHoleScoreOfflineFirst({
+        roundId,
+        playerId,
+        holeNumber: 1,
+        par: 4,
+        strokeIndex: 1,
+        playingHandicap: 11,
+        holesCount: 9,
+        strokes: 6,
+        putts: 3,
+      });
+      return { ok: true };
+    });
+
+    expect(staleFlush.syncedCount).toBe(0);
+    expect(staleFlush.remainingPendingCount).toBe(1);
+
+    const afterStale = await getOfflineRoundScores(roundId, playerId);
+    expect(afterStale[0].strokes).toBe(6);
+    expect(afterStale[0].revision).toBe(3);
+    expect(afterStale[0].syncStatus).toBe('pending');
   });
 });

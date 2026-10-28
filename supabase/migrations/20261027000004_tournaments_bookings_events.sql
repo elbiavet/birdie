@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS public.event_rsvps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID NOT NULL REFERENCES public.special_events(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  guests_count INT NOT NULL DEFAULT 0 CHECK (guests_count BETWEEN 0 AND 5),
+  guests_count INT NOT NULL DEFAULT 0 CHECK (guests_count BETWEEN 0 AND 3),
   status public.rsvp_status NOT NULL DEFAULT 'attending',
   dietary_notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -278,3 +278,132 @@ CREATE POLICY "event_rsvps_update_self_or_admin"
 CREATE POLICY "event_rsvps_delete_self_or_admin"
   ON public.event_rsvps FOR DELETE TO authenticated
   USING (user_id = auth.uid() OR public.is_club_admin_or_superadmin());
+
+-- ============================================================================
+-- 5. VALIDACIÓN ATÓMICA DE CUPO Y AFORO EN SERVIDOR (TRIGGERS CON FOR UPDATE)
+-- Evita condiciones de carrera cuando solicitudes concurrentes intentan reservar
+-- la misma salida (tee_time_slots) o confirmar asistencia a un evento (special_events).
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.enforce_tee_time_slot_capacity()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_max_players INT;
+  v_is_blocked BOOLEAN;
+  v_current_booked INT;
+  v_duplicate_exists BOOLEAN;
+BEGIN
+  IF NEW.players_count < 1 OR NEW.players_count > 4 THEN
+    RAISE EXCEPTION 'El número de jugadores por reserva debe estar entre 1 y 4.'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NEW.status = 'confirmed' THEN
+    -- Bloqueo pesimista sobre la franja para serializar inserciones concurrentes
+    SELECT max_players, is_blocked
+      INTO v_max_players, v_is_blocked
+      FROM public.tee_time_slots
+      WHERE id = NEW.slot_id
+      FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'La franja de salida seleccionada no existe.'
+        USING ERRCODE = '23503';
+    END IF;
+
+    IF v_is_blocked THEN
+      RAISE EXCEPTION 'Esta franja horaria está bloqueada.'
+        USING ERRCODE = '23514';
+    END IF;
+
+    SELECT EXISTS (
+      SELECT 1 FROM public.bookings
+      WHERE slot_id = NEW.slot_id
+        AND booked_by = NEW.booked_by
+        AND status = 'confirmed'
+        AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::UUID)
+    ) INTO v_duplicate_exists;
+
+    IF v_duplicate_exists THEN
+      RAISE EXCEPTION 'El socio ya tiene una reserva confirmada en esta franja.'
+        USING ERRCODE = '23505';
+    END IF;
+
+    SELECT COALESCE(SUM(players_count), 0)
+      INTO v_current_booked
+      FROM public.bookings
+      WHERE slot_id = NEW.slot_id
+        AND status = 'confirmed'
+        AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::UUID);
+
+    IF v_current_booked + NEW.players_count > v_max_players THEN
+      RAISE EXCEPTION 'Cupo insuficiente en la salida seleccionada: plazas ocupadas %, solicitadas %, máximo %.',
+        v_current_booked, NEW.players_count, v_max_players
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_bookings_enforce_slot_capacity ON public.bookings;
+CREATE TRIGGER trg_bookings_enforce_slot_capacity
+  BEFORE INSERT OR UPDATE ON public.bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_tee_time_slot_capacity();
+
+CREATE OR REPLACE FUNCTION public.enforce_event_rsvp_capacity()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_capacity INT;
+  v_current_attending INT;
+BEGIN
+  IF NEW.guests_count < 0 OR NEW.guests_count > 3 THEN
+    RAISE EXCEPTION 'El número de acompañantes debe estar entre 0 y 3.'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NEW.status = 'attending' THEN
+    -- Bloqueo pesimista sobre el evento para serializar confirmaciones concurrentes
+    SELECT capacity
+      INTO v_capacity
+      FROM public.special_events
+      WHERE id = NEW.event_id
+      FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'El evento seleccionado no existe.'
+        USING ERRCODE = '23503';
+    END IF;
+
+    SELECT COALESCE(SUM(1 + guests_count), 0)
+      INTO v_current_attending
+      FROM public.event_rsvps
+      WHERE event_id = NEW.event_id
+        AND status = 'attending'
+        AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::UUID);
+
+    IF v_current_attending + 1 + NEW.guests_count > v_capacity THEN
+      -- Si supera el aforo disponible en servidor, pasa atómicamente a lista de espera
+      NEW.status := 'waitlist';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_event_rsvps_enforce_capacity ON public.event_rsvps;
+CREATE TRIGGER trg_event_rsvps_enforce_capacity
+  BEFORE INSERT OR UPDATE ON public.event_rsvps
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_event_rsvp_capacity();

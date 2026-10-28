@@ -70,6 +70,7 @@ export default function ScorecardAndGpsPage() {
   );
 
   const [activeHoleNumber, setActiveHoleNumber] = useState<number>(1);
+  const [roundHolesMode, setRoundHolesMode] = useState<9 | 18>(course.holesCount);
   const activeHole = useMemo(
     () =>
       course.holes.find((h) => h.holeNumber === activeHoleNumber) ?? course.holes[0],
@@ -131,8 +132,13 @@ export default function ScorecardAndGpsPage() {
   }, [activeHole, recordedScores]);
 
   const activeHoleStrokesReceived = useMemo(
-    () => calculateStrokesReceivedOnHole(playingHandicap, activeHole.strokeIndex, 18),
-    [playingHandicap, activeHole.strokeIndex]
+    () =>
+      calculateStrokesReceivedOnHole(
+        playingHandicap,
+        activeHole.strokeIndex,
+        roundHolesMode
+      ),
+    [playingHandicap, activeHole.strokeIndex, roundHolesMode]
   );
 
   const activeHoleStableford = useMemo(
@@ -145,9 +151,22 @@ export default function ScorecardAndGpsPage() {
     [strokes, activeHole.par, activeHoleStrokesReceived]
   );
 
+  const effectiveHolesForRound = useMemo(
+    () =>
+      roundHolesMode === 9
+        ? course.holes.filter((h) => h.holeNumber <= 9)
+        : course.holes,
+    [course.holes, roundHolesMode]
+  );
+
   const roundSummary = useMemo(
-    () => summarizeRoundScorecard(course.holes, recordedScores, playingHandicap),
-    [course.holes, recordedScores, playingHandicap]
+    () =>
+      summarizeRoundScorecard(
+        effectiveHolesForRound,
+        recordedScores,
+        playingHandicap
+      ),
+    [effectiveHolesForRound, recordedScores, playingHandicap]
   );
 
   const handleSaveHoleOffline = async () => {
@@ -158,6 +177,7 @@ export default function ScorecardAndGpsPage() {
       par: activeHole.par,
       strokeIndex: activeHole.strokeIndex,
       playingHandicap,
+      holesCount: roundHolesMode,
       strokes,
       putts,
       fairwayHit: activeHole.par >= 4 ? fairwayHit : null,
@@ -168,10 +188,10 @@ export default function ScorecardAndGpsPage() {
 
     await loadRoundFromOfflineDb();
     setStatusBanner(
-      `Hoyo ${activeHole.holeNumber} guardado en SQLite local (${strokes} golpes · ${activeHoleStableford} pts Stableford).`
+      `Hoyo ${activeHole.holeNumber} guardado en SQLite local [pendiente de envío a Supabase] (${strokes} golpes · ${activeHoleStableford} pts Stableford).`
     );
 
-    if (activeHoleNumber < 18) {
+    if (activeHoleNumber < roundHolesMode) {
       setActiveHoleNumber((prev) => prev + 1);
     }
   };
@@ -179,9 +199,17 @@ export default function ScorecardAndGpsPage() {
   const handleFlushQueue = async () => {
     const res = await flushPendingScoresToSupabase();
     await loadRoundFromOfflineDb();
-    setStatusBanner(
-      `Sincronización completada: ${res.syncedCount}/${res.attemptedCount} hoyos enviados a Supabase.`
-    );
+    if (res.status === 'synced') {
+      setStatusBanner(
+        res.attemptedCount === 0
+          ? 'No hay golpes pendientes de sincronizar en la cola SQLite.'
+          : `Sincronización confirmada en servidor Supabase: ${res.syncedCount}/${res.attemptedCount} hoyos sincronizados.`
+      );
+    } else {
+      setStatusBanner(
+        `${res.reason ?? 'Sincronización incompleta.'} (${res.remainingPendingCount} hoyo[s] siguen en estado 'pending' en SQLite local).`
+      );
+    }
   };
 
   return (
@@ -209,6 +237,22 @@ export default function ScorecardAndGpsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={roundHolesMode}
+                onChange={(e) => {
+                  const nextMode: 9 | 18 = Number(e.target.value) === 9 ? 9 : 18;
+                  setRoundHolesMode(nextMode);
+                  if (activeHoleNumber > nextMode) {
+                    setActiveHoleNumber(1);
+                  }
+                }}
+                aria-label="Modalidad de hoyos de la ronda"
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+              >
+                <option value={18}>Vuelta 18 Hoyos</option>
+                <option value={9}>Vuelta 9 Hoyos</option>
+              </select>
+
               <select
                 value={selectedCourseId}
                 onChange={(e) => {

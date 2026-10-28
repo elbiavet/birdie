@@ -1,4 +1,35 @@
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import type { UserRole } from '@/types/database';
+
+export type PersistenceStatus = 'persisted_remote' | 'demo_memory_only';
+
+export interface ActionPersistenceMetadata {
+  persistence: PersistenceStatus;
+  persistedToBackend: boolean;
+  notice: string;
+}
+
+/**
+ * Determina e informa explícitamente si una operación se ha persistido en el backend Supabase
+ * o si se está ejecutando únicamente como simulación en memoria local (Modo Demo).
+ */
+export function resolvePersistenceMetadata(
+  backendConnected: boolean = isSupabaseConfigured()
+): ActionPersistenceMetadata {
+  if (backendConnected) {
+    return {
+      persistence: 'persisted_remote',
+      persistedToBackend: true,
+      notice: 'Persistido en servidor Supabase.',
+    };
+  }
+  return {
+    persistence: 'demo_memory_only',
+    persistedToBackend: false,
+    notice:
+      'MODO DEMO LOCAL: acción aplicada solo en memoria de sesión (no enviada ni persistida en Supabase).',
+  };
+}
 
 // ============================================================================
 // 1. TIPOS Y MOTOR DE RESERVAS DE TEE TIMES (/bookings)
@@ -476,6 +507,105 @@ export function upsertEventRsvp(
   });
 
   return { updatedEvents, assignedStatus };
+}
+
+/**
+ * Ejecuta una reserva de Tee Time contra el servidor Supabase si está configurado
+ * (donde el trigger `trg_bookings_enforce_slot_capacity` valida el aforo de forma atómica con `FOR UPDATE`),
+ * o en memoria local marcando explícitamente `persistence = 'demo_memory_only'`.
+ */
+export async function submitTeeTimeBooking(
+  slots: TeeTimeSlot[],
+  input: CreateTeeTimeBookingInput
+): Promise<{
+  updatedSlots: TeeTimeSlot[];
+  createdBooking: TeeTimeBookingRecord;
+  meta: ActionPersistenceMetadata;
+}> {
+  const localResult = createTeeTimeBooking(slots, input);
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return {
+      ...localResult,
+      meta: resolvePersistenceMetadata(false),
+    };
+  }
+
+  const { error } = await supabase.from('bookings').insert({
+    slot_id: input.slotId,
+    booked_by: input.userId,
+    players_count: input.playersCount,
+    buggy_requested: Boolean(input.buggyRequested),
+    notes: input.notes ?? null,
+    status: 'confirmed',
+  });
+
+  if (error) {
+    throw new Error(`Error del servidor al confirmar reserva: ${error.message}`);
+  }
+
+  return {
+    ...localResult,
+    meta: resolvePersistenceMetadata(true),
+  };
+}
+
+/**
+ * Ejecuta una confirmación o cancelación de RSVP contra Supabase si está configurado
+ * (donde el trigger `trg_event_rsvps_enforce_capacity` aplica el aforo atómico en servidor),
+ * o en memoria local indicando explícitamente `persistence = 'demo_memory_only'`.
+ */
+export async function submitEventRsvp(
+  events: SpecialEventItem[],
+  params: {
+    eventId: string;
+    userId: string;
+    userName: string;
+    guestsCount: number;
+    desiredStatus: 'attending' | 'cancelled';
+  }
+): Promise<{
+  updatedEvents: SpecialEventItem[];
+  assignedStatus: EventRsvpStatus;
+  meta: ActionPersistenceMetadata;
+}> {
+  const localResult = upsertEventRsvp(events, params);
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    return {
+      ...localResult,
+      meta: resolvePersistenceMetadata(false),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('event_rsvps')
+    .upsert(
+      {
+        event_id: params.eventId,
+        user_id: params.userId,
+        guests_count: params.guestsCount,
+        status: params.desiredStatus,
+      },
+      { onConflict: 'event_id,user_id' }
+    )
+    .select('status')
+    .single();
+
+  if (error) {
+    throw new Error(`Error del servidor al registrar RSVP: ${error.message}`);
+  }
+
+  const serverAssignedStatus =
+    (data?.status as EventRsvpStatus | undefined) ?? localResult.assignedStatus;
+
+  return {
+    updatedEvents: localResult.updatedEvents,
+    assignedStatus: serverAssignedStatus,
+    meta: resolvePersistenceMetadata(true),
+  };
 }
 
 // ============================================================================

@@ -90,26 +90,33 @@ Antes de dar por cerrada cualquier fase en [`BACKLOG.md`](../../../BACKLOG.md):
 
 Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la lógica WHS/Stableford o modifiques la sincronización offline del marcador:
 
-1. **Normalización y alta de recorridos (`src/lib/golf-api/`)**:
-   - Todo payload externo de `golfapi.io` / `GolfCourseAPI` debe pasar por `normalizeExternalCoursePayload` en [`src/lib/golf-api/index.ts`](../../../src/lib/golf-api/index.ts) o por la Edge Function [`supabase/functions/sync-golf-course/index.ts`](../../../supabase/functions/sync-golf-course/index.ts) (restringida a `club_admin` y `superadmin`).
-   - Verifica que los 18 hoyos tengan `strokeIndex` únicos del `1` al `18` y coordenadas GPS (`greenFrontLat/Lng`, `greenCenterLat/Lng`, `greenBackLat/Lng`).
-2. **Caché offline de hoyos en SQLite**:
-   - Invoca `syncCourseToOfflineCache(courseId)` para persistir los 18 hoyos en `cacheCourseData` (`src/lib/capacitor/sqlite.ts`) antes de iniciar una ronda sin cobertura.
-3. **Anotación Offline-First y vaciado de cola (`src/lib/offline-sync/index.ts`)**:
-   - Usa siempre `recordHoleScoreOfflineFirst(params)` para calcular puntos Stableford (`src/lib/scoring/engine.ts`) y guardar en SQLite local con `syncStatus = 'pending'`.
-   - Cuando recupere conectividad (`isOnline`), ejecuta `flushPendingScoresToSupabase()` para enviar los registros pendientes y marcarlos como `synced`.
+1. **Normalización compartida y sincronización transaccional (`src/lib/golf-api/normalizer.ts`)**:
+   - Todo payload externo de `golfapi.io` / `GolfCourseAPI` debe validarse y normalizarse con `normalizeExternalCoursePayload` y `buildSupabaseCourseSyncBundle` en [`src/lib/golf-api/normalizer.ts`](../../../src/lib/golf-api/normalizer.ts), que es la **fuente única de verdad** compartida entre el cliente Next.js (`src/lib/golf-api/index.ts`) y la Edge Function Deno (`supabase/functions/sync-golf-course/index.ts`).
+   - El normalizador exige 9 o 18 hoyos con `strokeIndex` únicos, coordenadas GPS en rango (`-90..90` / `-180..180`), `slopeRating` (`55..155`) y deduplicación de barras por `(name, gender)`.
+   - La Edge Function persiste el campo invocando la función RPC transaccional `public.sync_golf_course_atomic(p_course, p_tees, p_holes)` en PostgreSQL (`ON CONFLICT (course_id, name, gender) DO UPDATE` y `ON CONFLICT (course_id, hole_number) DO UPDATE`) para impedir tees duplicados o campos parcialmente sincronizados.
+2. **Caché offline y conexión nativa SQLite (`src/lib/capacitor/sqlite.ts`)**:
+   - `initOfflineDatabase()` abre y almacena la instancia singleton `SQLiteDBConnection` en Android nativo (`@capacitor-community/sqlite`), reutilizada por todas las operaciones CRUD (`saveOfflineHoleScore`, `getOfflineRoundScores`, `getPendingSyncScores`, `markScoreAsSynced`, `cacheCourseData`, `getCachedCourseData`, `clearOfflineStore`), manteniendo el fallback en memoria para Web/SSR.
+   - Invoca `syncCourseToOfflineCache(courseId)` para persistir los hoyos antes de iniciar una ronda sin cobertura.
+3. **Anotación Offline-First (9/18 hoyos), Mutex de concurrencia y control de versiones (`src/lib/offline-sync/index.ts`)**:
+   - Usa `recordHoleScoreOfflineFirst(params)` pasando `holesCount: 9 | 18` para calcular golpes recibidos WHS y puntos Stableford (`src/lib/scoring/engine.ts`). Cada edición guarda el registro con `syncStatus = 'pending'` e incrementa monotónicamente `revision`.
+   - `flushPendingScoresToSupabase()` utiliza un mutex en vuelo (`activeFlushPromise`) para evitar que dos vaciados concurrentes dupliquen envíos, y pasa `expectedRevision = scoreSnapshot.revision` a `markScoreAsSynced` para que una respuesta tardía de una versión antigua nunca marque como `'synced'` una edición más reciente.
+   - Si no hay conexión (`skipped_offline`) o Supabase no está configurado (`skipped_unconfigured`), **nunca** marca golpes como sincronizados de forma ficticia: devuelve `syncedCount: 0` y conserva los registros en `'pending'`.
    - En los tests unitarios de Vitest, limpia siempre el almacén en `beforeEach` mediante `await clearOfflineStore()`.
 
 ---
 
-## Flujo 5: Competición, Reservas de Salidas y Clasificación WHS (`src/lib/competition/`)
+## Flujo 5: Competición, Reservas Atómicas y Separación Demo vs. Producción (`src/lib/competition/`)
 
 Sigue estos pasos cuando modifiques o extiendas los módulos de Reservas (`/bookings`), Calendario (`/calendar`), Torneos (`/tournaments`) o Eventos (`/events`):
 
-1. **Reservas de Tee Times (`createTeeTimeBooking` / `cancelTeeTimeBooking`)**:
-   - Verifica siempre `playersCount` entre `1` y `4`, que `slot.isBlocked` sea `false` y que `playersCount <= getAvailableSeatsInSlot(slot)`.
-   - Respeta la paridad con la política RLS de `public.tee_time_bookings`: un `player` solo puede cancelar reservas donde `booking.userId === actorUserId`, mientras que `club_admin` y `superadmin` pueden cancelar cualquier reserva.
+1. **Reservas de Tee Times (`createTeeTimeBooking` / `submitTeeTimeBooking` / `cancelTeeTimeBooking`)**:
+   - Verifica en cliente `playersCount` entre `1` y `4`, que `slot.isBlocked` sea `false` y que `playersCount <= getAvailableSeatsInSlot(slot)`.
+   - En PostgreSQL (`20261027000004_tournaments_bookings_events.sql`), el trigger `trg_bookings_enforce_slot_capacity` (`public.enforce_tee_time_slot_capacity`) bloquea la fila de `tee_time_slots` con `FOR UPDATE` para garantizar que dos solicitudes simultáneas nunca superen `max_players`.
+   - En `public.hole_scores` (`20261027000003_scorecards_and_stats.sql`), las políticas RLS de `INSERT`/`UPDATE` exigen `player_id = auth.uid()` (o rol admin) y el trigger `trg_hole_scores_immutable_identity` impide mutar `player_id`, `round_id` o `hole_number`.
 2. **Clasificación de Torneos (`rankTournamentLeaderboard`)**:
    - Soporta las 3 modalidades (`stableford`, `stroke_play_net`, `stroke_play_gross`) aplicando desempate automático por segunda vuelta (`backNineStablefordPoints`) y menor `playingHandicap`.
-3. **Eventos Especiales y Lista de Espera (`upsertEventRsvp`)**:
-   - Valida acompañantes (`0..3`) y asigna automáticamente `status = 'waitlist'` cuando `getConfirmedEventAttendeesCount(event) + 1 + guestsCount > event.maxCapacity`.
+3. **Eventos Especiales y Lista de Espera Atómica (`upsertEventRsvp` / `submitEventRsvp`)**:
+   - Tanto la interfaz como la restricción `CHECK (guests_count BETWEEN 0 AND 3)` en `public.event_rsvps` limitan los acompañantes a `0..3`.
+   - El trigger `trg_event_rsvps_enforce_capacity` (`public.enforce_event_rsvp_capacity`) bloquea `public.special_events` con `FOR UPDATE` en servidor y degrada automáticamente `status` a `'waitlist'` si `asistentes_confirmados + 1 + guests_count > capacity`.
+4. **Transparencia Demo vs. Producción (`resolvePersistenceMetadata`)**:
+   - Cuando `isSupabaseConfigured()` es `false`, toda acción interactiva devuelve `persistence: 'demo_memory_only'` y `persistedToBackend: false`, mostrando en la UI un aviso explícito de que el cambio vive únicamente en la memoria de sesión y no se ha persistido en Supabase.

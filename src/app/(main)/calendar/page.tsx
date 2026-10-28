@@ -7,6 +7,7 @@ import {
   filterCalendarMatches,
   INITIAL_CALENDAR_MATCHES,
   joinOpenMatch,
+  resolvePersistenceMetadata,
   type CalendarMatchItem,
 } from '@/lib/competition';
 import {
@@ -49,10 +50,11 @@ export default function MatchCalendarPage() {
         playerName: profile.fullName,
         handicapIndex: profile.handicapIndex,
       });
+      const meta = resolvePersistenceMetadata();
       setMatches(updated);
       setBanner({
         type: 'ok',
-        message: `Te has unido correctamente a la partida con hándicap ${profile.handicapIndex}.`,
+        message: `Unido a la partida con hándicap ${profile.handicapIndex}. ${meta.notice}`,
       });
     } catch (err) {
       setBanner({

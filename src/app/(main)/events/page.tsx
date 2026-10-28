@@ -6,7 +6,7 @@ import { useClub } from '@/components/providers/ClubProvider';
 import {
   getConfirmedEventAttendeesCount,
   INITIAL_SPECIAL_EVENTS,
-  upsertEventRsvp,
+  submitEventRsvp,
   type SpecialEventItem,
 } from '@/lib/competition';
 import {
@@ -29,38 +29,40 @@ export default function SpecialEventsPage() {
     message: string;
   } | null>(null);
 
-  const handleRsvp = (
+  const handleRsvp = async (
     eventId: string,
     desiredStatus: 'attending' | 'cancelled'
   ) => {
     try {
       const guestsCount = guestsByEvent[eventId] ?? 0;
-      const { updatedEvents, assignedStatus } = upsertEventRsvp(events, {
-        eventId,
-        userId: profile.id,
-        userName: profile.fullName,
-        guestsCount,
-        desiredStatus,
-      });
+      const { updatedEvents, assignedStatus, meta } = await submitEventRsvp(
+        events,
+        {
+          eventId,
+          userId: profile.id,
+          userName: profile.fullName,
+          guestsCount,
+          desiredStatus,
+        }
+      );
       setEvents(updatedEvents);
 
       if (assignedStatus === 'attending') {
         setBanner({
           type: 'ok',
-          message: `Asistencia confirmada para ${profile.fullName}${
+          message: `Asistencia registrada para ${profile.fullName}${
             guestsCount > 0 ? ` + ${guestsCount} acompañante(s)` : ''
-          }.`,
+          }. ${meta.notice}`,
         });
       } else if (assignedStatus === 'waitlist') {
         setBanner({
           type: 'ok',
-          message:
-            'Aforo completo: has quedado registrado automáticamente en la Lista de Espera.',
+          message: `Aforo completo: asignado a Lista de Espera. ${meta.notice}`,
         });
       } else {
         setBanner({
           type: 'ok',
-          message: 'Tu asistencia al evento ha sido cancelada.',
+          message: `Tu asistencia al evento ha sido cancelada. ${meta.notice}`,
         });
       }
     } catch (err) {

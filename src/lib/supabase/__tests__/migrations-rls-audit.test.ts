@@ -100,6 +100,41 @@ describe('Auditoría de Esquema Supabase, RLS y Suite pgTAP', () => {
     );
   });
 
+  it('verifica las protecciones de integridad de Fase 3B (RPC transaccional de campos, RLS estricto e inmutabilidad en hole_scores, y triggers FOR UPDATE de aforo en bookings y event_rsvps)', () => {
+    // Hallazgo 7: RPC transaccional sync_golf_course_atomic y unicidad de tees
+    expect(combinedMigrationsSql).toContain(
+      'CREATE OR REPLACE FUNCTION public.sync_golf_course_atomic('
+    );
+    expect(combinedMigrationsSql).toContain(
+      'ON CONFLICT (course_id, name, gender) DO UPDATE'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'ON CONFLICT (course_id, hole_number) DO UPDATE'
+    );
+
+    // Hallazgo 5: RLS de hole_scores restringido al jugador propietario o admin + trigger de identidad inmutable
+    expect(combinedMigrationsSql).toContain(
+      'CREATE POLICY "hole_scores_insert_active_round_owner_or_admin"'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'CREATE POLICY "hole_scores_update_active_round_owner_or_admin"'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'CREATE TRIGGER trg_hole_scores_immutable_identity'
+    );
+
+    // Hallazgos 4 y 9: Límite guests_count BETWEEN 0 AND 3 y triggers atómicos con bloqueo FOR UPDATE
+    expect(combinedMigrationsSql).toContain(
+      'guests_count INT NOT NULL DEFAULT 0 CHECK (guests_count BETWEEN 0 AND 3)'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'CREATE TRIGGER trg_bookings_enforce_slot_capacity'
+    );
+    expect(combinedMigrationsSql).toContain(
+      'CREATE TRIGGER trg_event_rsvps_enforce_capacity'
+    );
+  });
+
   it('verifica la consistencia de los 3 archivos de pruebas pgTAP (plan vs número de aserciones)', () => {
     const pgtapFiles = fs
       .readdirSync(PGTAP_TESTS_DIR)

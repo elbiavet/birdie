@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  buildSupabaseCourseSyncBundle,
   calculateCourseNineTotals,
   GOLF_API_COURSES_CATALOG,
   getCourseById,
@@ -72,7 +73,7 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     expect(blueTotals.totalMeters).toBeGreaterThan(redTotals.totalMeters);
   });
 
-  it('normaliza payloads crudos de proveedores externos con o sin barras explícitas y rechaza payloads inválidos', () => {
+  it('normaliza payloads crudos de proveedores externos, deduplica barras (name + gender) y rechaza valores ausentes o inválidos', () => {
     const rawPayload = {
       courseID: 'ext_999',
       courseName: 'Real Club de Prueba',
@@ -90,6 +91,15 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
           courseRating: 72.4,
           slopeRating: 131,
           totalMeters: 3150,
+        },
+        {
+          teeID: 'tee-custom-1-dup',
+          teeName: 'campeonato',
+          teeColor: '#000000',
+          gender: 'men' as const,
+          courseRating: 72.8,
+          slopeRating: 133,
+          totalMeters: 3165,
         },
       ],
       holes: Array.from({ length: 9 }, (_, i) => ({
@@ -110,10 +120,17 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     expect(normalized.externalGolfApiId).toBe('ext_999');
     expect(normalized.holesCount).toBe(9);
     expect(normalized.parTotal).toBe(36);
+    // Las 2 barras con el mismo (name, gender) deben deduplicarse en 1 sola
     expect(normalized.tees).toHaveLength(1);
-    expect(normalized.tees[0].name).toBe('Campeonato');
-    expect(normalized.tees[0].slopeRating).toBe(131);
+    expect(normalized.tees[0].name).toBe('campeonato');
+    expect(normalized.tees[0].slopeRating).toBe(133);
 
+    const bundle = buildSupabaseCourseSyncBundle(rawPayload);
+    expect(bundle.course.external_golf_api_id).toBe('ext_999');
+    expect(bundle.tees).toHaveLength(1);
+    expect(bundle.holes).toHaveLength(9);
+
+    // Rechaza payload con campos vacíos o sin hoyos
     expect(() =>
       normalizeExternalCoursePayload({
         courseID: '',
@@ -126,6 +143,48 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
         holes: [],
       })
     ).toThrow(/Payload de Golf API inválido/);
+
+    // Rechaza número de hoyos distinto de 9 o 18
+    expect(() =>
+      normalizeExternalCoursePayload({
+        ...rawPayload,
+        holes: rawPayload.holes.slice(0, 5),
+      })
+    ).toThrow(/9 o 18 hoyos/);
+
+    // Rechaza coordenadas GPS fuera de rango
+    expect(() =>
+      normalizeExternalCoursePayload({
+        ...rawPayload,
+        lat: 125,
+      })
+    ).toThrow(/coordenadas lat\/lng del campo ausentes o fuera de rango/);
+
+    // Rechaza slopeRating fuera del rango oficial WHS (55..155)
+    expect(() =>
+      normalizeExternalCoursePayload({
+        ...rawPayload,
+        tees: [
+          {
+            teeID: 't-bad',
+            teeName: 'Blancas',
+            teeColor: '#fff',
+            gender: 'men',
+            courseRating: 72,
+            slopeRating: 200,
+            totalMeters: 6000,
+          },
+        ],
+      })
+    ).toThrow(/slopeRating o courseRating fuera de rango/);
+
+    // Rechaza hoyos con strokeIndex duplicado
+    expect(() =>
+      normalizeExternalCoursePayload({
+        ...rawPayload,
+        holes: rawPayload.holes.map((h) => ({ ...h, handicap: 1 })),
+      })
+    ).toThrow(/strokeIndex\/handicap duplicado/);
   });
 
   it('sincroniza los 18 hoyos de un recorrido en la caché SQLite local y lanza error si el campo no existe', async () => {
@@ -142,7 +201,7 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     );
   });
 
-  it('verifica que la Edge Function sync-golf-course valida roles club_admin/superadmin y hace upsert en courses, course_tees y course_holes', () => {
+  it('verifica que la Edge Function sync-golf-course comparte el normalizador único y ejecuta el RPC transaccional sync_golf_course_atomic', () => {
     const edgeFnPath = path.resolve(
       process.cwd(),
       'supabase/functions/sync-golf-course/index.ts'
@@ -152,9 +211,8 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     const source = fs.readFileSync(edgeFnPath, 'utf-8');
     expect(source).toContain("userRole !== 'club_admin'");
     expect(source).toContain("userRole !== 'superadmin'");
-    expect(source).toContain(".from('courses')");
-    expect(source).toContain(".from('course_tees')");
-    expect(source).toContain(".from('course_holes')");
-    expect(source).toContain('onConflict: \'course_id,hole_number\'');
+    expect(source).toContain('../../../src/lib/golf-api/normalizer.ts');
+    expect(source).toContain('buildSupabaseCourseSyncBundle');
+    expect(source).toContain("'sync_golf_course_atomic'");
   });
 });

@@ -5,10 +5,11 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
   cancelTeeTimeBooking,
-  createTeeTimeBooking,
   getAvailableSeatsInSlot,
   getBookedPlayersInSlot,
   INITIAL_TEE_TIME_SLOTS,
+  resolvePersistenceMetadata,
+  submitTeeTimeBooking,
   type TeeTimeSlot,
 } from '@/lib/competition';
 import {
@@ -53,22 +54,25 @@ export default function TeeTimeBookingsPage() {
     [filteredSlots, selectedSlotId, slots]
   );
 
-  const handleCreateBooking = (e: React.FormEvent) => {
+  const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { updatedSlots, createdBooking } = createTeeTimeBooking(slots, {
-        slotId: activeSlot.id,
-        userId: profile.id,
-        userName: profile.fullName,
-        playersCount,
-        buggyRequested,
-        notes,
-      });
+      const { updatedSlots, createdBooking, meta } = await submitTeeTimeBooking(
+        slots,
+        {
+          slotId: activeSlot.id,
+          userId: profile.id,
+          userName: profile.fullName,
+          playersCount,
+          buggyRequested,
+          notes,
+        }
+      );
       setSlots(updatedSlots);
       setNotes('');
       setFeedback({
         type: 'ok',
-        message: `Reserva confirmada a las ${activeSlot.slotTime} para ${createdBooking.playersCount} jugador(es).`,
+        message: `Salida ${activeSlot.slotTime} (${createdBooking.playersCount} jug.): ${meta.notice}`,
       });
     } catch (err) {
       setFeedback({
@@ -81,10 +85,11 @@ export default function TeeTimeBookingsPage() {
   const handleCancelBooking = (bookingId: string) => {
     try {
       const next = cancelTeeTimeBooking(slots, bookingId, profile.id, profile.role);
+      const meta = resolvePersistenceMetadata();
       setSlots(next);
       setFeedback({
         type: 'ok',
-        message: 'Reserva cancelada correctamente y plazas liberadas.',
+        message: `Reserva cancelada y plazas liberadas. ${meta.notice}`,
       });
     } catch (err) {
       setFeedback({

@@ -3,9 +3,15 @@
 // Sincroniza un campo desde el proveedor Golf API externo hacia las tablas
 // public.courses, public.course_tees y public.course_holes del club.
 // Restringido a usuarios con rol 'club_admin' o 'superadmin'.
+// Comparte la misma fuente de verdad de validación/normalización que el cliente
+// (`src/lib/golf-api/normalizer.ts`) y ejecuta la operación de forma atómica.
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import {
+  buildSupabaseCourseSyncBundle,
+  normalizeExternalCoursePayload,
+} from '../../../src/lib/golf-api/normalizer.ts';
 
 interface SyncCourseRequestBody {
   externalCourseId: string;
@@ -91,107 +97,53 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const externalCourse = await apiResponse.json();
+    const rawExternalPayload = await apiResponse.json();
 
-    // 3. Upsert en public.courses
-    const { data: upsertedCourse, error: courseError } = await supabase
-      .from('courses')
-      .upsert(
-        {
-          external_golf_api_id: body.externalCourseId,
-          name: externalCourse.courseName,
-          club_name: externalCourse.clubName ?? externalCourse.courseName,
-          city: externalCourse.city ?? null,
-          country: externalCourse.country ?? 'España',
-          holes_count: externalCourse.holes?.length === 9 ? 9 : 18,
-          par_total:
-            externalCourse.holes?.reduce(
-              (acc: number, h: { par: number }) => acc + h.par,
-              0
-            ) ?? 72,
-          latitude: externalCourse.lat,
-          longitude: externalCourse.lng,
-          is_home_course: Boolean(body.isHomeCourse),
-          last_synced_at: new Date().toISOString(),
-        },
-        { onConflict: 'external_golf_api_id' }
-      )
-      .select('id')
-      .single();
-
-    if (courseError || !upsertedCourse) {
-      throw new Error(courseError?.message ?? 'Error al guardar el campo en public.courses');
+    // 3. Validar y normalizar usando la fuente única de verdad compartida con el cliente
+    let normalizedCourse;
+    try {
+      normalizedCourse = normalizeExternalCoursePayload(rawExternalPayload);
+    } catch (validationErr) {
+      const msg =
+        validationErr instanceof Error
+          ? validationErr.message
+          : 'Payload externo de Golf API inválido';
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    // 4. Sincronizar barras de salida en public.course_tees
-    if (Array.isArray(externalCourse.tees) && externalCourse.tees.length > 0) {
-      const teeRows = externalCourse.tees.map(
-        (t: {
-          teeName: string;
-          teeColor?: string;
-          gender?: string;
-          courseRating: number;
-          slopeRating: number;
-          totalMeters: number;
-        }) => ({
-          course_id: upsertedCourse.id,
-          name: t.teeName,
-          color_hex: t.teeColor ?? '#FACC15',
-          gender: t.gender ?? 'mixed',
-          course_rating: t.courseRating,
-          slope_rating: t.slopeRating,
-          total_distance_meters: t.totalMeters,
-        })
+    const bundle = buildSupabaseCourseSyncBundle(
+      normalizedCourse,
+      Boolean(body.isHomeCourse)
+    );
+
+    // 4. Ejecutar sincronización transaccional atómica en PostgreSQL (`sync_golf_course_atomic`)
+    // para evitar tees duplicados (ON CONFLICT (course_id, name, gender)) o campos parcialmente sincronizados
+    const { data: syncedCourseId, error: rpcError } = await supabase.rpc(
+      'sync_golf_course_atomic',
+      {
+        p_course: bundle.course,
+        p_tees: bundle.tees,
+        p_holes: bundle.holes,
+      }
+    );
+
+    if (rpcError || !syncedCourseId) {
+      throw new Error(
+        rpcError?.message ??
+          'Error en la transacción sync_golf_course_atomic al sincronizar campo, barras y hoyos.'
       );
-
-      await supabase.from('course_tees').insert(teeRows);
-    }
-
-    // 5. Upsert de los hoyos y coordenadas GPS en public.course_holes
-    if (Array.isArray(externalCourse.holes) && externalCourse.holes.length > 0) {
-      const holeRows = externalCourse.holes.map(
-        (h: {
-          hole: number;
-          par: number;
-          handicap: number;
-          whiteMeters?: number;
-          yellowMeters: number;
-          blueMeters?: number;
-          redMeters?: number;
-          greenFrontLat: number;
-          greenFrontLng: number;
-          greenCenterLat: number;
-          greenCenterLng: number;
-          greenBackLat: number;
-          greenBackLng: number;
-        }) => ({
-          course_id: upsertedCourse.id,
-          hole_number: h.hole,
-          par: h.par,
-          stroke_index: h.handicap,
-          distance_white_meters: h.whiteMeters ?? h.yellowMeters + 15,
-          distance_yellow_meters: h.yellowMeters,
-          distance_blue_meters: h.blueMeters ?? Math.max(90, h.yellowMeters - 25),
-          distance_red_meters: h.redMeters ?? Math.max(80, h.yellowMeters - 45),
-          green_front_lat: h.greenFrontLat,
-          green_front_lng: h.greenFrontLng,
-          green_center_lat: h.greenCenterLat,
-          green_center_lng: h.greenCenterLng,
-          green_back_lat: h.greenBackLat,
-          green_back_lng: h.greenBackLng,
-        })
-      );
-
-      await supabase
-        .from('course_holes')
-        .upsert(holeRows, { onConflict: 'course_id,hole_number' });
     }
 
     return new Response(
       JSON.stringify({
         status: 'synced',
-        courseId: upsertedCourse.id,
-        externalCourseId: body.externalCourseId,
+        courseId: syncedCourseId,
+        externalCourseId: normalizedCourse.externalGolfApiId,
+        holesSynced: normalizedCourse.holes.length,
+        teesSynced: normalizedCourse.tees.length,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

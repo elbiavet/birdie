@@ -7,6 +7,7 @@ import {
   INITIAL_TOURNAMENTS,
   rankTournamentLeaderboard,
   registerPlayerInTournament,
+  resolvePersistenceMetadata,
   type TournamentDefinition,
   type TournamentScoringMode,
 } from '@/lib/competition';
@@ -57,12 +58,13 @@ export default function TournamentsAndLeaderboardPage() {
         playerName: profile.fullName,
         handicapIndex: profile.handicapIndex,
       });
+      const meta = resolvePersistenceMetadata();
       setTournaments((prev) =>
         prev.map((t) => (t.id === updated.id ? updated : t))
       );
       setBanner({
         type: 'ok',
-        message: `Inscripción confirmada en "${activeTournament.name}" para ${profile.fullName}.`,
+        message: `Inscrito en "${activeTournament.name}" (${profile.fullName}). ${meta.notice}`,
       });
     } catch (err) {
       setBanner({

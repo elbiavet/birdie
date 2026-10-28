@@ -174,12 +174,10 @@ CREATE POLICY "round_players_update_participant_or_admin"
   TO authenticated
   USING (
     player_id = auth.uid()
-    OR public.is_participant_in_round(round_id)
     OR public.is_club_admin_or_superadmin()
   )
   WITH CHECK (
     player_id = auth.uid()
-    OR public.is_participant_in_round(round_id)
     OR public.is_club_admin_or_superadmin()
   );
 
@@ -192,7 +190,7 @@ CREATE POLICY "round_players_delete_creator_or_admin"
     OR public.is_club_admin_or_superadmin()
   );
 
--- 3. Políticas para public.hole_scores
+-- 3. Políticas para public.hole_scores (escritura restringida estrictamente al propio player_id = auth.uid() o rol administrativo)
 CREATE POLICY "hole_scores_select_visible"
   ON public.hole_scores
   FOR SELECT
@@ -206,14 +204,15 @@ CREATE POLICY "hole_scores_select_visible"
     )
   );
 
-CREATE POLICY "hole_scores_insert_active_round_participant_or_admin"
+CREATE POLICY "hole_scores_insert_active_round_owner_or_admin"
   ON public.hole_scores
   FOR INSERT
   TO authenticated
   WITH CHECK (
     public.is_club_admin_or_superadmin()
     OR (
-      (player_id = auth.uid() OR public.is_participant_in_round(round_id))
+      player_id = auth.uid()
+      AND public.is_participant_in_round(round_id)
       AND EXISTS (
         SELECT 1 FROM public.rounds r
         WHERE r.id = hole_scores.round_id AND r.status = 'in_progress'
@@ -221,14 +220,15 @@ CREATE POLICY "hole_scores_insert_active_round_participant_or_admin"
     )
   );
 
-CREATE POLICY "hole_scores_update_active_round_participant_or_admin"
+CREATE POLICY "hole_scores_update_active_round_owner_or_admin"
   ON public.hole_scores
   FOR UPDATE
   TO authenticated
   USING (
     public.is_club_admin_or_superadmin()
     OR (
-      (player_id = auth.uid() OR public.is_participant_in_round(round_id))
+      player_id = auth.uid()
+      AND public.is_participant_in_round(round_id)
       AND EXISTS (
         SELECT 1 FROM public.rounds r
         WHERE r.id = hole_scores.round_id AND r.status = 'in_progress'
@@ -238,7 +238,8 @@ CREATE POLICY "hole_scores_update_active_round_participant_or_admin"
   WITH CHECK (
     public.is_club_admin_or_superadmin()
     OR (
-      (player_id = auth.uid() OR public.is_participant_in_round(round_id))
+      player_id = auth.uid()
+      AND public.is_participant_in_round(round_id)
       AND EXISTS (
         SELECT 1 FROM public.rounds r
         WHERE r.id = hole_scores.round_id AND r.status = 'in_progress'
@@ -260,3 +261,26 @@ CREATE POLICY "hole_scores_delete_admin_or_owner_in_progress"
       )
     )
   );
+
+-- Trigger de integridad en public.hole_scores para impedir cambiar player_id, round_id o hole_number en un UPDATE
+CREATE OR REPLACE FUNCTION public.prevent_hole_score_identity_mutation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF OLD.player_id <> NEW.player_id OR OLD.round_id <> NEW.round_id OR OLD.hole_number <> NEW.hole_number THEN
+    RAISE EXCEPTION 'No se permite modificar player_id, round_id ni hole_number de un golpe existente.'
+      USING ERRCODE = '42501';
+  END IF;
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_hole_scores_immutable_identity ON public.hole_scores;
+CREATE TRIGGER trg_hole_scores_immutable_identity
+  BEFORE UPDATE ON public.hole_scores
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_hole_score_identity_mutation();

@@ -138,3 +138,165 @@ CREATE POLICY "hole_pois_write_admin_only"
   ON public.hole_pois FOR ALL TO authenticated
   USING (public.is_club_admin_or_superadmin())
   WITH CHECK (public.is_club_admin_or_superadmin());
+
+-- ============================================================================
+-- FUNCIÓN RPC TRANSACCIONAL: public.sync_golf_course_atomic
+-- Garantiza que la sincronización de un campo desde Golf API actualice
+-- public.courses, public.course_tees y public.course_holes en una única
+-- transacción atómica, haciendo upsert de barras por (course_id, name, gender)
+-- sin duplicarlas y revirtiendo todo si falla cualquier fila.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.sync_golf_course_atomic(
+  p_course JSONB,
+  p_tees JSONB,
+  p_holes JSONB
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_course_id UUID;
+BEGIN
+  IF NOT public.is_club_admin_or_superadmin() THEN
+    RAISE EXCEPTION 'Permiso denegado: solo club_admin o superadmin pueden sincronizar campos.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO public.courses (
+    external_golf_api_id,
+    name,
+    club_name,
+    city,
+    country,
+    holes_count,
+    par_total,
+    latitude,
+    longitude,
+    address,
+    phone,
+    website,
+    is_home_course,
+    last_synced_at,
+    updated_at
+  )
+  VALUES (
+    p_course->>'external_golf_api_id',
+    p_course->>'name',
+    COALESCE(p_course->>'club_name', p_course->>'name'),
+    p_course->>'city',
+    COALESCE(p_course->>'country', 'España'),
+    COALESCE((p_course->>'holes_count')::INT, 18),
+    COALESCE((p_course->>'par_total')::INT, 72),
+    (p_course->>'latitude')::NUMERIC,
+    (p_course->>'longitude')::NUMERIC,
+    p_course->>'address',
+    p_course->>'phone',
+    p_course->>'website',
+    COALESCE((p_course->>'is_home_course')::BOOLEAN, false),
+    now(),
+    now()
+  )
+  ON CONFLICT (external_golf_api_id) DO UPDATE SET
+    name = EXCLUDED.name,
+    club_name = EXCLUDED.club_name,
+    city = EXCLUDED.city,
+    country = EXCLUDED.country,
+    holes_count = EXCLUDED.holes_count,
+    par_total = EXCLUDED.par_total,
+    latitude = EXCLUDED.latitude,
+    longitude = EXCLUDED.longitude,
+    address = EXCLUDED.address,
+    phone = EXCLUDED.phone,
+    website = EXCLUDED.website,
+    is_home_course = EXCLUDED.is_home_course,
+    last_synced_at = now(),
+    updated_at = now()
+  RETURNING id INTO v_course_id;
+
+  -- Upsert idempotente de barras de salida sin duplicar (UNIQUE (course_id, name, gender))
+  IF jsonb_typeof(p_tees) = 'array' AND jsonb_array_length(p_tees) > 0 THEN
+    INSERT INTO public.course_tees (
+      course_id,
+      name,
+      color_hex,
+      gender,
+      course_rating,
+      slope_rating,
+      total_distance_meters
+    )
+    SELECT
+      v_course_id,
+      t->>'name',
+      COALESCE(t->>'color_hex', '#FACC15'),
+      COALESCE(t->>'gender', 'mixed'),
+      (t->>'course_rating')::NUMERIC,
+      (t->>'slope_rating')::INT,
+      (t->>'total_distance_meters')::INT
+    FROM jsonb_array_elements(p_tees) AS t
+    ON CONFLICT (course_id, name, gender) DO UPDATE SET
+      color_hex = EXCLUDED.color_hex,
+      course_rating = EXCLUDED.course_rating,
+      slope_rating = EXCLUDED.slope_rating,
+      total_distance_meters = EXCLUDED.total_distance_meters;
+  END IF;
+
+  -- Upsert idempotente de hoyos (UNIQUE (course_id, hole_number))
+  IF jsonb_typeof(p_holes) = 'array' AND jsonb_array_length(p_holes) > 0 THEN
+    INSERT INTO public.course_holes (
+      course_id,
+      hole_number,
+      par,
+      stroke_index,
+      distance_white_meters,
+      distance_yellow_meters,
+      distance_blue_meters,
+      distance_red_meters,
+      tee_lat,
+      tee_lng,
+      green_front_lat,
+      green_front_lng,
+      green_center_lat,
+      green_center_lng,
+      green_back_lat,
+      green_back_lng
+    )
+    SELECT
+      v_course_id,
+      (h->>'hole_number')::INT,
+      (h->>'par')::INT,
+      (h->>'stroke_index')::INT,
+      (h->>'distance_white_meters')::INT,
+      (h->>'distance_yellow_meters')::INT,
+      (h->>'distance_blue_meters')::INT,
+      (h->>'distance_red_meters')::INT,
+      (h->>'tee_lat')::NUMERIC,
+      (h->>'tee_lng')::NUMERIC,
+      (h->>'green_front_lat')::NUMERIC,
+      (h->>'green_front_lng')::NUMERIC,
+      (h->>'green_center_lat')::NUMERIC,
+      (h->>'green_center_lng')::NUMERIC,
+      (h->>'green_back_lat')::NUMERIC,
+      (h->>'green_back_lng')::NUMERIC
+    FROM jsonb_array_elements(p_holes) AS h
+    ON CONFLICT (course_id, hole_number) DO UPDATE SET
+      par = EXCLUDED.par,
+      stroke_index = EXCLUDED.stroke_index,
+      distance_white_meters = EXCLUDED.distance_white_meters,
+      distance_yellow_meters = EXCLUDED.distance_yellow_meters,
+      distance_blue_meters = EXCLUDED.distance_blue_meters,
+      distance_red_meters = EXCLUDED.distance_red_meters,
+      tee_lat = EXCLUDED.tee_lat,
+      tee_lng = EXCLUDED.tee_lng,
+      green_front_lat = EXCLUDED.green_front_lat,
+      green_front_lng = EXCLUDED.green_front_lng,
+      green_center_lat = EXCLUDED.green_center_lat,
+      green_center_lng = EXCLUDED.green_center_lng,
+      green_back_lat = EXCLUDED.green_back_lat,
+      green_back_lng = EXCLUDED.green_back_lng;
+  END IF;
+
+  RETURN v_course_id;
+END;
+$$;
