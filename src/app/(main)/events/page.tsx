@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
   getConfirmedEventAttendeesCount,
@@ -74,8 +73,7 @@ export default function SpecialEventsPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Cabecera */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
@@ -227,6 +225,5 @@ export default function SpecialEventsPage() {
           })}
         </section>
       </div>
-    </AppShell>
   );
 }

@@ -189,6 +189,19 @@
 
 ---
 
+## Fase 3C: Corrección de Duplicación de Barra de Navegación y Menú Lateral (`AppShell`)
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F3C-T01` | Eliminar la envoltura redundante `<AppShell>` en las 7 páginas de `src/app/(main)/` (`clubs`, `scorecard`, `stats`, `bookings`, `calendar`, `tournaments`, `events`), ya que `src/app/layout.tsx` monta `<AppShell>{children}</AppShell>` a nivel raíz para toda la aplicación. | `completada` | Ninguna página de `src/app/` monta `<AppShell>` directamente; solo `src/app/layout.tsx` lo envuelve. | **Ejecutado**: Sí (`Get-ChildItem -Path src/app -Recurse -File \| Select-String -Pattern "AppShell"`). **Resultado**: PASS — Único montaje de `<AppShell>` en `src/app/layout.tsx`. |
+| `F3C-T02` | Añadir guardia de idempotencia mediante contexto React (`AppShellNestedContext`) en `src/components/layout/AppShell.tsx` para garantizar que, aunque algún componente o vista futura anide `<AppShell>` por error, jamás se duplique la cabecera (`<header>`), el menú lateral (`<aside>`) ni la barra inferior móvil (`<nav>`). | `completada` | Si `<AppShell>` se renderiza dentro de otro `<AppShell>`, devuelve `{children}` sin duplicar elementos de navegación. | **Ejecutado**: Sí (implementado `AppShellNestedContext` en `src/components/layout/AppShell.tsx`). **Resultado**: PASS — Guardia de anidamiento activa. |
+| `F3C-T03` | **[TEST]** Añadir tests automatizados de no-duplicación de navegación en `src/components/__tests__/app-shell-and-profile.test.tsx`, `src/lib/stats/__tests__/stats-analyzer.test.ts` y `src/lib/competition/__tests__/competition-and-operations.test.ts`, verificando que al renderizar cualquier página dentro de `<AppShell>` existe exactamente 1 `<header>` y 1 `<aside>`, y ejecutar `npm run typecheck`, `npm run test` y `npm run build`. | `completada` | Suite de tests y build estático en verde verificando unicidad de barra superior y menú en todas las rutas. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`, e inspección de `out/**/*.html`). **Resultado**: PASS — `9/9` suites (`50/50` tests) en verde; `12/12` HTML exportados en `out/` con exactamente `1 <header>` y `1 <aside>`. |
+| `F3C-T04` | **[REVISIÓN DE CIERRE FASE 3C]** Auditar criterios de aceptación de la Fase 3C, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog. | `completada` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`). **Resultado**: PASS — `4/4` tareas completadas, regla de no-duplicación de `AppShell` documentada en `.agents/skills/birdie-workflows/SKILL.md` y Fase 3C cerrada. |
+
+> **Estado de la Fase 3C**: **CERRADA (4/4 tareas completadas y verificadas)**.
+
+---
+
 ## Fase 4: Comunidad, Tiempo Real y Administración
 
 | ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |

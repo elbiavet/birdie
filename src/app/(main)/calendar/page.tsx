@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
   filterCalendarMatches,
@@ -65,8 +64,7 @@ export default function MatchCalendarPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Cabecera y Filtros */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -218,6 +216,5 @@ export default function MatchCalendarPage() {
           })}
         </section>
       </div>
-    </AppShell>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { useClub } from '@/components/providers/ClubProvider';
 import {
   computePlayerStatistics,
@@ -64,8 +63,7 @@ export default function PlayerStatsPage() {
   const distTotal = Math.max(1, stats.holesCount);
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Cabecera */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -301,6 +299,5 @@ export default function PlayerStatsPage() {
           </div>
         </section>
       </div>
-    </AppShell>
   );
 }

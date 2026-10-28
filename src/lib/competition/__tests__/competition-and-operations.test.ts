@@ -20,6 +20,7 @@ import {
   submitTeeTimeBooking,
   upsertEventRsvp,
 } from '../index';
+import { AppShell } from '@/components/layout/AppShell';
 import { ClubProvider } from '@/components/providers/ClubProvider';
 import TeeTimeBookingsPage from '@/app/(main)/bookings/page';
 import MatchCalendarPage from '@/app/(main)/calendar/page';
@@ -330,42 +331,58 @@ describe('Competición y Operaciones (Fase 3: Reservas, Calendario, Torneos y Ev
     expect(getConfirmedEventAttendeesCount(step3.updatedEvents[1])).toBe(3);
   });
 
-  it('renderiza mediante SSR las 4 pantallas de la Fase 3 (/bookings, /calendar, /tournaments y /events) dentro de ClubProvider', () => {
+  it('renderiza mediante SSR las 4 pantallas de la Fase 3 (/bookings, /calendar, /tournaments y /events) dentro de ClubProvider + AppShell sin duplicar la barra ni el menú', () => {
     const bookingsHtml = renderToStaticMarkup(
       React.createElement(ClubProvider, {
         initialClubId: 'demo-club',
-        children: React.createElement(TeeTimeBookingsPage),
+        children: React.createElement(AppShell, {
+          children: React.createElement(TeeTimeBookingsPage),
+        }),
       })
     );
     expect(bookingsHtml).toContain('Reservas de Salidas (Tee Times)');
     expect(bookingsHtml).toContain('Confirmar Reserva');
+    expect((bookingsHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((bookingsHtml.match(/<aside/g) ?? []).length).toBe(1);
 
     const calendarHtml = renderToStaticMarkup(
       React.createElement(ClubProvider, {
         initialClubId: 'demo-club',
-        children: React.createElement(MatchCalendarPage),
+        children: React.createElement(AppShell, {
+          children: React.createElement(MatchCalendarPage),
+        }),
       })
     );
     expect(calendarHtml).toContain('Calendario de Partidos');
     expect(calendarHtml).toContain('Fourball Dominguero de Socios');
+    expect((calendarHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((calendarHtml.match(/<aside/g) ?? []).length).toBe(1);
 
     const tournamentsHtml = renderToStaticMarkup(
       React.createElement(ClubProvider, {
         initialClubId: 'demo-club',
-        children: React.createElement(TournamentsAndLeaderboardPage),
+        children: React.createElement(AppShell, {
+          children: React.createElement(TournamentsAndLeaderboardPage),
+        }),
       })
     );
     expect(tournamentsHtml).toContain('Torneos y Resultados (Leaderboard)');
     expect(tournamentsHtml).toContain('Gran Premio de Otoño');
+    expect((tournamentsHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((tournamentsHtml.match(/<aside/g) ?? []).length).toBe(1);
 
     const eventsHtml = renderToStaticMarkup(
       React.createElement(ClubProvider, {
         initialClubId: 'demo-club',
-        children: React.createElement(SpecialEventsPage),
+        children: React.createElement(AppShell, {
+          children: React.createElement(SpecialEventsPage),
+        }),
       })
     );
     expect(eventsHtml).toContain('Eventos Especiales de');
     expect(eventsHtml).toContain('Cena Anual de Gala y Entrega de Trofeos');
+    expect((eventsHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((eventsHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
 
   it('diferencia explícitamente entre modo demo en memoria y persistencia confirmada en Supabase (Hallazgo 10)', async () => {

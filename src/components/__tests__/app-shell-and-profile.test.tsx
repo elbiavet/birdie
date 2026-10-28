@@ -1,12 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
 import { getClubConfig } from '@/lib/club-config';
-import { resolveNavigationItems } from '@/components/layout/AppShell';
+import { AppShell, resolveNavigationItems } from '@/components/layout/AppShell';
+import { ClubProvider } from '@/components/providers/ClubProvider';
+import DashboardPage from '@/app/page';
+import ProfilePage from '@/app/(main)/profile/page';
 import {
   calculatePlayingHandicap,
   DEMO_HANDICAP_HISTORY,
   DEMO_PROFILES_BY_ROLE,
   isSupabaseConfigured,
 } from '@/lib/supabase/client';
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
   it('muestra los 14 módulos de jugador en demo-club (todos los features activos) y oculta /admin a un player', () => {
@@ -78,5 +88,44 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
       )
     ).toBe(true);
+  });
+
+  it('garantiza que la barra superior (<header>) y el menú lateral (<aside>) no se duplican en Inicio, Perfil ni aunque se anide AppShell', () => {
+    const dashboardHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement(DashboardPage),
+        }),
+      })
+    );
+    expect((dashboardHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((dashboardHtml.match(/<aside/g) ?? []).length).toBe(1);
+
+    const profileHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement(ProfilePage),
+        }),
+      })
+    );
+    expect((profileHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((profileHtml.match(/<aside/g) ?? []).length).toBe(1);
+
+    // Incluso si un componente hijo envuelve por error otro <AppShell>, la guardia de contexto evita duplicar header/aside
+    const nestedShellHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement(AppShell, {
+            children: React.createElement('div', null, 'Contenido Único'),
+          }),
+        }),
+      })
+    );
+    expect((nestedShellHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((nestedShellHtml.match(/<aside/g) ?? []).length).toBe(1);
+    expect(nestedShellHtml).toContain('Contenido Único');
   });
 });

@@ -7,6 +7,7 @@ import {
   type AnalyzedHoleSample,
 } from '../analyzer';
 import { HoleGpsPanel } from '@/components/modules/scorecard/HoleGpsPanel';
+import { AppShell } from '@/components/layout/AppShell';
 import { ClubProvider } from '@/components/providers/ClubProvider';
 import ClubsDirectoryPage from '@/app/(main)/clubs/page';
 import ScorecardAndGpsPage from '@/app/(main)/scorecard/page';
@@ -123,35 +124,56 @@ describe('Analizador de Estadísticas Deportivas, Panel GPS y Pantallas Fase 2 (
     expect(html).toContain('Caída de Drive / Dogleg');
   });
 
-  it('renderiza las páginas /clubs, /scorecard y /stats dentro de ClubProvider mostrando datos del recorrido, marcador y analítica', () => {
+  it('renderiza las páginas /clubs, /scorecard y /stats dentro de ClubProvider + AppShell sin duplicar la barra ni el menú', () => {
     const clubsHtml = renderToStaticMarkup(
       React.createElement(
         ClubProvider,
-        { initialClubId: 'demo-club', children: React.createElement(ClubsDirectoryPage) }
+        {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement(ClubsDirectoryPage),
+          }),
+        }
       )
     );
     expect(clubsHtml).toContain('Directorio de Clubes y Campos');
     expect(clubsHtml).toContain('Primera Vuelta — IDA');
     expect(clubsHtml).toContain('Segunda Vuelta — VUELTA');
+    expect((clubsHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((clubsHtml.match(/<aside/g) ?? []).length).toBe(1);
 
     const scorecardHtml = renderToStaticMarkup(
       React.createElement(
         ClubProvider,
-        { initialClubId: 'demo-club', children: React.createElement(ScorecardAndGpsPage) }
+        {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement(ScorecardAndGpsPage),
+          }),
+        }
       )
     );
     expect(scorecardHtml).toContain('Marcador Digital y Telémetro GPS');
     expect(scorecardHtml).toContain('Guardar Hoyo 1 en SQLite Offline');
     expect(scorecardHtml).toContain('Resumen de Tarjeta en Vivo');
+    expect((scorecardHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((scorecardHtml.match(/<aside/g) ?? []).length).toBe(1);
 
     const statsHtml = renderToStaticMarkup(
       React.createElement(
         ClubProvider,
-        { initialClubId: 'demo-club', children: React.createElement(PlayerStatsPage) }
+        {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement(PlayerStatsPage),
+          }),
+        }
       )
     );
     expect(statsHtml).toContain('Estadísticas de Rendimiento');
     expect(statsHtml).toContain('Rendimiento por Par de Hoyo');
     expect(statsHtml).toContain('Distribución de Resultados por Hoyo');
+    expect((statsHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((statsHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
 });

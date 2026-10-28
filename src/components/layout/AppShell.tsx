@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -194,13 +194,21 @@ function getNavIcon(id: string) {
   }
 }
 
+const AppShellNestedContext = createContext<boolean>(false);
+
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const isAlreadyInsideAppShell = useContext(AppShellNestedContext);
   const pathname = usePathname();
   const { club, availableClubIds, switchClub, profile, setRole, isOnline } = useClub();
   const navItems = resolveNavigationItems(club, profile.role);
 
+  if (isAlreadyInsideAppShell) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--club-bg)] text-slate-900">
+    <AppShellNestedContext.Provider value={true}>
+      <div className="min-h-screen flex flex-col bg-[var(--club-bg)] text-slate-900">
       {/* Cabecera White-Label del Club */}
       <header
         style={{
@@ -361,6 +369,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
-    </div>
+      </div>
+    </AppShellNestedContext.Provider>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { useClub } from '@/components/providers/ClubProvider';
 import { HoleGpsPanel } from '@/components/modules/scorecard/HoleGpsPanel';
 import {
@@ -213,8 +212,7 @@ export default function ScorecardAndGpsPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Cabecera de la Ronda y Estado Offline SQLite */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
@@ -606,6 +604,5 @@ export default function ScorecardAndGpsPage() {
           </div>
         </section>
       </div>
-    </AppShell>
   );
 }
