@@ -99,3 +99,17 @@ Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la ló
    - Usa siempre `recordHoleScoreOfflineFirst(params)` para calcular puntos Stableford (`src/lib/scoring/engine.ts`) y guardar en SQLite local con `syncStatus = 'pending'`.
    - Cuando recupere conectividad (`isOnline`), ejecuta `flushPendingScoresToSupabase()` para enviar los registros pendientes y marcarlos como `synced`.
    - En los tests unitarios de Vitest, limpia siempre el almacén en `beforeEach` mediante `await clearOfflineStore()`.
+
+---
+
+## Flujo 5: Competición, Reservas de Salidas y Clasificación WHS (`src/lib/competition/`)
+
+Sigue estos pasos cuando modifiques o extiendas los módulos de Reservas (`/bookings`), Calendario (`/calendar`), Torneos (`/tournaments`) o Eventos (`/events`):
+
+1. **Reservas de Tee Times (`createTeeTimeBooking` / `cancelTeeTimeBooking`)**:
+   - Verifica siempre `playersCount` entre `1` y `4`, que `slot.isBlocked` sea `false` y que `playersCount <= getAvailableSeatsInSlot(slot)`.
+   - Respeta la paridad con la política RLS de `public.tee_time_bookings`: un `player` solo puede cancelar reservas donde `booking.userId === actorUserId`, mientras que `club_admin` y `superadmin` pueden cancelar cualquier reserva.
+2. **Clasificación de Torneos (`rankTournamentLeaderboard`)**:
+   - Soporta las 3 modalidades (`stableford`, `stroke_play_net`, `stroke_play_gross`) aplicando desempate automático por segunda vuelta (`backNineStablefordPoints`) y menor `playingHandicap`.
+3. **Eventos Especiales y Lista de Espera (`upsertEventRsvp`)**:
+   - Valida acompañantes (`0..3`) y asigna automáticamente `status = 'waitlist'` cuando `getConfirmedEventAttendeesCount(event) + 1 + guestsCount > event.maxCapacity`.
