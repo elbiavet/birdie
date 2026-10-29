@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "102938475612",
+    "project_id": "birdie-demo-club",
+    "storage_bucket": "birdie-demo-club.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102938475612:android:a1b2c3d4e5f60718",
+        "android_client_info": {
+          "package_name": "com.birdie.valleverde"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBirdieDemoClubFakeApiKeyForTesting123"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

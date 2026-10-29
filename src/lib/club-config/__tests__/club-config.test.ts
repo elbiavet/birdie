@@ -113,6 +113,9 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
     expect(pinosResult.appId).toBe('com.birdie.pinosgolf');
     expect(pinosResult.domain).toBe('app.lospinosgolf.com');
     expect(fs.existsSync(pinosResult.generatedConfigPath)).toBe(true);
+    expect(pinosResult.androidSynced).toBe(true);
+    expect(pinosResult.androidPackageName).toBe('com.birdie.pinosgolf');
+    expect(pinosResult.googleServicesSynced).toBe(true);
 
     // Restaurar demo-club en staging por defecto
     const demoResult = configureClub({
@@ -121,6 +124,9 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
     });
     expect(demoResult.appId).toBe('com.birdie.valleverde');
     expect(demoResult.domain).toBe('staging.valleverde.birdie.app');
+    expect(demoResult.androidSynced).toBe(true);
+    expect(demoResult.androidPackageName).toBe('com.birdie.valleverde');
+    expect(demoResult.googleServicesSynced).toBe(true);
   });
 
   it('verifica que los workflows de GitHub Actions incluyan todos los clubes registrados y los tests pgTAP', () => {

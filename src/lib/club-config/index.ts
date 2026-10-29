@@ -1,5 +1,5 @@
-import demoClubJson from '@clubs/demo-club/config.json';
-import pinosGolfJson from '@clubs/pinos-golf/config.json';
+import demoClubJson from '../../../clubs/demo-club/config.json';
+import pinosGolfJson from '../../../clubs/pinos-golf/config.json';
 import type { ClubConfig, ClubFeatureKey, ClubFeatures } from '@/types/club';
 import { resolveRuntimeEnvironment, type AppEnvironment } from '@/lib/env';
 

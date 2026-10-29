@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "897654321098",
+    "project_id": "birdie-pinos-golf",
+    "storage_bucket": "birdie-pinos-golf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:897654321098:android:f9e8d7c6b5a40321",
+        "android_client_info": {
+          "package_name": "com.birdie.pinosgolf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBirdiePinosGolfFakeApiKeyForTesting456"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

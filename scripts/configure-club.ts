@@ -21,6 +21,9 @@ export interface ConfigureClubResult {
   domain: string;
   generatedConfigPath: string;
   publicLogoPath: string;
+  androidSynced?: boolean;
+  androidPackageName?: string;
+  googleServicesSynced?: boolean;
 }
 
 export function parseCliArgs(
@@ -133,6 +136,9 @@ export function configureClub({
   }
   fs.writeFileSync(globalsCssPath, globalsCssContent, 'utf-8');
 
+  // 4. Sincronizar proyecto Android nativo (applicationId, strings.xml, google-services.json, iconos)
+  const androidResult = syncAndroidProject(validated, projectRoot);
+
   return {
     clubId: validated.clubId,
     name: validated.name,
@@ -141,6 +147,121 @@ export function configureClub({
     domain: activeDomain,
     generatedConfigPath,
     publicLogoPath,
+    ...androidResult,
+  };
+}
+
+/**
+ * Sincroniza los metadatos y artefactos de marca del club activo en el proyecto Android de Capacitor (/android).
+ */
+export function syncAndroidProject(
+  club: {
+    clubId: string;
+    appId: string;
+    name: string;
+    shortName: string;
+  },
+  projectRoot = process.cwd()
+): {
+  androidSynced: boolean;
+  androidPackageName?: string;
+  googleServicesSynced?: boolean;
+} {
+  const androidDir = path.join(projectRoot, 'android');
+  if (!fs.existsSync(androidDir)) {
+    return { androidSynced: false };
+  }
+
+  // 1. Sincronizar applicationId y namespace en android/app/build.gradle
+  const buildGradlePath = path.join(androidDir, 'app', 'build.gradle');
+  if (fs.existsSync(buildGradlePath)) {
+    let buildGradle = fs.readFileSync(buildGradlePath, 'utf-8');
+    buildGradle = buildGradle.replace(/namespace\s+["'][^"']+["']/, `namespace "${club.appId}"`);
+    buildGradle = buildGradle.replace(
+      /applicationId\s+["'][^"']+["']/,
+      `applicationId "${club.appId}"`
+    );
+    fs.writeFileSync(buildGradlePath, buildGradle, 'utf-8');
+  }
+
+  // 2. Sincronizar app_name, package_name y scheme en strings.xml
+  const stringsXmlPath = path.join(
+    androidDir,
+    'app',
+    'src',
+    'main',
+    'res',
+    'values',
+    'strings.xml'
+  );
+  if (fs.existsSync(stringsXmlPath)) {
+    let stringsXml = fs.readFileSync(stringsXmlPath, 'utf-8');
+    stringsXml = stringsXml.replace(
+      /<string name="app_name">[^<]*<\/string>/,
+      `<string name="app_name">${club.shortName}</string>`
+    );
+    stringsXml = stringsXml.replace(
+      /<string name="title_activity_main">[^<]*<\/string>/,
+      `<string name="title_activity_main">${club.shortName}</string>`
+    );
+    stringsXml = stringsXml.replace(
+      /<string name="package_name">[^<]*<\/string>/,
+      `<string name="package_name">${club.appId}</string>`
+    );
+    stringsXml = stringsXml.replace(
+      /<string name="custom_url_scheme">[^<]*<\/string>/,
+      `<string name="custom_url_scheme">${club.appId}</string>`
+    );
+    fs.writeFileSync(stringsXmlPath, stringsXml, 'utf-8');
+  }
+
+  // 3. Sincronizar google-services.json para FCM Push Notifications
+  const googleServicesSource = path.join(
+    projectRoot,
+    'clubs',
+    club.clubId,
+    'assets',
+    'google-services.json'
+  );
+  const googleServicesDest = path.join(androidDir, 'app', 'google-services.json');
+  let googleServicesSynced = false;
+  if (fs.existsSync(googleServicesSource)) {
+    fs.copyFileSync(googleServicesSource, googleServicesDest);
+    googleServicesSynced = true;
+  }
+
+  // 4. Sincronizar icono y splash a recursos Android si existen
+  const iconSource = path.join(projectRoot, 'clubs', club.clubId, 'assets', 'icon.png');
+  const splashSource = path.join(projectRoot, 'clubs', club.clubId, 'assets', 'splash.png');
+
+  if (fs.existsSync(iconSource)) {
+    const mipmapDirs = [
+      'mipmap-mdpi',
+      'mipmap-hdpi',
+      'mipmap-xhdpi',
+      'mipmap-xxhdpi',
+      'mipmap-xxxhdpi',
+    ];
+    for (const m of mipmapDirs) {
+      const targetDir = path.join(androidDir, 'app', 'src', 'main', 'res', m);
+      if (fs.existsSync(targetDir)) {
+        fs.copyFileSync(iconSource, path.join(targetDir, 'ic_launcher.png'));
+        fs.copyFileSync(iconSource, path.join(targetDir, 'ic_launcher_round.png'));
+      }
+    }
+  }
+
+  if (fs.existsSync(splashSource)) {
+    const drawableDir = path.join(androidDir, 'app', 'src', 'main', 'res', 'drawable');
+    if (fs.existsSync(drawableDir)) {
+      fs.copyFileSync(splashSource, path.join(drawableDir, 'splash.png'));
+    }
+  }
+
+  return {
+    androidSynced: true,
+    androidPackageName: club.appId,
+    googleServicesSynced,
   };
 }
 
