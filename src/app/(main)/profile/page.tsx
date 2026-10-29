@@ -8,7 +8,10 @@ import {
   calculatePlayingHandicap,
   DEMO_HANDICAP_HISTORY,
 } from '@/lib/supabase/client';
-import { registerForPushNotifications } from '@/lib/capacitor/push';
+import {
+  deactivatePushToken,
+  registerForPushNotifications,
+} from '@/lib/capacitor/push';
 
 const COURSE_TEES_PREVIEW = [
   { name: 'Blancas (Caballeros)', slope: 134, rating: 73.2, par: 72, color: '#CBD5E1' },
@@ -26,6 +29,10 @@ export default function ProfilePage() {
   const [bio, setBio] = useState(profile.bio || '');
   const [isDirectoryVisible, setIsDirectoryVisible] = useState(profile.isDirectoryVisible);
   const [pushTokenInfo, setPushTokenInfo] = useState<string | null>(null);
+  const [currentPushToken, setCurrentPushToken] = useState<string | null>(null);
+  const [isPushActive, setIsPushActive] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
   const [savedBanner, setSavedBanner] = useState(false);
   const isDark = resolvedTheme === 'dark';
 
@@ -48,9 +55,31 @@ export default function ProfilePage() {
     setTimeout(() => setSavedBanner(false), 3000);
   };
 
-  const handleEnablePush = async () => {
-    const registration = await registerForPushNotifications(club.clubId);
-    setPushTokenInfo(`${registration.platform.toUpperCase()}: ${registration.token}`);
+  const handleTogglePush = async () => {
+    try {
+      setPushLoading(true);
+      setPushError(null);
+
+      if (isPushActive && currentPushToken) {
+        await deactivatePushToken(currentPushToken, profile.id);
+        setIsPushActive(false);
+        setPushTokenInfo(null);
+        setCurrentPushToken(null);
+      } else {
+        const registration = await registerForPushNotifications(club.clubId, profile.id);
+        setCurrentPushToken(registration.token);
+        setIsPushActive(true);
+        setPushTokenInfo(
+          `${registration.platform.toUpperCase()} (${registration.deviceName}): ${registration.token}`
+        );
+      }
+    } catch (err) {
+      setPushError(
+        err instanceof Error ? err.message : 'Error al gestionar notificaciones push'
+      );
+    } finally {
+      setPushLoading(false);
+    }
   };
 
   return (
@@ -110,15 +139,32 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleEnablePush}
-          className="relative z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]"
-        >
-          <Bell className="w-4 h-4 text-[var(--theme-accent)]" />
-          Activar Notificaciones Push (FCM / APNs)
-        </button>
+        <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <button
+            type="button"
+            onClick={handleTogglePush}
+            disabled={pushLoading}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border ${
+              isPushActive
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                : 'border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]'
+            }`}
+          >
+            <Bell className={`w-4 h-4 ${isPushActive ? 'text-emerald-400' : 'text-[var(--theme-accent)]'}`} />
+            {pushLoading
+              ? 'Conectando...'
+              : isPushActive
+              ? 'Desactivar Push (Activo)'
+              : 'Activar Notificaciones Push (FCM / APNs)'}
+          </button>
+        </div>
       </div>
+
+      {pushError && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 flex items-center gap-2">
+          <span>{pushError}</span>
+        </div>
+      )}
 
       {pushTokenInfo && (
         <div className="p-4 rounded-2xl bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] text-xs text-[var(--theme-text-primary)] flex items-center gap-2">

@@ -11,6 +11,11 @@ import {
   type AdminDashboardStats,
 } from '@/lib/community';
 import {
+  sendClubPushNotification,
+  type SendPushNotificationResult,
+} from '@/lib/push';
+import {
+  Bell,
   BookOpen,
   Calendar,
   CalendarClock,
@@ -19,6 +24,8 @@ import {
   MessageCircle,
   MessageSquare,
   Newspaper,
+  Radio,
+  Send,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -36,6 +43,47 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardStats>(() =>
     computeAdminDashboardStats()
   );
+
+  // Consola de Notificaciones Push Masivas
+  const [pushTitle, setPushTitle] = useState('');
+  const [pushBody, setPushBody] = useState('');
+  const [pushTargetUrl, setPushTargetUrl] = useState('/news');
+  const [pushSending, setPushSending] = useState(false);
+  const [pushResult, setPushResult] = useState<SendPushNotificationResult | null>(null);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  const handleSendPush = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pushTitle.trim() || !pushBody.trim()) {
+      setPushError('El título y mensaje de la notificación son obligatorios.');
+      return;
+    }
+
+    try {
+      setPushSending(true);
+      setPushError(null);
+      const res = await sendClubPushNotification(
+        {
+          clubId: club.clubId,
+          title: pushTitle.trim(),
+          body: pushBody.trim(),
+          targetUrl: pushTargetUrl,
+        },
+        profile.role
+      );
+
+      setPushResult(res);
+      setPushTitle('');
+      setPushBody('');
+      setTimeout(() => setPushResult(null), 6000);
+    } catch (err) {
+      setPushError(
+        err instanceof Error ? err.message : 'Error al emitir notificación push.'
+      );
+    } finally {
+      setPushSending(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -379,6 +427,111 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
         </div>
+      </div>
+
+      {/* Consola de Notificaciones Push Masivas (FCM / APNs) */}
+      <div className="card-luxury rounded-2xl border p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--theme-border)] pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--theme-surface-subtle)] text-[var(--theme-accent)] border border-[var(--theme-border)]">
+              <Bell className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-[var(--theme-text-primary)]">
+                Emisión de Notificaciones Push (FCM / APNs)
+              </h2>
+              <p className="text-xs text-[var(--theme-text-secondary)]">
+                Envía alertas prioritarias a los dispositivos de los socios registrados en el club.
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+            <Radio className="h-3 w-3 animate-pulse" />
+            Canal Activo · {club.name}
+          </span>
+        </div>
+
+        {pushError && (
+          <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400">
+            {pushError}
+          </div>
+        )}
+
+        {pushResult && (
+          <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-400 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              <span>
+                Notificación emitida exitosamente a <strong>{pushResult.sentCount}</strong> dispositivo(s)
+                {pushResult.status === 'simulated' ? ' (Modo simulación / staging)' : ''}.
+              </span>
+            </div>
+            <div className="flex gap-2 text-[11px] opacity-90">
+              <span>Android: {pushResult.platforms.android}</span>·
+              <span>iOS: {pushResult.platforms.ios}</span>·
+              <span>Web: {pushResult.platforms.web}</span>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSendPush} className="mt-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-xs font-bold text-[var(--theme-text-primary)]">
+                Título del Aviso *
+              </label>
+              <input
+                type="text"
+                value={pushTitle}
+                onChange={(e) => setPushTitle(e.target.value)}
+                placeholder="Ej. Torneo Social de Primavera / Cierre temporal hoyo 4"
+                className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3.5 py-2 text-xs text-[var(--theme-text-primary)] placeholder-[var(--theme-text-secondary)]/50 focus:border-[var(--theme-accent)] focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[var(--theme-text-primary)]">
+                Ruta de Destino (Deep-link)
+              </label>
+              <select
+                value={pushTargetUrl}
+                onChange={(e) => setPushTargetUrl(e.target.value)}
+                className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3.5 py-2 text-xs text-[var(--theme-text-primary)] focus:border-[var(--theme-accent)] focus:outline-none"
+              >
+                <option value="/news">Noticias (/news)</option>
+                <option value="/tournaments">Torneos (/tournaments)</option>
+                <option value="/bookings">Tee Times (/bookings)</option>
+                <option value="/forum">Foro del Club (/forum)</option>
+                <option value="/info">Información (/info)</option>
+                <option value="/">Inicio (/)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--theme-text-primary)]">
+              Mensaje de la Notificación *
+            </label>
+            <textarea
+              rows={3}
+              value={pushBody}
+              onChange={(e) => setPushBody(e.target.value)}
+              placeholder="Escribe el texto de la alerta que recibirán los socios en su móvil..."
+              className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3.5 py-2 text-xs text-[var(--theme-text-primary)] placeholder-[var(--theme-text-secondary)]/50 focus:border-[var(--theme-accent)] focus:outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={pushSending}
+              className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {pushSending ? 'Transmitiendo...' : 'Transmitir Notificación Push'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
