@@ -117,10 +117,20 @@ export function configureClub({
     fs.copyFileSync(sourceLogoPath, publicLogoPath);
   }
 
-  // 3. Actualizar variables CSS en src/app/globals.css
+  // 3. Actualizar variables CSS en src/app/globals.css preservando estilos y tokens
   const globalsCssPath = path.join(projectRoot, 'src', 'app', 'globals.css');
   const rootCss = buildClubCssRootBlock(validated);
-  const globalsCssContent = `@import "tailwindcss";\n\n${rootCss}\nbody {\n  background-color: var(--club-bg);\n  color: #0f172a;\n}\n`;
+  let globalsCssContent = '';
+  if (fs.existsSync(globalsCssPath)) {
+    const existing = fs.readFileSync(globalsCssPath, 'utf-8');
+    if (/:root\s*\{[^}]*\}/.test(existing)) {
+      globalsCssContent = existing.replace(/:root\s*\{[^}]*\}/, rootCss.trim());
+    } else {
+      globalsCssContent = `@import "tailwindcss";\n\n${rootCss}\n${existing}`;
+    }
+  } else {
+    globalsCssContent = `@import "tailwindcss";\n\n${rootCss}\nbody {\n  background-color: var(--theme-bg, var(--club-bg));\n  color: var(--theme-text-primary, #0f172a);\n}\n`;
+  }
   fs.writeFileSync(globalsCssPath, globalsCssContent, 'utf-8');
 
   return {

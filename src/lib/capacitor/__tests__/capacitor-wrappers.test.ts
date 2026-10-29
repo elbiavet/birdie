@@ -22,7 +22,15 @@ import {
   markScoreAsSynced,
   saveOfflineHoleScore,
 } from '../sqlite';
-import { detectPushPlatform, registerForPushNotifications } from '../push';
+import {
+  clearInMemoryPushTokens,
+  deactivatePushToken,
+  detectPushPlatform,
+  extractNotificationRoute,
+  registerForPushNotifications,
+  savePushTokenToSupabase,
+  setupPushNotificationListeners,
+} from '../push';
 
 describe('Capacitor Config & Wrappers Nativos (Geolocation, SQLite Offline, Push)', () => {
   beforeEach(async () => {
@@ -269,9 +277,84 @@ describe('Capacitor Config & Wrappers Nativos (Geolocation, SQLite Offline, Push
   });
 
   it('registra token de notificaciones push en modo fallback web', async () => {
+    clearInMemoryPushTokens();
     expect(detectPushPlatform()).toBe('web');
     const reg = await registerForPushNotifications('pinos-golf');
     expect(reg.platform).toBe('web');
     expect(reg.token).toContain('pinos-golf');
+    expect(reg.deviceName).toContain('pinos-golf');
+  });
+
+  it('extrae rutas de navegación interna para deep-linking desde distintos payloads push', () => {
+    expect(extractNotificationRoute({ target_url: '/tournaments' })).toBe('/tournaments');
+    expect(extractNotificationRoute({ route: 'news' })).toBe('/news');
+    expect(extractNotificationRoute({ link: 'https://birdie.golf/forum?cat=rules' })).toBe('/forum?cat=rules');
+    expect(extractNotificationRoute({ url: '/bookings' })).toBe('/bookings');
+    expect(extractNotificationRoute(null)).toBeNull();
+    expect(extractNotificationRoute({})).toBeNull();
+  });
+
+  it('persiste y desactiva tokens en Supabase device_push_tokens gestionando fallbacks', async () => {
+    // 1. Fallback cuando Supabase no está configurado
+    const tokenData = {
+      token: 'fcm_mock_token_123',
+      platform: 'android' as const,
+      deviceName: 'Pixel 8 (demo-club)',
+      registeredAt: new Date().toISOString(),
+    };
+
+    const fallbackRes = await savePushTokenToSupabase(tokenData, 'user-1', null);
+    expect(fallbackRes.success).toBe(true);
+    expect(fallbackRes.persisted).toBe(false);
+    expect(fallbackRes.reason).toBe('supabase_unconfigured');
+
+    // 2. Persistencia con cliente Supabase mockeado
+    let upsertPayload: Record<string, unknown> | null = null;
+    let updatePayload: Record<string, unknown> | null = null;
+
+    const mockSupabase = {
+      from: vi.fn((table: string) => {
+        if (table === 'device_push_tokens') {
+          return {
+            upsert: vi.fn((payload) => {
+              upsertPayload = payload;
+              return Promise.resolve({ error: null });
+            }),
+            update: vi.fn((payload) => {
+              updatePayload = payload;
+              return {
+                eq: vi.fn().mockReturnThis(),
+                then: (resolve: (val: unknown) => void) => resolve({ error: null }),
+              };
+            }),
+          };
+        }
+        return {} as never;
+      }),
+    } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+    const saved = await savePushTokenToSupabase(tokenData, 'user-123', mockSupabase);
+    expect(saved.success).toBe(true);
+    expect(saved.persisted).toBe(true);
+    expect(saved.reason).toBe('saved');
+    expect(upsertPayload).toMatchObject({
+      user_id: 'user-123',
+      token: 'fcm_mock_token_123',
+      platform: 'android',
+      is_active: true,
+    });
+
+    // 3. Desactivar token
+    const deactivated = await deactivatePushToken('fcm_mock_token_123', 'user-123', mockSupabase);
+    expect(deactivated.success).toBe(true);
+    expect(updatePayload).toEqual({ is_active: false });
+  });
+
+  it('configura listeners push con deep-linking y maneja entorno web de forma segura', async () => {
+    const onRouteNavigate = vi.fn();
+    const cleanup = await setupPushNotificationListeners({ onRouteNavigate });
+    expect(typeof cleanup).toBe('function');
+    await cleanup();
+    expect(onRouteNavigate).not.toHaveBeenCalled();
   });
 });
