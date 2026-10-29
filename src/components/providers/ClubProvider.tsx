@@ -30,9 +30,11 @@ const CLUB_OVERRIDE_STORAGE_KEY = 'birdie_active_club_override_v1';
 export function ClubProvider({
   children,
   initialClubId,
+  initialProfile,
 }: {
   children: React.ReactNode;
   initialClubId?: string;
+  initialProfile?: PlayerProfile;
 }) {
   const defaultClub = useMemo(
     () => (initialClubId ? getClubConfig(initialClubId) : getActiveClubConfig()),
@@ -40,7 +42,9 @@ export function ClubProvider({
   );
 
   const [club, setClub] = useState<ClubConfig>(defaultClub);
-  const [profile, setProfile] = useState<PlayerProfile>(DEMO_PROFILES_BY_ROLE.player);
+  const [profile, setProfile] = useState<PlayerProfile>(
+    initialProfile ?? DEMO_PROFILES_BY_ROLE.player
+  );
   const [isOnline, setIsOnline] = useState<boolean>(true);
 
   useEffect(() => {
