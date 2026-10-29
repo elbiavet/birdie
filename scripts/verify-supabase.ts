@@ -132,6 +132,9 @@ async function main() {
   let tempCourseId: string | null = null;
   let tempRoundId: string | null = null;
   let tempEventId: string | null = null;
+  let tempNewsArticleId: string | null = null;
+  let tempLockedThreadId: string | null = null;
+  let tempChatRoomId: string | null = null;
 
   try {
     const password = `BirdieVerify#${runSuffix}!`;
@@ -516,10 +519,152 @@ async function main() {
     }
 
     console.log(
-      `[OK] 5/5 RLS estricto de public.hole_scores y trigger trg_hole_scores_immutable_identity verificados en vivo.`
+      `[OK] 5/6 RLS estricto de public.hole_scores y trigger trg_hole_scores_immutable_identity verificados en vivo.`
     );
-    console.log(`\n✅ VERIFICACIÓN INTEGRAL EN VIVO CONTRA SUPABASE COMPLETADA CON ÉXITO (5/5 BLOQUES).`);
+
+    // ============================================================================
+    // 6. VERIFICACIÓN EN VIVO DE RLS FASE 4 (Noticias, Foros cerrados y Chat Admin)
+    // ============================================================================
+    // A) Noticias (news_articles): escritura exclusiva club_admin/superadmin, lectura socios
+    const { data: newsCreated, error: newsInsertAdminErr } = await clubAdminClient
+      .from('news_articles')
+      .insert({
+        title: `Noticia Admin ${runSuffix}`,
+        slug: `noticia-verify-${runSuffix}`,
+        summary: 'Resumen de prueba de verificación RLS en vivo',
+        content: 'Contenido oficial verificado por la administración.',
+        is_published: true,
+        author_id: uAdmin.user.id,
+      })
+      .select('id')
+      .single();
+
+    if (newsInsertAdminErr || !newsCreated) {
+      throw new Error(`Admin no pudo insertar noticia en Supabase: ${newsInsertAdminErr?.message}`);
+    }
+    tempNewsArticleId = newsCreated.id;
+
+    // Intento de inserción de noticia por Player 1 -> Bloqueado por RLS (news_articles_write_admin_only)
+    const { error: newsInsertPlayerErr } = await player1Client.from('news_articles').insert({
+      title: `Noticia Ilegal ${runSuffix}`,
+      slug: `noticia-ilegal-${runSuffix}`,
+      summary: 'Intento de jugador de publicar noticia oficial',
+      content: 'Contenido no autorizado.',
+      is_published: true,
+      author_id: uP1.user.id,
+    });
+    if (!newsInsertPlayerErr) {
+      throw new Error('RLS permitió a un jugador estándar (player) insertar en public.news_articles.');
+    }
+
+    // B) Foro (forum_threads y forum_posts): bloqueo de respuestas en hilos cerrados
+    const { data: lockedThread, error: lockedThreadErr } = await clubAdminClient
+      .from('forum_threads')
+      .insert({
+        author_id: uAdmin.user.id,
+        category: 'rules',
+        title: `Debate Cerrado ${runSuffix}`,
+        body: 'Debate de prueba bloqueado para respuestas de socios.',
+        is_pinned: false,
+        is_locked: true,
+      })
+      .select('id')
+      .single();
+
+    if (lockedThreadErr || !lockedThread) {
+      throw new Error(`Admin no pudo crear hilo cerrado en el foro: ${lockedThreadErr?.message}`);
+    }
+    tempLockedThreadId = lockedThread.id;
+
+    // Player 1 intenta responder en el hilo cerrado -> Bloqueado por RLS (forum_posts_insert_unlocked_or_admin)
+    const { error: lockedReplyPlayerErr } = await player1Client.from('forum_posts').insert({
+      thread_id: tempLockedThreadId,
+      author_id: uP1.user.id,
+      body: 'Intento de respuesta en hilo cerrado por un socio.',
+    });
+    if (!lockedReplyPlayerErr) {
+      throw new Error('RLS permitió a un socio responder en un hilo cerrado (is_locked = true).');
+    }
+
+    // Admin sí puede responder en el hilo cerrado
+    const { error: lockedReplyAdminErr } = await clubAdminClient.from('forum_posts').insert({
+      thread_id: tempLockedThreadId,
+      author_id: uAdmin.user.id,
+      body: 'Nota oficial de cierre por administración.',
+    });
+    if (lockedReplyAdminErr) {
+      throw new Error(`Admin no pudo responder en hilo cerrado: ${lockedReplyAdminErr.message}`);
+    }
+
+    // C) Chat con el Administrador (admin_chat_rooms y admin_chat_messages): aislamiento privado estricto
+    // Player 1 crea su sala de chat con administración
+    const { data: chatRoom1, error: chatRoomErr } = await player1Client
+      .from('admin_chat_rooms')
+      .insert({
+        player_id: uP1.user.id,
+        subject: `Consulta Privada Player 1 - ${runSuffix}`,
+      })
+      .select('id')
+      .single();
+
+    if (chatRoomErr || !chatRoom1) {
+      throw new Error(`Player 1 no pudo crear su sala de chat: ${chatRoomErr?.message}`);
+    }
+    tempChatRoomId = chatRoom1.id;
+
+    // Player 1 envía mensaje en su sala -> Permitido
+    const { error: msgP1Err } = await player1Client.from('admin_chat_messages').insert({
+      room_id: tempChatRoomId,
+      sender_id: uP1.user.id,
+      body: 'Mensaje legítimo del titular de la sala.',
+    });
+    if (msgP1Err) {
+      throw new Error(`Player 1 no pudo enviar mensaje en su sala: ${msgP1Err.message}`);
+    }
+
+    // Player 2 intenta leer la sala de Player 1 -> RLS devuelve 0 filas
+    const { data: p2Rooms } = await player2Client
+      .from('admin_chat_rooms')
+      .select('id')
+      .eq('id', tempChatRoomId);
+    if (p2Rooms && p2Rooms.length > 0) {
+      throw new Error('RLS permitió a Player 2 leer la sala de chat privada de Player 1.');
+    }
+
+    // Player 2 intenta insertar un mensaje en la sala de Player 1 -> Bloqueado por RLS
+    const { error: msgP2IntrusionErr } = await player2Client.from('admin_chat_messages').insert({
+      room_id: tempChatRoomId,
+      sender_id: uP2.user.id,
+      body: 'Intrusión de Player 2 en la sala de Player 1.',
+    });
+    if (!msgP2IntrusionErr) {
+      throw new Error('RLS permitió a Player 2 insertar un mensaje en la sala privada de Player 1.');
+    }
+
+    // Admin puede leer y responder en la sala de Player 1
+    const { error: msgAdminReplyErr } = await clubAdminClient.from('admin_chat_messages').insert({
+      room_id: tempChatRoomId,
+      sender_id: uAdmin.user.id,
+      body: 'Respuesta oficial del administrador al socio Player 1.',
+    });
+    if (msgAdminReplyErr) {
+      throw new Error(`Admin no pudo responder en la sala de Player 1: ${msgAdminReplyErr.message}`);
+    }
+
+    console.log(
+      `[OK] 6/6 RLS Fase 4 verificado en vivo (noticias admin-only, bloqueo de posts en hilos cerrados y privacidad 1-a-1 de chat).`
+    );
+    console.log(`\n✅ VERIFICACIÓN INTEGRAL EN VIVO CONTRA SUPABASE COMPLETADA CON ÉXITO (6/6 BLOQUES).`);
   } finally {
+    if (tempChatRoomId) {
+      await adminClient.from('admin_chat_rooms').delete().eq('id', tempChatRoomId);
+    }
+    if (tempLockedThreadId) {
+      await adminClient.from('forum_threads').delete().eq('id', tempLockedThreadId);
+    }
+    if (tempNewsArticleId) {
+      await adminClient.from('news_articles').delete().eq('id', tempNewsArticleId);
+    }
     if (tempRoundId) {
       await adminClient.from('rounds').delete().eq('id', tempRoundId);
     }
