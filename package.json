@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:apk": "CAPACITOR_BUILD=true next build",
+    "build:apk": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "configure:club": "tsx scripts/configure-club.ts",
     "verify:supabase": "tsx scripts/verify-supabase.ts",
-    "cap:sync": "cap sync android"
+    "cap:sync": "npx cap sync android"
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.0",
