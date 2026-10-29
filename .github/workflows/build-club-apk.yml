@@ -21,7 +21,6 @@ jobs:
   build-android-apk:
     name: Build APK (${{ matrix.club }} — ${{ inputs.environment || 'staging' }})
     runs-on: ubuntu-latest
-    if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,30 +34,37 @@ jobs:
 
     steps:
       - name: Checkout repository
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         uses: actions/checkout@v4
 
       - name: Setup Node.js 22
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Setup Java JDK 17 for Android Gradle
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Install dependencies
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         run: npm ci
 
       - name: Apply White-Label configuration for ${{ matrix.club }}
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         run: npm run configure:club -- --club=${{ matrix.club }} --env=${{ inputs.environment || 'staging' }}
 
       - name: Build Next.js Static Export (out/)
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         run: npm run build:apk
 
       - name: Initialize or Sync Capacitor Android Project
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         run: |
           if [ ! -d "android" ]; then
             npx cap add android
@@ -66,10 +72,12 @@ jobs:
           npx cap sync android
 
       - name: Build Android APK with Gradle
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         working-directory: ./android
         run: ./gradlew assembleDebug
 
       - name: Upload Club APK Artifact
+        if: ${{ inputs.club_filter == 'all' || inputs.club_filter == '' || inputs.club_filter == matrix.club }}
         uses: actions/upload-artifact@v4
         with:
           name: birdie-${{ matrix.club }}-${{ inputs.environment || 'staging' }}-apk
