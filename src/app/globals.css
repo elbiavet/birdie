@@ -9,6 +9,46 @@
 }
 
 body {
-  background-color: var(--club-bg);
-  color: #0f172a;
+  background-color: var(--theme-bg, var(--club-bg));
+  color: var(--theme-text-primary, #0f172a);
 }
+
+.btn-gold-gradient {
+  background: var(--theme-gold-gradient, linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%));
+  color: #0B0C10;
+  border: 1px solid var(--theme-gold-border, #DFCB9E);
+  box-shadow: var(--theme-gold-shadow, 0 4px 14px rgba(201, 173, 116, 0.22));
+}
+
+.hero-banner-luxury {
+  background: var(--theme-hero-gradient, linear-gradient(135deg, #064334 0%, #0D3028 100%));
+  border-color: var(--theme-border);
+}
+
+.dark .hero-banner-luxury {
+  background: linear-gradient(135deg, #064334 0%, #0D3028 100%);
+  border-color: rgba(201, 173, 116, 0.25);
+}
+
+.light .hero-banner-luxury,
+[data-theme="light"] .hero-banner-luxury {
+  background: linear-gradient(135deg, #F2ECE0 0%, #E9DECA 40%, #DECBA4 100%);
+  border-color: rgba(197, 160, 89, 0.45);
+}
+
+.card-luxury {
+  background: var(--theme-surface-subtle);
+  border-color: var(--theme-border);
+}
+
+.dark .card-luxury {
+  background: linear-gradient(135deg, #19191E 0%, #252329 100%);
+  border-color: rgba(201, 173, 116, 0.2);
+}
+
+.light .card-luxury,
+[data-theme="light"] .card-luxury {
+  background: #FFFFFF;
+  border-color: rgba(197, 160, 89, 0.35);
+}
+

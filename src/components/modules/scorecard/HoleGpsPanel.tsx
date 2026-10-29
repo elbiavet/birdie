@@ -86,19 +86,22 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
   return (
     <div
       style={{
-        backgroundColor: isDark ? '#0F241B' : '#FFFFFF',
-        borderColor: isDark ? '#1B3D2F' : '#D8DFD9',
-        color: isDark ? '#FFFFFF' : '#1A2E22',
+        backgroundColor: isDark ? '#202127' : '#FFFFFF',
+        borderColor: isDark ? 'rgba(201, 173, 116, 0.25)' : 'rgba(197, 160, 89, 0.35)',
+        color: isDark ? '#E4D3AC' : '#0A3A2A',
+        boxShadow: isDark
+          ? '0 4px 14px rgba(0, 0, 0, 0.35)'
+          : '0 4px 12px rgba(180, 150, 100, 0.08)',
       }}
       className="rounded-2xl border p-5 shadow-sm transition-colors duration-200"
     >
       <div
-        style={{ borderColor: isDark ? '#1B3D2F' : '#E8ECE9' }}
+        style={{ borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : 'rgba(197, 160, 89, 0.2)' }}
         className="flex flex-wrap items-center justify-between gap-3 border-b pb-3"
       >
         <div className="flex items-center gap-2">
           <Compass
-            style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+            style={{ color: isDark ? '#C9AD74' : '#A98A55' }}
             className="h-5 w-5 shrink-0"
           />
           <div>
@@ -117,9 +120,9 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
             type="button"
             onClick={() => setUnit(unit === 'meters' ? 'yards' : 'meters')}
             style={{
-              backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-              borderColor: isDark ? '#255440' : '#CBD5E1',
-              color: isDark ? '#FFFFFF' : '#1A2E22',
+              backgroundColor: isDark ? '#19191E' : '#FCFAF5',
+              borderColor: isDark ? 'rgba(201, 173, 116, 0.3)' : 'rgba(197, 160, 89, 0.3)',
+              color: isDark ? '#D5C7A5' : '#0A3A2A',
             }}
             className="rounded-lg border px-2.5 py-1 text-xs font-semibold transition hover:opacity-90 cursor-pointer"
           >
@@ -128,11 +131,7 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
           <button
             type="button"
             onClick={handleReadHardwareGps}
-            style={{
-              backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-              color: isDark ? '#08130E' : '#FFFFFF',
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition hover:opacity-95 cursor-pointer shadow-xs"
+            className="btn-gold-gradient inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition hover:opacity-95 cursor-pointer shadow-xs"
           >
             <LocateFixed className="h-3.5 w-3.5" />
             GPS Nativo
@@ -144,34 +143,39 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
       <div className="mt-4 grid grid-cols-3 gap-3 text-center">
         <div
           style={{
-            backgroundColor: isDark ? '#16382A' : '#F4F6F4',
-            borderColor: isDark ? '#255440' : '#E8ECE9',
+            backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : 'rgba(197, 160, 89, 0.25)',
           }}
           className="rounded-xl border p-3 transition-colors"
         >
           <span className="text-[11px] font-semibold uppercase tracking-wider opacity-75">
             Frente Green
           </span>
-          <p className="mt-1 text-xl font-metric">
+          <p className="mt-1 text-xl font-metric font-bold">
             {formatDist(greenDistances.frontMeters, greenDistances.frontYards)}
           </p>
         </div>
 
         <div
           style={{
-            backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-            borderColor: isDark ? '#D4AF37' : '#A38332',
+            background: isDark
+              ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+              : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+            borderColor: isDark ? 'rgba(201, 173, 116, 0.5)' : 'rgba(169, 138, 85, 0.5)',
+            boxShadow: isDark
+              ? '0 2px 10px rgba(201, 173, 116, 0.2)'
+              : '0 2px 8px rgba(169, 138, 85, 0.15)',
           }}
           className="rounded-xl border-2 p-3 shadow-xs transition-colors"
         >
           <span
-            style={{ color: isDark ? '#D4AF37' : '#A38332' }}
+            style={{ color: isDark ? '#E6D4A7' : '#8C6F32' }}
             className="text-[11px] font-bold uppercase tracking-wider"
           >
             Centro Bandera
           </span>
           <p
-            style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+            style={{ color: isDark ? '#E6D4A7' : '#0A3A2A' }}
             className="mt-1 text-2xl font-metric font-bold"
           >
             {formatDist(greenDistances.centerMeters, greenDistances.centerYards)}
@@ -180,15 +184,15 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
 
         <div
           style={{
-            backgroundColor: isDark ? '#16382A' : '#F4F6F4',
-            borderColor: isDark ? '#255440' : '#E8ECE9',
+            backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : 'rgba(197, 160, 89, 0.25)',
           }}
           className="rounded-xl border p-3 transition-colors"
         >
           <span className="text-[11px] font-semibold uppercase tracking-wider opacity-75">
             Fondo Green
           </span>
-          <p className="mt-1 text-xl font-metric">
+          <p className="mt-1 text-xl font-metric font-bold">
             {formatDist(greenDistances.backMeters, greenDistances.backYards)}
           </p>
         </div>
@@ -197,15 +201,15 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
       {/* Simulador de avance en calle (Tee -> Calle -> Approach -> Green) */}
       <div
         style={{
-          backgroundColor: isDark ? '#16382A' : '#F4F6F4',
-          borderColor: isDark ? '#255440' : '#E8ECE9',
+          backgroundColor: isDark ? '#19191E' : '#FCFAF5',
+          borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : 'rgba(197, 160, 89, 0.25)',
         }}
         className="mt-4 rounded-xl border p-3 transition-colors"
       >
         <div className="flex items-center justify-between text-xs">
           <span className="inline-flex items-center gap-1 font-medium">
             <Navigation
-              style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+              style={{ color: isDark ? '#C9AD74' : '#A98A55' }}
               className="h-3.5 w-3.5"
             />
             Posición en el hoyo (Tee → Green)
@@ -239,7 +243,7 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
       {poiDistances.length > 0 && (
         <div className="mt-4 space-y-1.5">
           <span
-            style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+            style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
             className="text-[11px] font-bold uppercase tracking-wider"
           >
             Obstáculos y Referencias del Hoyo
@@ -249,8 +253,8 @@ export function HoleGpsPanel({ hole }: HoleGpsPanelProps) {
               <div
                 key={`${poi.label}-${idx}`}
                 style={{
-                  backgroundColor: isDark ? '#16382A' : '#F4F6F4',
-                  borderColor: isDark ? '#255440' : '#E8ECE9',
+                  backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : 'rgba(197, 160, 89, 0.25)',
                 }}
                 className="flex items-center justify-between rounded-lg border px-3 py-2 text-xs"
               >

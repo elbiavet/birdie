@@ -48,6 +48,24 @@ export const THEME_PALETTES: Record<ResolvedTheme, ThemePalette> = {
 export const THEME_STORAGE_KEY = 'birdie_theme_mode_v1';
 
 /**
+ * Degradados dorados calibrados con brillo lujoso, cálido y sutil (sin destellos blancos ni saltos estridentes).
+ */
+export const GOLD_GRADIENTS = {
+  dark: {
+    gradient: 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)',
+    border: '#DFCB9E',
+    color: '#0B0C10',
+    shadow: '0 4px 14px rgba(201, 173, 116, 0.22)',
+  },
+  light: {
+    gradient: 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+    border: '#CCB88E',
+    color: '#0B0C10',
+    shadow: '0 4px 14px rgba(169, 138, 85, 0.18)',
+  },
+} as const;
+
+/**
  * Obtiene el modo de tema guardado o el valor por defecto.
  */
 export function getSavedThemeMode(): ThemeMode {
@@ -119,4 +137,7 @@ export function applyThemeToElement(
   target.style.setProperty('--theme-text-secondary', palette.textSecondary);
   target.style.setProperty('--theme-border', palette.border);
   target.style.setProperty('--theme-border-strong', palette.borderStrong);
+  target.style.setProperty('--theme-gold-gradient', GOLD_GRADIENTS[resolved].gradient);
+  target.style.setProperty('--theme-gold-border', GOLD_GRADIENTS[resolved].border);
+  target.style.setProperty('--theme-gold-shadow', GOLD_GRADIENTS[resolved].shadow);
 }

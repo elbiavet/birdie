@@ -35,11 +35,11 @@ Los colores están asignados de forma específica y deliberada a cada componente
 | **Barra Superior (Header)** | Verde profundo | `#06372D` | Barra superior baja con píldoras de telemetría y controles. |
 | **Barra Lateral (Sidebar)** | Carbón profundo | `#202127` | Tarjeta flotante freestanding con bordes dorados discretos. |
 | **Panel Inferior Contenedor** | Carbón profundo | `#202127` | Tarjeta contenedora de la sección *Club Ecosystem*. |
-| **Panel de Bienvenida (Hero)** | Degradado verde bosque | `#064334` → `#0D3028` | Tarjeta de bienvenida destacada con curvas doradas sutiles en la derecha. |
+| **Panel de Bienvenida (Hero)** | Degradado verde bosque | `#064334` → `#0D3028` | Tarjeta de bienvenida destacada en verde esmeralda con borde `rgba(201, 173, 116, 0.25)` y curvas doradas sutiles en la derecha. |
 | **Tarjetas de Métricas (las 4 en fila)** | Carbón suave con bordes dorados | `#19191E` → `#252329` | Las 4 tarjetas de KPIs WHS en una única fila horizontal. |
 | **Tarjetas de Acciones (las 3 principales)** | Carbón suave con bordes dorados | `#19191E` → `#252329` | Tarjetas de *Iniciar Vuelta*, *Reservar Salida* y *Mi Perfil*. |
 | **Tarjetas de Módulos (Ecosistema)** | Verde bosque intenso | `#0C3029` → `#104238` | Tarjetas modulares dentro del panel inferior, sin adornos artificiales. |
-| **Acento Dorado Cálido** | Oro cálido metálico | `#C9AD74` | Bordes discretos, botones de acción, iconos y elemento activo (`Inicio`). |
+| **Acento Dorado Metálico Brillante** | Oro cálido con degradado sutil de alto lujo | `#D4BA80` → `#E6D4A7` → `#C9AD74` → `#BA9C61` | Botones de acción rápida, avatar de club y elemento activo (`Inicio`), con reflejo champán cálido y suave, sin destellos blancos ni contraste agresivo. |
 | **Texto Destacado / Títulos** | Champán claro | `#E4D3AC` | Títulos principales, valores numéricos de métricas y nombres. |
 | **Texto General / Contenido** | Arena dorado | `#D5C7A5` | Etiquetas de botones, descripciones de acciones y datos. |
 | **Texto Secundario / Metadatos** | Verde salvia tenue | `#92A99E` | Leyendas, subtítulos federativos, horas y estados secundarios. |
@@ -53,10 +53,11 @@ Los colores están asignados de forma específica y deliberada a cada componente
 | **Fondo Exterior (Canvas)** | Marfil cálido | `#F7F3EA` | Lienzo general exterior diurno. |
 | **Barra Superior (Header)** | Verde grisáceo claro | `#DCE6DD` | Barra superior baja con pastillas en blanco cálido `#FCFAF5`. |
 | **Barra Lateral y Paneles** | Blanco cálido | `#FCFAF5` | Barra lateral flotante y tarjeta contenedora inferior. |
-| **Panel de Bienvenida (Hero)** | Degradado beige arena | `#F0EBDD` → `#E8E3D4` | Tarjeta destacada con curvas suaves en bronce dorado. |
-| **Tarjetas de Métricas y Acciones** | Blanco marfil con bordes dorados | `#FFFDF6` | Tarjetas de métricas y acciones con bordes `rgba(169, 138, 85, 0.3)`. |
+| **Panel de Bienvenida (Hero)** | Degradado champán oro / arena dorada | `#F2ECE0` → `#E9DECA` → `#DECBA4` | Tarjeta destacada con degradado dorado cálido continuo, borde fino oro mate `rgba(197, 160, 89, 0.45)`, curvas doradas áureas (`#C5A059`) y pastilla GPS translúcida. |
+| **Tarjetas de Métricas (Hero)** | Blanco marfil con bordes dorados | `#FFFFFF` | Las 4 métricas WHS dentro del hero con fondo blanco marfil puro, bordes `rgba(197, 160, 89, 0.35)` y sombra cálida. |
+| **Tarjetas de Acciones Principales** | Blanco marfil con bordes dorados | `#FFFDF6` | Tarjetas de *Iniciar Vuelta*, *Reservar Salida* y *Mi Perfil* con bordes `rgba(169, 138, 85, 0.3)`. |
 | **Tarjetas de Módulos (Ecosistema)** | Verde salvia suave | `#D8E4D9` | Tarjetas modulares dentro del panel inferior. |
-| **Acento Dorado / Bronce** | Bronce dorado | `#A98A55` | Bordes dorados suaves, botones e indicadores. |
+| **Acento Dorado Metálico Brillante** | Oro champán con degradado sutil de alto lujo | `#BEA16D` → `#D4BE92` → `#AC8E58` → `#9C7E4A` | Botones de acción rápida, avatar de club y elemento activo de navegación, con reflejo luminoso suave y bisel fino, sin estridencias. |
 | **Texto Principal y Nav Activo** | Verde corporativo profundo | `#0A3A2A` | Títulos principales, elemento activo, cifras e iconos clave. |
 | **Texto Secundario / Metadatos** | Verde salvia apagado | `#52665B` | Subtítulos, metadatos, leyendas y etiquetas secundarias. |
 
@@ -92,19 +93,23 @@ La interfaz sigue una cuadrícula estructurada y compacta para evitar vacíos de
    - Todos los controles (estado online, handicap, selectores de club/rol, conmutador de tema y acceso) adoptan forma de cápsula redondeada completa (`rounded-full`).
 2. **Barra Lateral Flotante (Sidebar)**:
    - Tarjeta freestanding separada del lienzo con esquinas muy redondeadas (`rounded-3xl`) y sombra suave.
-   - **Ítem Activo (`Inicio`)**: Píldora redondeada completa (`rounded-full`) con degradado dorado metálico (`linear-gradient(135deg, #C9AD74 0%, #B8995E 100%)`) y texto oscuro contrastado (`#0B0C10`, 700 bold) en Dark, y verde `#0A3A2A` con texto blanco cálido en Light.
-3. **Panel de Bienvenida (Welcome Hero)**:
-   - Tarjeta destacada (`rounded-3xl`) con degradado suave.
-   - **Curvas Lineales Doradas**: Arcos elípticos amplios y elegantes trazados en el cuadrante superior derecho con trazo dorado suave (`#C9AD74` al 45% de opacidad en Dark, `#A98A55` en Light).
-   - **Fila de 4 Métricas**: Dispuestas estrictamente en una única fila horizontal de 4 columnas (`grid-cols-2 md:grid-cols-4 gap-3`), con tarjetas internas redondeadas (`rounded-2xl`) y bordes dorados discretos.
-4. **Tres Tarjetas de Acciones Rápidas**:
-   - Distribución en 3 columnas iguales (`grid-cols-1 md:grid-cols-3 gap-5`).
-   - Cada tarjeta contiene: icono circular temático (`Flag`, `CalendarClock`, `Award`), título en 700 bold, subtítulo en dos líneas y un **botón dorado de ancho completo** con texto en negrita.
-5. **Panel Inferior del Ecosistema del Club**:
-   - Tarjeta contenedora carbón `#202127` (Dark) o blanco cálido `#FCFAF5` (Light).
-   - Aloja exactamente 3 tarjetas modulares (`Calendario Partidos`, `Torneos Especiales`, `Mi Perfil y Hándicap WHS`) en verde bosque `#0C3029`→`#104238` (Dark) o salvia `#D8E4D9` (Light).
+   - **Ítem Activo (`Inicio` y módulos)**: Píldora redondeada completa (`rounded-full`) con degradado dorado metálico refinado (`linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)`, borde `#DFCB9E`) y texto oscuro contrastado (`#0B0C10`, 700 bold) en Dark, y en Light (`linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)`, borde `#CCB88E`).
+3. **Regla Universal de Cabeceras (`.hero-banner-luxury`) en Todas las Páginas**:
+   - **Obligatorio para toda página**: La sección superior de bienvenida o encabezado de módulo (`/`, `/scorecard`, `/stats`, `/bookings`, `/calendar`, `/tournaments`, `/events`, `/players`, `/clubs`, `/news`, `/info`, `/forum`, `/admin-chat`, `/profile`, `/login`) debe usar la clase `.hero-banner-luxury` con curvas SVG sutiles en la esquina derecha.
+   - **Modo Oscuro**: Degradado verde bosque esmeralda profundo (`#064334` → `#0D3028`), borde `rgba(201, 173, 116, 0.25)`, título `#E4D3AC`, subtítulo `#92A99E`.
+   - **Modo Claro**: Degradado champán dorado continuo (`#F2ECE0` → `#E9DECA` → `#DECBA4`), borde oro mate `rgba(197, 160, 89, 0.45)`, título `#0A3A2A`, subtítulo `#42584A`.
+4. **Regla Universal de Botones de Acción Dorados (`.btn-gold-gradient`)**:
+   - **Obligatorio en todos los sitios donde se use dorado**: Todo botón de acción primaria, selector activo o badge dorado debe incorporar el degradado metálico direccional con brillo lujoso y suave.
+   - **Calibración de contraste y luminosidad**:
+     - **Prohibido** convertir el dorado en un color plano o mate; debe mantener siempre su degradado a 135° y sensación tridimensional metálica.
+     - **Prohibido** usar destellos casi blancos (`#FFF8E7`, `#FDF7E7`) o efectos cromados estridentes.
+     - La transición entre claros y oscuros se reduce a un delta controlado (~22% de variación de luminancia), empleando reflejos champán cálidos (`#E6D4A7` en Dark, `#D4BE92` en Light) y sombras doradas sutiles (`#BA9C61` en Dark, `#9C7E4A` en Light).
+   - Texto siempre en negro carbón `#0B0C10` en negrita 700, borde fino `#DFCB9E` (Dark) / `#CCB88E` (Light) y sombra dorada sutil `0 4px 14px rgba(201, 173, 116, 0.22)` (Dark) / `rgba(169, 138, 85, 0.18)` (Light).
+5. **Regla Universal de Tarjetas (`.card-luxury`)**:
+   - Las tarjetas de contenido, métricas y formularios deben usar `.card-luxury`, que provee esquinas redondeadas (`rounded-2xl` o `rounded-3xl`), fondo carbón `#19191E`→`#252329` con borde oro `rgba(201, 173, 116, 0.2)` en Dark, y blanco marfil puro `#FFFFFF` con borde oro `rgba(197, 160, 89, 0.35)` y sombra cálida en Light.
 6. **Regla de Ausencia de Adornos Artificiales**:
    - **Prohibido** añadir wireframes geométricos, ilustraciones poligonales o hileras de píldoras accesorias que no formen parte de las referencias visuales aprobadas.
+   - **Prohibido** volver a hardcodear colores antiguos (`#16382A`, `#0F241B`, `#08130E`, `#F4F6F4`, `#A38332`, `#D4AF37`) directamente en componentes.
 
 ---
 
@@ -128,66 +133,90 @@ Los archivos de referencia de diseño se encuentran preservados en el repositori
   - Muestra la composición con cabecera verde `#06372D`, fondo exterior carbón `#0B0C10`, barra lateral `#202127`, hero verde esmeralda con arcos dorados, tarjetas carbón con botones dorados `#C9AD74` y panel inferior con tarjetas verdes.
 - **Modo Claro (Imagen 2)**: [`docs/brand/reference-light.jpg`](../../../docs/brand/reference-light.jpg)
   - Muestra la composición diurna con fondo marfil `#F7F3EA`, cabecera verde grisáceo `#DCE6DD`, tarjetas blanco marfil `#FFFDF6` con botones dorados `#A98A55` y tarjetas de módulos en salvia `#D8E4D9`.
+- **Detalle Hero Dorado en Modo Claro (Imagen 3)**: [`docs/brand/reference-welcome-gold.jpg`](../../../docs/brand/reference-welcome-gold.jpg)
+  - Muestra la tarjeta de bienvenida con degradado champán dorado (`#F2ECE0` → `#E9DECA` → `#DECBA4`), curvas áureas elegantes, píldora GPS translúcida y las 4 tarjetas de métricas en blanco puro con bordes dorados discretos.
 
 ---
 
-## 7. Plantilla para Nuevos Componentes
+## 7. Plantilla Oficial para Nuevas Páginas y Componentes
 
-Al añadir una nueva tarjeta o vista que deba alinearse con esta identidad:
+Al añadir una nueva página o componente en la aplicación, se debe seguir esta estructura oficial garantizada:
 
 ```tsx
 import React from 'react';
+import { useClub } from '@/components/providers/ClubProvider';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { Flag, Sparkles } from 'lucide-react';
 
-export function LuxuryCard({
-  title,
-  metric,
-  description,
-}: {
-  title: string;
-  metric: string;
-  description: string;
-}) {
+export default function ExamplePage() {
+  const { club } = useClub();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
   return (
-    <article
-      style={{
-        background: isDark
-          ? 'linear-gradient(135deg, #19191E 0%, #252329 100%)'
-          : '#FFFDF6',
-        borderColor: isDark
-          ? 'rgba(201, 173, 116, 0.25)'
-          : 'rgba(169, 138, 85, 0.3)',
-      }}
-      className="rounded-3xl p-6 border shadow-sm transition"
-    >
-      <span
-        style={{ color: isDark ? '#92A99E' : '#52665B' }}
-        className="text-[11px] font-semibold uppercase tracking-wider"
-      >
-        Métrica Oficial
-      </span>
-      <h3
-        style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
-        className="text-xl font-bold mt-1"
-      >
-        {title}
-      </h3>
-      <div
-        style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
-        className="text-2xl font-bold mt-2"
-      >
-        {metric}
+    <div className="space-y-6">
+      {/* 1. Cabecera Hero Oficial: .hero-banner-luxury */}
+      <section className="hero-banner-luxury relative overflow-hidden rounded-2xl border p-6 shadow-sm transition-colors">
+        {/* Curvas sutiles de fondo */}
+        <svg
+          className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-20 dark:opacity-15"
+          viewBox="0 0 400 200"
+          fill="none"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 200 C 150 180, 250 80, 400 0 L 400 200 Z"
+            fill="url(#example-hero-gold)"
+          />
+          <defs>
+            <linearGradient id="example-hero-gold" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#C9AD74" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#E6D4A7" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#BA9C61" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+              <Flag className="h-3.5 w-3.5" />
+              Sección Oficial · {club.name}
+            </span>
+            <h1 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              Título del Módulo
+            </h1>
+            <p className="text-sm font-normal text-[var(--theme-text-secondary)]">
+              Subtítulo explicativo con la funcionalidad del módulo.
+            </p>
+          </div>
+
+          {/* Botón de acción con degradado dorado metálico */}
+          <button
+            type="button"
+            className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4" />
+            Acción Principal
+          </button>
+        </div>
+      </section>
+
+      {/* 2. Tarjetas de Contenido Oficiales: .card-luxury */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <article className="card-luxury rounded-2xl border p-6 shadow-sm transition">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+            Métrica Oficial
+          </span>
+          <h3 className="mt-1 text-base font-bold text-[var(--theme-text-primary)]">
+            Tarjeta de Información
+          </h3>
+          <p className="mt-2 text-xs font-normal leading-relaxed text-[var(--theme-text-secondary)]">
+            Texto explicativo y detalles del módulo.
+          </p>
+        </article>
       </div>
-      <p
-        style={{ color: isDark ? '#D5C7A5' : '#52665B' }}
-        className="text-xs font-normal mt-2 leading-relaxed"
-      >
-        {description}
-      </p>
-    </article>
+    </div>
   );
 }
 ```

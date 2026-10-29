@@ -94,8 +94,28 @@ export default function ClubsDirectoryPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera y buscador */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <section className="hero-banner-luxury relative overflow-hidden rounded-2xl border p-6 shadow-sm transition-colors">
+          {/* Curvas sutiles de fondo */}
+          <svg
+            className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-20 dark:opacity-15"
+            viewBox="0 0 400 200"
+            fill="none"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 200 C 150 180, 250 80, 400 0 L 400 200 Z"
+              fill="url(#clubs-hero-gold)"
+            />
+            <defs>
+              <linearGradient id="clubs-hero-gold" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#C9AD74" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#E6D4A7" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#BA9C61" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
                 <Compass className="h-3.5 w-3.5" />
@@ -113,11 +133,7 @@ export default function ClubsDirectoryPage() {
             <button
               type="button"
               onClick={() => handleCacheOffline(selectedCourse)}
-              style={{
-                backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                color: isDark ? '#08130E' : '#FFFFFF',
-              }}
-              className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-xs transition hover:opacity-95 cursor-pointer"
+              className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition cursor-pointer"
             >
               <DownloadCloud className="h-4 w-4" />
               Descargar Recorrido a SQLite Offline
@@ -127,7 +143,7 @@ export default function ClubsDirectoryPage() {
           {syncMessage && (
             <div
               role="status"
-              className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-400"
+              className="relative z-10 mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-400"
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
               <span>{syncMessage}</span>
@@ -135,7 +151,7 @@ export default function ClubsDirectoryPage() {
           )}
 
           {/* Filtros de búsqueda */}
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="relative z-10 mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="relative sm:col-span-2">
               <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-[var(--theme-text-secondary)]" />
               <input
@@ -180,15 +196,17 @@ export default function ClubsDirectoryPage() {
                 style={
                   isSelected
                     ? {
-                        backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-                        borderColor: isDark ? '#D4AF37' : '#A38332',
+                        borderColor: isDark ? '#C9AD74' : '#A98A55',
+                        boxShadow: isDark
+                          ? '0 4px 16px rgba(201, 173, 116, 0.2)'
+                          : '0 4px 16px rgba(169, 138, 85, 0.15)',
                       }
                     : undefined
                 }
                 className={`cursor-pointer rounded-2xl border p-5 transition ${
                   isSelected
-                    ? 'border-2 shadow-xs'
-                    : 'border-[var(--theme-border)] bg-[var(--theme-surface)] hover:border-[var(--theme-accent)]'
+                    ? 'border-2 card-luxury'
+                    : 'card-luxury hover:border-[var(--theme-accent)]'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -204,11 +222,13 @@ export default function ClubsDirectoryPage() {
                   {isClubHome && (
                     <span
                       style={{
-                        backgroundColor: isDark ? 'rgba(212, 175, 55, 0.2)' : 'rgba(163, 131, 50, 0.15)',
-                        color: isDark ? '#D4AF37' : '#A38332',
-                        borderColor: isDark ? '#D4AF37' : '#A38332',
+                        background: isDark
+                          ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                          : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                        color: '#0B0C10',
+                        borderColor: isDark ? '#DFCB9E' : '#CCB88E',
                       }}
-                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-bold"
+                      className="rounded-full border px-2.5 py-0.5 text-[11px] font-bold shadow-xs"
                     >
                       Sede Activa
                     </span>
@@ -253,7 +273,7 @@ export default function ClubsDirectoryPage() {
         </section>
 
         {/* Detalle Técnico del Recorrido Seleccionado */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
+        <section className="card-luxury rounded-2xl border p-6 shadow-sm transition-colors">
           <div className="flex flex-col justify-between gap-4 border-b border-[var(--theme-border)] pb-5 lg:flex-row lg:items-center">
             <div>
               <div className="flex items-center gap-2">
@@ -286,9 +306,11 @@ export default function ClubsDirectoryPage() {
                   style={
                     selectedTeeColor === teeBtn.key
                       ? {
-                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          color: isDark ? '#08130E' : '#FFFFFF',
-                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          color: '#0B0C10',
+                          borderColor: isDark ? '#DFCB9E' : '#CCB88E',
                         }
                       : undefined
                   }
@@ -352,8 +374,11 @@ export default function ClubsDirectoryPage() {
                   ))}
                   <th
                     style={{
-                      backgroundColor: isDark ? '#16382A' : '#0A3A2A',
-                      color: isDark ? '#D4AF37' : '#FFFFFF',
+                      background: isDark
+                        ? 'linear-gradient(135deg, #064334 0%, #0D3028 100%)'
+                        : 'linear-gradient(135deg, #0A3A2A 0%, #164D3A 100%)',
+                      color: isDark ? '#E4D3AC' : '#FFFFFF',
+                      borderColor: isDark ? '#C9AD74' : '#A98A55',
                     }}
                     className="px-3 py-2 font-bold"
                   >
@@ -417,8 +442,11 @@ export default function ClubsDirectoryPage() {
                   ))}
                   <th
                     style={{
-                      backgroundColor: isDark ? '#16382A' : '#0A3A2A',
-                      color: isDark ? '#D4AF37' : '#FFFFFF',
+                      background: isDark
+                        ? 'linear-gradient(135deg, #064334 0%, #0D3028 100%)'
+                        : 'linear-gradient(135deg, #0A3A2A 0%, #164D3A 100%)',
+                      color: isDark ? '#E4D3AC' : '#FFFFFF',
+                      borderColor: isDark ? '#C9AD74' : '#A98A55',
                     }}
                     className="px-3 py-2 font-bold"
                   >
@@ -426,8 +454,11 @@ export default function ClubsDirectoryPage() {
                   </th>
                   <th
                     style={{
-                      backgroundColor: isDark ? '#0F241B' : '#A38332',
-                      color: isDark ? '#D4AF37' : '#FFFFFF',
+                      background: isDark
+                        ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                        : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                      color: '#0B0C10',
+                      borderColor: isDark ? '#DFCB9E' : '#CCB88E',
                     }}
                     className="px-3 py-2 font-bold"
                   >

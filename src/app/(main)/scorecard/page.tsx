@@ -217,22 +217,36 @@ export default function ScorecardAndGpsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera de la Ronda y Estado Offline SQLite */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center relative z-10">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+                <span
+                  style={{
+                    backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                    borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                    color: isDark ? '#E4D3AC' : '#0A3A2A',
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+                >
                   <Database className="h-3.5 w-3.5" />
                   SQLite Offline-First Activo
                 </span>
-                <span className="rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-text-secondary)]">
+                <span
+                  style={{
+                    backgroundColor: isDark ? 'rgba(42, 36, 20, 0.7)' : 'rgba(255, 255, 255, 0.6)',
+                    borderColor: isDark ? 'rgba(201, 173, 116, 0.25)' : 'rgba(197, 160, 89, 0.35)',
+                    color: isDark ? '#D5C7A5' : '#42584A',
+                  }}
+                  className="rounded-full border px-3 py-1 text-xs font-semibold"
+                >
                   Playing HCP: {playingHandicap} ({selectedTee.name})
                 </span>
               </div>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              <h2 className="mt-2 text-2xl font-bold">
                 Marcador Digital y Telémetro GPS
               </h2>
-              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+              <p className="text-sm font-normal opacity-90">
                 {course.name} · Par {course.parTotal} · Jugador: {currentUser.fullName}
               </p>
             </div>
@@ -248,7 +262,12 @@ export default function ScorecardAndGpsPage() {
                   }
                 }}
                 aria-label="Modalidad de hoyos de la ronda"
-                className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--theme-text-primary)] focus:outline-none"
+                style={{
+                  backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.4)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="rounded-xl border px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer"
               >
                 <option value={18}>Vuelta 18 Hoyos</option>
                 <option value={9}>Vuelta 9 Hoyos</option>
@@ -261,7 +280,12 @@ export default function ScorecardAndGpsPage() {
                   setActiveHoleNumber(1);
                 }}
                 aria-label="Seleccionar recorrido"
-                className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--theme-text-primary)] focus:outline-none"
+                style={{
+                  backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.4)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="rounded-xl border px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer"
               >
                 {GOLF_API_COURSES_CATALOG.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -273,12 +297,7 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={handleFlushQueue}
-                style={{
-                  backgroundColor: isDark ? '#16382A' : '#0A3A2A',
-                  color: isDark ? '#D4AF37' : '#FFFFFF',
-                  borderColor: isDark ? '#255440' : '#1A4D3A',
-                }}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition hover:opacity-90 border shadow-xs cursor-pointer"
+                className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
               >
                 <CloudUpload className="h-4 w-4" />
                 Sincronizar Cola ({pendingQueueCount})
@@ -297,7 +316,7 @@ export default function ScorecardAndGpsPage() {
           )}
 
           {/* Selector horizontal de los 18 Hoyos */}
-          <div className="mt-5 flex items-center gap-1.5 overflow-x-auto pb-2">
+          <div className="mt-5 flex items-center gap-1.5 overflow-x-auto pb-2 relative z-10">
             {course.holes.map((h) => {
               const recorded = recordedScores.find(
                 (s) => s.holeNumber === h.holeNumber
@@ -312,15 +331,21 @@ export default function ScorecardAndGpsPage() {
                   style={
                     isCurrent
                       ? {
-                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          color: isDark ? '#08130E' : '#FFFFFF',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+                          color: '#0B0C10',
+                          fontWeight: 700,
+                          boxShadow: isDark
+                            ? '0 3px 12px rgba(201, 173, 116, 0.26)'
+                            : '0 3px 12px rgba(169, 138, 85, 0.2)',
                         }
                       : recorded
                         ? {
-                            backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-                            borderColor: isDark ? '#255440' : '#CBD5E1',
-                            color: isDark ? '#D4AF37' : '#0A3A2A',
+                            backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                            borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.4)',
+                            color: isDark ? '#E4D3AC' : '#0A3A2A',
                           }
                         : undefined
                   }
@@ -345,14 +370,16 @@ export default function ScorecardAndGpsPage() {
         {/* Grid Central: Panel de Anotación del Hoyo Activo + Telémetro GPS */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Anotador del Hoyo Activo */}
-          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs lg:col-span-7 transition-colors">
+          <section className="card-luxury p-6 shadow-xs lg:col-span-7 transition-colors">
             <div className="flex items-center justify-between border-b border-[var(--theme-border)] pb-4">
               <div className="flex items-center gap-3">
                 <div
                   style={{
-                    backgroundColor: isDark ? '#16382A' : '#0A3A2A',
-                    color: isDark ? '#D4AF37' : '#FFFFFF',
-                    borderColor: isDark ? '#255440' : '#1A4D3A',
+                    background: isDark
+                      ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                      : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                    color: isDark ? '#E5C365' : '#8C6F32',
+                    borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : 'rgba(169, 138, 85, 0.5)',
                   }}
                   className="flex h-12 w-12 items-center justify-center rounded-2xl border text-lg font-bold shadow-xs"
                 >
@@ -543,11 +570,7 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={handleSaveHoleOffline}
-                style={{
-                  backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                  color: isDark ? '#08130E' : '#FFFFFF',
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition hover:opacity-95 cursor-pointer"
+                className="btn-gold-gradient flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition cursor-pointer"
               >
                 <Flag className="h-4 w-4" />
                 Guardar Hoyo {activeHole.holeNumber} en SQLite Offline
@@ -562,7 +585,7 @@ export default function ScorecardAndGpsPage() {
         </div>
 
         {/* Resumen Acumulado de la Tarjeta (Ida / Vuelta / Total Stableford) */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
+        <section className="card-luxury p-6 shadow-xs transition-colors">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[var(--theme-accent)]" />
@@ -575,7 +598,7 @@ export default function ScorecardAndGpsPage() {
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
               <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Golpes Brutos</span>
-              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
                 {roundSummary.totalGrossStrokes}
               </p>
               <span className="text-[11px] text-[var(--theme-text-secondary)]">
@@ -585,7 +608,7 @@ export default function ScorecardAndGpsPage() {
 
             <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
               <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Golpes Netos</span>
-              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
                 {roundSummary.totalNetStrokes}
               </p>
               <span className="text-[11px] text-[var(--theme-text-secondary)]">
@@ -595,24 +618,29 @@ export default function ScorecardAndGpsPage() {
 
             <div
               style={{
-                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(10, 58, 42, 0.08)',
-                borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                background: isDark
+                  ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                  : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.5)' : 'rgba(169, 138, 85, 0.5)',
+                boxShadow: isDark
+                  ? '0 2px 10px rgba(201, 173, 116, 0.2)'
+                  : '0 2px 8px rgba(169, 138, 85, 0.15)',
               }}
-              className="rounded-xl border p-3.5"
+              className="rounded-xl border-2 p-3.5"
             >
               <span
-                style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+                style={{ color: isDark ? '#E6D4A7' : '#8C6F32' }}
                 className="text-xs font-bold"
               >
                 Puntos Stableford
               </span>
               <p
-                style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+                style={{ color: isDark ? '#E6D4A7' : '#0A3A2A' }}
                 className="mt-1 text-2xl font-metric font-bold"
               >
                 {roundSummary.totalStablefordPoints} pts
               </p>
-              <span className="text-[11px] opacity-80">
+              <span className="text-[11px] opacity-80 font-medium">
                 Ida {roundSummary.outStablefordPoints} · Vta{' '}
                 {roundSummary.inStablefordPoints}
               </span>

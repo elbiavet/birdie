@@ -56,18 +56,43 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Cabecera de Perfil y Hándicap */}
-      <div className="bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs flex flex-wrap items-center justify-between gap-4 transition-colors">
-        <div className="flex items-center gap-4">
+      <div className="hero-banner-luxury relative overflow-hidden rounded-2xl border p-6 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors">
+        {/* Curvas sutiles de fondo */}
+        <svg
+          className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-20 dark:opacity-15"
+          viewBox="0 0 400 200"
+          fill="none"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 200 C 150 180, 250 80, 400 0 L 400 200 Z"
+            fill="url(#profile-hero-gold)"
+          />
+          <defs>
+            <linearGradient id="profile-hero-gold" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#C9AD74" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#E6D4A7" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#BA9C61" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div className="relative z-10 flex items-center gap-4">
           <div
             style={{
-              backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-              color: isDark ? '#D4AF37' : '#0A3A2A',
-              borderColor: isDark ? '#255440' : '#CBD5E1',
+              background: isDark
+                ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+              color: '#0B0C10',
+              borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+              boxShadow: isDark
+                ? '0 4px 14px rgba(201, 173, 116, 0.22)'
+                : '0 4px 14px rgba(169, 138, 85, 0.18)',
             }}
-            className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-bold shadow-xs border"
+            className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-bold shadow-sm border"
           >
-            <span className="text-[10px] uppercase opacity-80">HCP</span>
-            <span className="text-xl font-bold">{profile.handicapIndex.toFixed(1)}</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">HCP</span>
+            <span className="text-xl font-extrabold">{profile.handicapIndex.toFixed(1)}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -88,7 +113,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={handleEnablePush}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]"
+          className="relative z-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]"
         >
           <Bell className="w-4 h-4 text-[var(--theme-accent)]" />
           Activar Notificaciones Push (FCM / APNs)
@@ -108,7 +133,7 @@ export default function ProfilePage() {
         {/* Formulario de Datos del Jugador y Hándicap */}
         <form
           onSubmit={handleSaveProfile}
-          className="lg:col-span-2 bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs space-y-4 transition-colors"
+          className="lg:col-span-2 card-luxury rounded-2xl border p-6 shadow-sm space-y-4 transition-colors"
         >
           <h2 className="text-base font-bold text-[var(--theme-text-primary)]">
             Datos del Jugador y Configuración de Privacidad
@@ -208,7 +233,7 @@ export default function ProfilePage() {
         </form>
 
         {/* Calculadora de Hándicap de Juego por Barras (Course Handicap) */}
-        <div className="bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs space-y-4 transition-colors">
+        <div className="card-luxury rounded-2xl border p-6 shadow-sm space-y-4 transition-colors">
           <div className="flex items-center gap-2">
             <Medal className="w-5 h-5 text-[var(--theme-accent)]" />
             <h2 className="text-base font-bold text-[var(--theme-text-primary)]">

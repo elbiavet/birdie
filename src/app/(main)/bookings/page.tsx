@@ -134,17 +134,24 @@ export default function TeeTimeBookingsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center relative z-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+              <span
+                style={{
+                  backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+              >
                 <CalendarDays className="h-3.5 w-3.5" />
                 Control de Cupo en Vivo · RLS por Socio / Admin
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              <h2 className="mt-2 text-2xl font-bold">
                 Reservas de Salidas (Tee Times)
               </h2>
-              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+              <p className="text-sm font-normal opacity-90">
                 Selecciona tu fecha y franja horaria en {club.name}. Máximo 4 jugadores
                 por salida.
               </p>
@@ -159,9 +166,15 @@ export default function TeeTimeBookingsPage() {
                   style={
                     selectedDate === d
                       ? {
-                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          color: isDark ? '#08130E' : '#FFFFFF',
-                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          color: '#0B0C10',
+                          borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+                          fontWeight: 700,
+                          boxShadow: isDark
+                            ? '0 3px 12px rgba(201, 173, 116, 0.26)'
+                            : '0 3px 12px rgba(169, 138, 85, 0.2)',
                         }
                       : undefined
                   }
@@ -212,8 +225,13 @@ export default function TeeTimeBookingsPage() {
                   style={
                     isSelected
                       ? {
-                          backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-                          borderColor: isDark ? '#D4AF37' : '#A38332',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                            : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                          borderColor: isDark ? 'rgba(201, 173, 116, 0.5)' : 'rgba(169, 138, 85, 0.5)',
+                          boxShadow: isDark
+                            ? '0 2px 10px rgba(201, 173, 116, 0.2)'
+                            : '0 2px 8px rgba(169, 138, 85, 0.15)',
                         }
                       : undefined
                   }
@@ -227,9 +245,11 @@ export default function TeeTimeBookingsPage() {
                     <div className="flex items-center gap-3">
                       <div
                         style={{
-                          backgroundColor: isDark ? '#08130E' : '#0A3A2A',
-                          color: isDark ? '#D4AF37' : '#FFFFFF',
-                          borderColor: isDark ? '#255440' : '#1A4D3A',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                            : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                          color: isDark ? '#E5C365' : '#8C6F32',
+                          borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : 'rgba(169, 138, 85, 0.5)',
                         }}
                         className="flex h-12 w-16 items-center justify-center rounded-xl border font-mono text-sm font-bold shadow-xs"
                       >
@@ -351,9 +371,12 @@ export default function TeeTimeBookingsPage() {
                       style={
                         playersCount === num
                           ? {
-                              backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                              color: isDark ? '#08130E' : '#FFFFFF',
-                              borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                              background: isDark
+                                ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                                : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                              color: '#0B0C10',
+                              borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+                              fontWeight: 700,
                             }
                           : undefined
                       }
@@ -397,11 +420,7 @@ export default function TeeTimeBookingsPage() {
               <button
                 type="submit"
                 disabled={activeSlot.isBlocked}
-                style={{
-                  backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                  color: isDark ? '#08130E' : '#FFFFFF',
-                }}
-                className="w-full rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition hover:opacity-95 disabled:opacity-40 cursor-pointer"
+                className="btn-gold-gradient w-full rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition hover:opacity-95 disabled:opacity-40 cursor-pointer"
               >
                 Confirmar Reserva ({playersCount * activeSlot.greenFeeEuros} €)
               </button>

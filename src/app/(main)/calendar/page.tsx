@@ -69,22 +69,36 @@ export default function MatchCalendarPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera y Filtros */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center relative z-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+              <span
+                style={{
+                  backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+              >
                 <Calendar className="h-3.5 w-3.5" />
                 Partidas Abiertas y Salidas Sociales
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              <h2 className="mt-2 text-2xl font-bold">
                 Calendario de Partidos
               </h2>
-              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+              <p className="text-sm font-normal opacity-90">
                 Encuentra compañeros de partida por nivel de hándicap, modalidad y mes.
               </p>
             </div>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3.5 py-2 text-xs font-semibold text-[var(--theme-text-primary)]">
+            <label
+              style={{
+                backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.3)' : 'rgba(197, 160, 89, 0.35)',
+                color: isDark ? '#E4D3AC' : '#0A3A2A',
+              }}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold"
+            >
               <input
                 type="checkbox"
                 checked={onlyOpenSpots}
@@ -150,7 +164,7 @@ export default function MatchCalendarPage() {
             return (
               <div
                 key={match.id}
-                className="flex flex-col justify-between rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors"
+                className="card-luxury flex flex-col justify-between p-6 shadow-xs transition-colors"
               >
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -204,11 +218,7 @@ export default function MatchCalendarPage() {
                     type="button"
                     disabled={alreadyJoined || seatsLeft === 0}
                     onClick={() => handleJoinMatch(match.id)}
-                    style={{
-                      backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                      color: isDark ? '#08130E' : '#FFFFFF',
-                    }}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition hover:opacity-95 disabled:opacity-40 cursor-pointer"
+                    className="btn-gold-gradient inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition hover:opacity-95 disabled:opacity-40 cursor-pointer"
                   >
                     <UserPlus className="h-4 w-4" />
                     {alreadyJoined

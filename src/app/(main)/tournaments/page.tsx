@@ -80,17 +80,24 @@ export default function TournamentsAndLeaderboardPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center relative z-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+              <span
+                style={{
+                  backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+              >
                 <Trophy className="h-3.5 w-3.5" />
                 Competición Oficial · Clasificación WHS en Vivo
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              <h2 className="mt-2 text-2xl font-bold">
                 Torneos y Resultados (Leaderboard)
               </h2>
-              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+              <p className="text-sm font-normal opacity-90">
                 Consulta el orden de salidas, inscríbete en campeonatos abiertos y sigue
                 la clasificación en tiempo real.
               </p>
@@ -100,11 +107,7 @@ export default function TournamentsAndLeaderboardPage() {
               <button
                 type="button"
                 onClick={handleRegister}
-                style={{
-                  backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                  color: isDark ? '#08130E' : '#FFFFFF',
-                }}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition hover:opacity-95 cursor-pointer"
+                className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-xs transition hover:opacity-95 cursor-pointer"
               >
                 <UserPlus className="h-4 w-4" />
                 Inscribirme ({activeTournament.entryFeeEuros} €)
@@ -131,7 +134,7 @@ export default function TournamentsAndLeaderboardPage() {
           )}
 
           {/* Selector de Torneo */}
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 relative z-10">
             {tournaments.map((t) => {
               const isSelected = t.id === activeTournament.id;
               return (
@@ -144,8 +147,13 @@ export default function TournamentsAndLeaderboardPage() {
                   style={
                     isSelected
                       ? {
-                          backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-                          borderColor: isDark ? '#D4AF37' : '#A38332',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                            : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                          borderColor: isDark ? 'rgba(201, 173, 116, 0.5)' : 'rgba(169, 138, 85, 0.5)',
+                          boxShadow: isDark
+                            ? '0 2px 10px rgba(201, 173, 116, 0.2)'
+                            : '0 2px 8px rgba(169, 138, 85, 0.15)',
                         }
                       : undefined
                   }
@@ -216,9 +224,15 @@ export default function TournamentsAndLeaderboardPage() {
                   style={
                     activeScoringView === tab.id
                       ? {
-                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          color: isDark ? '#08130E' : '#FFFFFF',
-                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          color: '#0B0C10',
+                          borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+                          fontWeight: 700,
+                          boxShadow: isDark
+                            ? '0 2px 10px rgba(201, 173, 116, 0.22)'
+                            : '0 2px 10px rgba(169, 138, 85, 0.18)',
                         }
                       : undefined
                   }
@@ -263,7 +277,7 @@ export default function TournamentsAndLeaderboardPage() {
                       style={
                         row.position === 1
                           ? {
-                              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(163, 131, 50, 0.08)',
+                              backgroundColor: isDark ? 'rgba(201, 173, 116, 0.15)' : 'rgba(169, 138, 85, 0.12)',
                             }
                           : undefined
                       }
@@ -301,11 +315,13 @@ export default function TournamentsAndLeaderboardPage() {
                       <td className="px-3 py-3 text-center">
                         <span
                           style={{
-                            backgroundColor: isDark ? '#16382A' : '#E8ECE9',
-                            color: isDark ? '#D4AF37' : '#0A3A2A',
-                            borderColor: isDark ? '#255440' : '#CBD5E1',
+                            background: isDark
+                              ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                              : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                            color: isDark ? '#E5C365' : '#8C6F32',
+                            borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : 'rgba(169, 138, 85, 0.5)',
                           }}
-                          className="rounded-lg border px-2.5 py-1 font-metric font-bold"
+                          className="rounded-lg border px-2.5 py-1 font-metric font-bold shadow-2xs"
                         >
                           {row.stablefordPoints} pts
                         </span>

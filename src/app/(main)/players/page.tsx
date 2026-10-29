@@ -78,24 +78,37 @@ export default function PlayerDirectoryPage() {
   return (
     <div className="space-y-6">
       {/* Cabecera */}
-      <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center relative z-10">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+            <span
+              style={{
+                backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                color: isDark ? '#E4D3AC' : '#0A3A2A',
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+            >
               <Users className="h-3.5 w-3.5" />
               Comunidad de Socios · Privacidad Opt-In (RLS)
             </span>
-            <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+            <h2 className="mt-2 text-2xl font-bold">
               Directorio de Jugadores
             </h2>
-            <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+            <p className="text-sm font-normal opacity-90">
               Encuentra compañeros de partida en {club.name} por nombre, licencia
               federativa o tramo de hándicap WHS. Solo se muestran socios con
               visibilidad pública activa.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-4 py-3">
+          <div
+            style={{
+              backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+              borderColor: isDark ? 'rgba(201, 173, 116, 0.3)' : 'rgba(197, 160, 89, 0.35)',
+            }}
+            className="flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-xs"
+          >
             <Award className="h-8 w-8 text-[var(--theme-accent)]" />
             <div>
               <div className="text-xs font-semibold text-[var(--theme-text-secondary)]">
@@ -112,14 +125,14 @@ export default function PlayerDirectoryPage() {
         </div>
 
         {syncNotice && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs text-emerald-400">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs text-emerald-400 relative z-10">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
             <span>{syncNotice}</span>
           </div>
         )}
 
         {/* Controles de Búsqueda y Filtro por Tramo de Hándicap */}
-        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12 relative z-10">
           <div className="relative lg:col-span-5">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--theme-text-secondary)]" />
             <input
@@ -128,7 +141,12 @@ export default function PlayerDirectoryPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar socio por nombre, licencia (ej. AM-284910) o modalidad..."
               aria-label="Buscar jugador en el directorio"
-              className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] py-2.5 pl-10 pr-4 text-sm text-[var(--theme-text-primary)] focus:border-[var(--theme-accent)] focus:outline-none"
+              style={{
+                backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.3)' : 'rgba(197, 160, 89, 0.35)',
+                color: isDark ? '#E4D3AC' : '#0A3A2A',
+              }}
+              className="w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm focus:outline-none"
             />
           </div>
 
@@ -147,17 +165,23 @@ export default function PlayerDirectoryPage() {
                   style={
                     active
                       ? {
-                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
-                          color: isDark ? '#08130E' : '#FFFFFF',
-                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          color: '#0B0C10',
+                          borderColor: isDark ? '#DFCB9E' : '#CCB88E',
+                          fontWeight: 700,
+                          boxShadow: isDark
+                            ? '0 2px 10px rgba(201, 173, 116, 0.22)'
+                            : '0 2px 10px rgba(169, 138, 85, 0.18)',
                         }
-                      : undefined
+                      : {
+                          backgroundColor: isDark ? '#19191E' : '#FFFFFF',
+                          borderColor: isDark ? 'rgba(201, 173, 116, 0.25)' : 'rgba(197, 160, 89, 0.3)',
+                          color: isDark ? '#D5C7A5' : '#0A3A2A',
+                        }
                   }
-                  className={`rounded-xl border px-3 py-2 text-xs font-bold transition cursor-pointer ${
-                    active
-                      ? 'shadow-xs'
-                      : 'border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]'
-                  }`}
+                  className="rounded-xl border px-3 py-2 text-xs font-bold transition cursor-pointer"
                 >
                   {b.label}
                 </button>
@@ -182,7 +206,7 @@ export default function PlayerDirectoryPage() {
           {visiblePlayers.map((player) => (
             <article
               key={player.id}
-              className="flex flex-col justify-between rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-5 shadow-xs transition hover:border-[var(--theme-accent)]"
+              className="card-luxury flex flex-col justify-between p-5 shadow-xs transition hover:border-[var(--theme-accent)]"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
@@ -205,9 +229,11 @@ export default function PlayerDirectoryPage() {
 
                   <div
                     style={{
-                      backgroundColor: isDark ? '#16382A' : '#0A3A2A',
-                      color: isDark ? '#D4AF37' : '#FFFFFF',
-                      borderColor: isDark ? '#255440' : '#1A4D3A',
+                      background: isDark
+                        ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                        : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+                      color: isDark ? '#E5C365' : '#8C6F32',
+                      borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : 'rgba(169, 138, 85, 0.5)',
                     }}
                     className="rounded-xl border px-3 py-1.5 text-center shadow-xs"
                   >

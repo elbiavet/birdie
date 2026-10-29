@@ -68,19 +68,26 @@ export default function PlayerStatsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera */}
-        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center relative z-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
+              <span
+                style={{
+                  backgroundColor: isDark ? 'rgba(42, 36, 20, 0.85)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
+                  color: isDark ? '#E4D3AC' : '#0A3A2A',
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
+              >
                 <BarChart3 className="h-3.5 w-3.5" />
                 Analítica Deportiva WHS · Tiempo Real + Histórico
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
+              <h2 className="mt-2 text-2xl font-bold">
                 Estadísticas de Rendimiento
               </h2>
-              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
-                Jugador: <span className="font-semibold text-[var(--theme-text-primary)]">{profile.fullName}</span> ·{' '}
-                Hándicap Exacto <span className="font-bold text-[var(--theme-accent)]">{profile.handicapIndex}</span>{' '}
+              <p className="text-sm font-normal opacity-90">
+                Jugador: <span className="font-semibold">{profile.fullName}</span> ·{' '}
+                Hándicap Exacto <span className="font-bold">{profile.handicapIndex}</span>{' '}
                 · Muestra analizada: {stats.holesCount} hoyos ({stats.roundsCount} vueltas)
               </p>
             </div>
@@ -96,7 +103,7 @@ export default function PlayerStatsPage() {
 
         {/* KPIs Principales */}
         <section className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+          <div className="card-luxury p-4 shadow-xs transition-colors">
             <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Media Bruta (18h)
             </span>
@@ -108,41 +115,46 @@ export default function PlayerStatsPage() {
 
           <div
             style={{
-              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(10, 58, 42, 0.08)',
-              borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+              background: isDark
+                ? 'linear-gradient(135deg, #2D271D 0%, #1F1E24 100%)'
+                : 'linear-gradient(135deg, #FAF4E8 0%, #EFE5D0 100%)',
+              borderColor: isDark ? 'rgba(201, 173, 116, 0.5)' : 'rgba(169, 138, 85, 0.5)',
+              boxShadow: isDark
+                ? '0 2px 10px rgba(201, 173, 116, 0.2)'
+                : '0 2px 8px rgba(169, 138, 85, 0.15)',
             }}
-            className="rounded-2xl border p-4 shadow-xs transition-colors"
+            className="rounded-2xl border-2 p-4 shadow-xs transition-colors"
           >
             <span
-              style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+              style={{ color: isDark ? '#E6D4A7' : '#8C6F32' }}
               className="text-xs font-bold"
             >
               Media Stableford
             </span>
             <p
-              style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+              style={{ color: isDark ? '#E6D4A7' : '#0A3A2A' }}
               className="mt-1 text-2xl font-metric font-bold"
             >
               {stats.averageStablefordPer18} pts
             </p>
-            <span className="text-[11px] opacity-80">Base 36 pts WHS</span>
+            <span className="text-[11px] opacity-80 font-medium">Base 36 pts WHS</span>
           </div>
 
-          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+          <div className="card-luxury p-4 shadow-xs transition-colors">
             <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Calles Cogidas (FIR)
             </span>
-            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
               {stats.fairwayHitPercentage}%
             </p>
             <span className="text-[11px] text-[var(--theme-text-secondary)]">Precisión desde el Tee</span>
           </div>
 
-          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+          <div className="card-luxury p-4 shadow-xs transition-colors">
             <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Green en Reg. (GIR)
             </span>
-            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
               {stats.girPercentage}%
             </p>
             <span className="text-[11px] text-[var(--theme-text-secondary)]">
@@ -150,11 +162,11 @@ export default function PlayerStatsPage() {
             </span>
           </div>
 
-          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+          <div className="card-luxury p-4 shadow-xs transition-colors">
             <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Scrambling (Up & Down)
             </span>
-            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
               {stats.scramblingPercentage}%
             </p>
             <span className="text-[11px] text-[var(--theme-text-secondary)]">
@@ -162,9 +174,9 @@ export default function PlayerStatsPage() {
             </span>
           </div>
 
-          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+          <div className="card-luxury p-4 shadow-xs transition-colors">
             <span className="text-xs font-medium text-[var(--theme-text-secondary)]">Putts por 18h</span>
-            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)] font-bold">
               {stats.averagePuttsPer18}
             </p>
             <span className="text-[11px] text-[var(--theme-text-secondary)]">
@@ -176,7 +188,7 @@ export default function PlayerStatsPage() {
         {/* Grid: Rendimiento por Par de Hoyo + Distribución de Resultados */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Media de golpes por Par 3, Par 4 y Par 5 */}
-          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
+          <section className="card-luxury p-6 shadow-xs transition-colors">
             <div className="flex items-center gap-2">
               <Compass className="h-5 w-5 text-[var(--theme-accent)]" />
               <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
@@ -203,7 +215,7 @@ export default function PlayerStatsPage() {
                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                       {item.label}
                     </span>
-                    <p className="mt-2 text-3xl font-metric text-[var(--theme-text-primary)]">
+                    <p className="mt-2 text-3xl font-metric text-[var(--theme-text-primary)] font-bold">
                       {item.avg.toFixed(2)}
                     </p>
                     <span className="mt-1 inline-block rounded-full bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-0.5 text-xs font-bold text-[var(--theme-accent)]">
@@ -216,7 +228,7 @@ export default function PlayerStatsPage() {
           </section>
 
           {/* Distribución de Golpes (Eagles, Birdies, Pares, Bogeys, Doble+) */}
-          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
+          <section className="card-luxury p-6 shadow-xs transition-colors">
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5 text-[var(--theme-accent)]" />
               <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
@@ -237,7 +249,7 @@ export default function PlayerStatsPage() {
                 {
                   label: 'Birdies (-1)',
                   count: stats.distribution.birdies,
-                  bar: isDark ? 'bg-[#D4AF37]' : 'bg-[#0A3A2A]',
+                  bar: isDark ? 'bg-[#E6D4A7]' : 'bg-[#A98A55]',
                 },
                 {
                   label: 'Pares (E)',

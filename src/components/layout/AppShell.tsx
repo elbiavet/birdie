@@ -241,11 +241,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <div
               style={{
-                backgroundColor: isDark ? '#C9AD74' : '#A98A55',
-                color: isDark ? '#0B0C10' : '#FCFAF5',
+                background: isDark
+                  ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                  : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                color: '#0B0C10',
+                fontWeight: 800,
                 boxShadow: isDark
-                  ? '0 2px 8px rgba(201, 173, 116, 0.35)'
-                  : '0 2px 8px rgba(169, 138, 85, 0.25)',
+                  ? '0 3px 12px rgba(201, 173, 116, 0.26)'
+                  : '0 3px 12px rgba(169, 138, 85, 0.22)',
+                border: isDark ? '1px solid #DFCB9E' : '1px solid #CCB88E',
               }}
               className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs tracking-wider"
             >
@@ -410,16 +414,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     isActive
                       ? {
                           background: isDark
-                            ? 'linear-gradient(135deg, #C9AD74 0%, #B8995E 100%)'
-                            : '#0A3A2A',
-                          color: isDark ? '#0B0C10' : '#FCFAF5',
+                            ? 'linear-gradient(135deg, #D4BA80 0%, #E6D4A7 32%, #C9AD74 68%, #BA9C61 100%)'
+                            : 'linear-gradient(135deg, #BEA16D 0%, #D4BE92 32%, #AC8E58 68%, #9C7E4A 100%)',
+                          color: '#0B0C10',
                           fontWeight: 700,
                           boxShadow: isDark
-                            ? '0 2px 10px rgba(201, 173, 116, 0.35)'
-                            : '0 2px 10px rgba(10, 58, 42, 0.25)',
+                            ? '0 3px 14px rgba(201, 173, 116, 0.28)'
+                            : '0 3px 14px rgba(169, 138, 85, 0.22)',
                           border: isDark
-                            ? '1px solid #D8BF88'
-                            : '1px solid #0A3A2A',
+                            ? '1px solid #DFCB9E'
+                            : '1px solid #CCB88E',
                         }
                       : undefined
                   }
@@ -434,9 +438,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Icon
                     className={`w-4 h-4 shrink-0 ${
                       isActive
-                        ? isDark
-                          ? 'text-[#0B0C10]'
-                          : 'text-[#FCFAF5]'
+                        ? 'text-[#0B0C10]'
                         : isDark
                         ? 'text-[#C9AD74]'
                         : 'text-[#A98A55]'
