@@ -79,6 +79,7 @@ Al terminar cada fase de [`BACKLOG.md`](./BACKLOG.md), **antes de dar la fase po
   - `npm run typecheck`: Ejecuta `tsc --noEmit`.
   - `npm run test`: Ejecuta `vitest run` (tests unitarios, integración y auditoría estática de migraciones SQL/RLS/`pgTAP`).
   - `npm run lint`: Ejecuta `next lint`.
+  - `npm run prebuild`: Ejecuta `tsx scripts/configure-club.ts` (invocado automáticamente por npm antes de `npm run build` en entornos de CI/CD como Vercel para resolver el club activo según variables de entorno).
   - `npm run build`: Ejecuta `next build` (con exportación estática `output: 'export'` en `out/`).
   - `npm run build:apk`: Ejecuta `CAPACITOR_BUILD=true next build`.
   - `npm run configure:club`: Ejecuta `tsx scripts/configure-club.ts` (acepta `club=<clubId> env=<staging|production>` o `--club=<clubId> --env=<staging|production>`).

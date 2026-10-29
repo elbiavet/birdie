@@ -389,3 +389,21 @@
 | `F5.2-T03` | **[REVISIÓN DE CIERRE FASE 5]** Auditar criterios de aceptación de la Fase 5, cobertura de tests por cambio de comportamiento y actualizar documentación/backlog antes de cerrar el proyecto. | `completada` | Revisión de cierre completada conforme a la sección 2B de `AGENTS.md`. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run verify:supabase`, `npm run build:apk`, `npm run cap:sync`). **Resultado**: PASS — 7/7 tareas de la Fase 5 completadas; 95/95 tests en verde, 6/6 bloques Supabase en vivo y sincronización nativa Android multi-club operativa. |
 
 > **Estado de la Fase 5**: **CERRADA (7/7 tareas completadas y verificadas)**.
+
+---
+
+## Fase 6: Preparación, Automatización y Despliegue en Vercel (White-Label)
+
+### Subfase 6.1: Automatización de Build, Configuración Vercel y Documentación Multi-Club
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F6-T01` | Integrar hook `prebuild` en `package.json` para ejecutar `scripts/configure-club.ts` automáticamente antes de cada compilación (`npm run build`) en Vercel, resolviendo el club activo (`NEXT_PUBLIC_CLUB_ID`) y entorno (`NEXT_PUBLIC_APP_ENV`). | `completada` | `npm run build` invoca automáticamente `configure-club.ts` antes de `next build` sin requerir pasos manuales previos en CI/Vercel. | **Ejecutado**: Sí (`npm run prebuild` y con `$env:NEXT_PUBLIC_CLUB_ID="pinos-golf"`). **Resultado**: PASS — `demo-club` y `pinos-golf` configurados y sincronizados correctamente mediante `prebuild`. |
+| `F6-T02` | Crear configuración oficial de Vercel en `vercel.json` con cabeceras de seguridad HTTP (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`), framework Next.js y compatibilidad de rutas estáticas. | `completada` | Archivo `vercel.json` válido conforme al esquema oficial de Vercel. | **Ejecutado**: Sí (`node -e JSON.parse(...)`). **Resultado**: PASS — `vercel.json` creado con `framework: nextjs`, `buildCommand: npm run build`, `cleanUrls` y cabeceras de seguridad. |
+| `F6-T03` | Crear guía exhaustiva de despliegue en Vercel (`docs/deployment/vercel.md`) cubriendo: despliegue con Git Integration (GitHub → Vercel), despliegue con Vercel CLI, configuración de variables de entorno por club y estrategia multi-tenant para múltiples clubes white-label. | `completada` | Documento `docs/deployment/vercel.md` detallado y con instrucciones paso a paso comprobables. | **Ejecutado**: Sí (revisión de `docs/deployment/vercel.md`). **Resultado**: PASS — Guía creada con arquitectura, CI/CD GitHub, Vercel CLI, tabla de variables y verificación post-despliegue. |
+| `F6-T04` | **[TEST]** Añadir y ejecutar tests automatizados en Vitest para validar la resolución de club en build/prebuild, y ejecutar `npm run typecheck`, `npm run test` y `npm run build` en modo Vercel. | `completada` | `typecheck`, `test` y `build` finalizan con código `0` ejecutando el hook `prebuild` de forma transparente. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`). **Resultado**: PASS — `tsc --noEmit` código 0; Vitest `13/13` suites, `96/96` tests en verde; `npm run build` ejecuta automáticamente `prebuild` y exporta 24/24 rutas estáticas limpias en `out/`. |
+| `F6-T05` | **[REVISIÓN DE CIERRE FASE 6]** Auditar criterios de aceptación de la Fase 6, cobertura de tests, actualizar `AGENTS.md` / `SKILL.md` si corresponde y entregar las opciones y pasos de despliegue directo al usuario. | `completada` | Criterios auditados y guía lista para despliegue productivo. | **Ejecutado**: Sí (`npm run test`, `npm run typecheck`, `npm run build`). **Resultado**: PASS — 5/5 tareas de la Fase 6 completadas; `AGENTS.md`, `birdie-workflows/SKILL.md` y `docs/deployment/vercel.md` actualizados con el Flujo 6 de Vercel. |
+
+> **Estado de la Fase 6**: **CERRADA (5/5 tareas completadas y verificadas)**.
+
+

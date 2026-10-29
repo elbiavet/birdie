@@ -1,7 +1,7 @@
 ---
 name: birdie-workflows
 description: >-
-  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, (3) sincronizar campos desde Golf API y cola offline SQLite, y (4) ejecutar la revisión de cierre de fase en BACKLOG.md. Úsala siempre que trabajes en alta de clubes, cambios de base de datos, núcleo deportivo o cierres de fase.
+  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, (3) sincronizar campos desde Golf API y cola offline SQLite, (4) ejecutar la revisión de cierre de fase en BACKLOG.md, y (5) desplegar proyectos de club white-label en Vercel. Úsala siempre que trabajes en alta de clubes, cambios de base de datos, núcleo deportivo, cierres de fase o despliegue.
 ---
 
 # Flujos de Trabajo Reutilizables de Birdie (`birdie-workflows`)
@@ -123,3 +123,22 @@ Sigue estos pasos cuando modifiques o extiendas los módulos de Reservas (`/book
    - El trigger `trg_event_rsvps_enforce_capacity` (`public.enforce_event_rsvp_capacity`) bloquea `public.special_events` con `FOR UPDATE` en servidor y degrada automáticamente `status` a `'waitlist'` si `asistentes_confirmados + 1 + guests_count > capacity`.
 4. **Transparencia Demo vs. Producción (`resolvePersistenceMetadata`)**:
    - Cuando `isSupabaseConfigured()` es `false`, toda acción interactiva devuelve `persistence: 'demo_memory_only'` y `persistedToBackend: false`, mostrando en la UI un aviso explícito de que el cambio vive únicamente en la memoria de sesión y no se ha persistido en Supabase.
+
+---
+
+## Flujo 6: Despliegue en Vercel (Multi-Club White-Label)
+
+Sigue estos pasos para desplegar Birdie en Vercel manteniendo la independencia de cada club:
+
+1. **Estrategia de Proyectos Multi-Club**:
+   - Cada club cuenta con un proyecto independiente en Vercel conectado al mismo repositorio GitHub (ej. `birdie-valleverde` y `birdie-pinosgolf`).
+   - El hook `npm run prebuild` se ejecuta automáticamente antes de `next build` en Vercel, leyendo `NEXT_PUBLIC_CLUB_ID` y `NEXT_PUBLIC_APP_ENV` para inyectar el branding, assets y variables del club activo.
+2. **Variables de Entorno Obligatorias en Vercel**:
+   - `NEXT_PUBLIC_CLUB_ID`: ID del club (`demo-club`, `pinos-golf`, etc.).
+   - `NEXT_PUBLIC_APP_ENV`: `staging` o `production`.
+   - `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Credenciales del proyecto Supabase del club.
+3. **Despliegue con Vercel CLI o Git**:
+   - Vía Git: Vercel recompila automáticamente ante cada `git push origin main`.
+   - Vía CLI: `npx vercel` (preview) o `npx vercel --prod` (producción).
+4. **Verificación**: Consulta la guía detallada en [`docs/deployment/vercel.md`](../../../docs/deployment/vercel.md).
+

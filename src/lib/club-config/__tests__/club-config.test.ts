@@ -148,4 +148,38 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
     }
     expect(apkYml).toContain('./gradlew assembleDebug');
   });
+
+  it('verifica la configuración y automatización para despliegue en Vercel (vercel.json, prebuild y guía)', () => {
+    // 1. Validar vercel.json
+    const vercelJsonPath = path.resolve(process.cwd(), 'vercel.json');
+    expect(fs.existsSync(vercelJsonPath)).toBe(true);
+    const vercelConfig = JSON.parse(fs.readFileSync(vercelJsonPath, 'utf-8'));
+    expect(vercelConfig.framework).toBe('nextjs');
+    expect(vercelConfig.buildCommand).toBe('npm run build');
+    expect(vercelConfig.cleanUrls).toBe(true);
+    expect(Array.isArray(vercelConfig.headers)).toBe(true);
+    expect(vercelConfig.headers.length).toBeGreaterThan(0);
+
+    // 2. Validar hook prebuild en package.json
+    const pkgJson = JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf-8')
+    );
+    expect(pkgJson.scripts.prebuild).toBe('tsx scripts/configure-club.ts');
+    expect(pkgJson.scripts.build).toBe('next build');
+
+    // 3. Validar resolución de variables de entorno típicas de Vercel
+    const vercelEnvResult = parseCliArgs([], {
+      NEXT_PUBLIC_CLUB_ID: 'pinos-golf',
+      NEXT_PUBLIC_APP_ENV: 'production',
+    });
+    expect(vercelEnvResult.clubId).toBe('pinos-golf');
+    expect(vercelEnvResult.environment).toBe('production');
+
+    // 4. Validar existencia de la documentación de despliegue en Vercel
+    const vercelDocPath = path.resolve(process.cwd(), 'docs/deployment/vercel.md');
+    expect(fs.existsSync(vercelDocPath)).toBe(true);
+    const vercelDocContent = fs.readFileSync(vercelDocPath, 'utf-8');
+    expect(vercelDocContent).toContain('NEXT_PUBLIC_CLUB_ID');
+    expect(vercelDocContent).toContain('vercel.com');
+  });
 });

@@ -5,6 +5,7 @@
   "description": "Plataforma white-label de golf multi-club (Next.js + Capacitor Android + Supabase)",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/configure-club.ts",
     "build": "next build",
     "build:apk": "next build",
     "start": "next start",
