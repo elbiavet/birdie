@@ -49,7 +49,7 @@ Para no asumir capacidades inexistentes, distingue estrictamente qué verifica c
 
 ## 3. Mapa de Suites Vitest Existentes y Cobertura Real
 
-A fecha actual, el proyecto cuenta exactamente con **11 suites de pruebas activas** en `src/**/__tests__/`. La cobertura debe describirse siempre en base al estado implementado, sin atribuir cobertura de subfases futuras:
+A fecha actual, el proyecto cuenta exactamente con **13 suites de pruebas activas** (95 tests en total) en `src/**/__tests__/`. La cobertura debe describirse siempre en base al estado implementado, sin atribuir cobertura de subfases futuras:
 
 1. **`src/lib/club-config/__tests__/club-config.test.ts` (8 tests)**: Registro de clubes (`demo-club`, `pinos-golf`), validación de esquemas, variables CSS de tema y correspondencia con la matriz CI.
 2. **`src/lib/golf-api/__tests__/golf-api.test.ts` (6 tests)**: Catálogo de recorridos, coordenadas GPS de greens, filtros de búsqueda, totales de 9 y 18 hoyos y normalizador compartido.
@@ -62,8 +62,10 @@ A fecha actual, el proyecto cuenta exactamente con **11 suites de pruebas activa
 7. **`src/lib/competition/__tests__/competition-and-operations.test.ts` (7 tests)**: Reservas de tee times (control de cupos 1..4 y franjas bloqueadas), calendario de partidas, clasificación de torneos y eventos especiales (Fase 3).
 8. **`src/lib/supabase/__tests__/migrations-rls-audit.test.ts` (5 tests)**: Auditoría estática de integridad de las 5 migraciones SQL, habilitación obligatoria de RLS en las 25 tablas y concordancia de planes `pgTAP`.
 9. **`src/lib/stats/__tests__/stats-analyzer.test.ts` (5 tests)**: Cálculo de estadísticas de juego (FIR %, GIR %, Scrambling %, Sand Saves y medias por Par).
-10. **`src/lib/capacitor/__tests__/capacitor-wrappers.test.ts` (6 tests)**: Wrappers de geolocalización GPS, base de datos SQLite offline-first (Android nativo y fallback web) y notificaciones push.
-11. **`src/lib/__tests__/env.test.ts` (2 tests)**: Detección y valores por defecto del entorno de ejecución.
+10. **`src/lib/capacitor/__tests__/capacitor-wrappers.test.ts` (9 tests)**: Wrappers de geolocalización GPS, base de datos SQLite offline-first (Android nativo y fallback web), y registro/persistencia de tokens push.
+11. **`src/lib/push/__tests__/push-dispatcher.test.ts` (8 tests)**: Validación de parámetros, normalización de payloads FCM v1 (Android/Web) y APNs (iOS), detección de tokens revocados y guardias de rol.
+12. **`src/lib/capacitor/__tests__/push-notifications.test.tsx` (11 tests)**: Suite integral de notificaciones push cubriendo ciclo de vida de tokens, fallback seguro, payloads multi-plataforma y renderizado SSR en `/profile` y `/admin`.
+13. **`src/lib/__tests__/env.test.ts` (2 tests)**: Detección y valores por defecto del entorno de ejecución.
 
 ---
 
