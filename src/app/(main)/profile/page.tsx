@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Bell, CheckCircle2, Eye, EyeOff, Medal, Save, Shield } from 'lucide-react';
 import { useClub } from '@/components/providers/ClubProvider';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import {
   calculatePlayingHandicap,
   DEMO_HANDICAP_HISTORY,
@@ -18,6 +19,7 @@ const COURSE_TEES_PREVIEW = [
 
 export default function ProfilePage() {
   const { club, profile, updateProfile } = useClub();
+  const { resolvedTheme } = useTheme();
   const [fullName, setFullName] = useState(profile.fullName);
   const [handicapInput, setHandicapInput] = useState(String(profile.handicapIndex));
   const [license, setLicense] = useState(profile.federationLicense);
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [isDirectoryVisible, setIsDirectoryVisible] = useState(profile.isDirectoryVisible);
   const [pushTokenInfo, setPushTokenInfo] = useState<string | null>(null);
   const [savedBanner, setSavedBanner] = useState(false);
+  const isDark = resolvedTheme === 'dark';
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,28 +56,31 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Cabecera de Perfil y Hándicap */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs flex flex-wrap items-center justify-between gap-4 transition-colors">
         <div className="flex items-center gap-4">
           <div
             style={{
-              backgroundColor: club.theme.primary,
-              color: club.theme.primaryForeground,
+              backgroundColor: isDark ? '#16382A' : '#E8ECE9',
+              color: isDark ? '#D4AF37' : '#0A3A2A',
+              borderColor: isDark ? '#255440' : '#CBD5E1',
             }}
-            className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-extrabold shadow-xs"
+            className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-bold shadow-xs border"
           >
             <span className="text-[10px] uppercase opacity-80">HCP</span>
-            <span className="text-xl">{profile.handicapIndex.toFixed(1)}</span>
+            <span className="text-xl font-bold">{profile.handicapIndex.toFixed(1)}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900">{profile.fullName}</h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
+              <h1 className="text-xl font-bold text-[var(--theme-text-primary)]">
+                {profile.fullName}
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--theme-surface-subtle)] text-[var(--theme-accent)] border border-[var(--theme-border)]">
                 <Shield className="w-3.5 h-3.5" />
                 {profile.role}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Licencia Federativa: <strong>{profile.federationLicense}</strong> · {profile.email}
+            <p className="text-xs text-[var(--theme-text-secondary)] mt-0.5 font-normal">
+              Licencia Federativa: <strong className="text-[var(--theme-text-primary)]">{profile.federationLicense}</strong> · {profile.email}
             </p>
           </div>
         </div>
@@ -82,20 +88,16 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={handleEnablePush}
-          style={{
-            backgroundColor: club.theme.accent,
-            color: '#ffffff',
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold shadow-xs hover:opacity-95 transition cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] hover:border-[var(--theme-accent)]"
         >
-          <Bell className="w-4 h-4" />
+          <Bell className="w-4 h-4 text-[var(--theme-accent)]" />
           Activar Notificaciones Push (FCM / APNs)
         </button>
       </div>
 
       {pushTokenInfo && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+        <div className="p-4 rounded-2xl bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] text-xs text-[var(--theme-text-primary)] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
           <span>
             Dispositivo registrado en <code>public.device_push_tokens</code> ({pushTokenInfo})
           </span>
@@ -106,39 +108,39 @@ export default function ProfilePage() {
         {/* Formulario de Datos del Jugador y Hándicap */}
         <form
           onSubmit={handleSaveProfile}
-          className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4"
+          className="lg:col-span-2 bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs space-y-4 transition-colors"
         >
-          <h2 className="text-base font-bold text-slate-900">
+          <h2 className="text-base font-bold text-[var(--theme-text-primary)]">
             Datos del Jugador y Configuración de Privacidad
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[var(--theme-text-primary)] mb-1">
                 Nombre completo
               </label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--theme-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[var(--theme-text-primary)] mb-1">
                 Licencia Federativa
               </label>
               <input
                 type="text"
                 value={license}
                 onChange={(e) => setLicense(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono"
+                className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--theme-accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[var(--theme-text-primary)] mb-1">
                 Índice de Hándicap WHS (-10.0 a 54.0)
               </label>
               <input
@@ -148,7 +150,7 @@ export default function ProfilePage() {
                 max="54"
                 value={handicapInput}
                 onChange={(e) => setHandicapInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold"
+                className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] px-3 py-2 text-sm font-metric focus:outline-none focus:border-[var(--theme-accent)]"
               />
             </div>
 
@@ -158,50 +160,46 @@ export default function ProfilePage() {
                 onClick={() => setIsDirectoryVisible((v) => !v)}
                 className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                   isDirectoryVisible
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                    : 'border-slate-300 bg-slate-50 text-slate-700'
+                    ? 'border-[var(--theme-accent)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)]'
+                    : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-secondary)]'
                 }`}
               >
                 <span>Visible en Directorio de Jugadores</span>
                 {isDirectoryVisible ? (
-                  <Eye className="w-4 h-4 text-emerald-700" />
+                  <Eye className="w-4 h-4 text-[var(--theme-accent)]" />
                 ) : (
-                  <EyeOff className="w-4 h-4 text-slate-500" />
+                  <EyeOff className="w-4 h-4 text-[var(--theme-text-secondary)]" />
                 )}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-[var(--theme-text-primary)] mb-1">
               Notas de juego / Preferencia de salidas
             </label>
             <textarea
               rows={2}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--theme-accent)]"
             />
           </div>
 
           <div className="flex items-center justify-between pt-2">
             {savedBanner ? (
-              <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+              <span className="text-xs font-semibold text-emerald-500 flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" /> Perfil y hándicap actualizados
               </span>
             ) : (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-normal">
                 Protegido por política RLS <code>profiles_update_self_or_admin</code>
               </span>
             )}
 
             <button
               type="submit"
-              style={{
-                backgroundColor: club.theme.primary,
-                color: club.theme.primaryForeground,
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+              className="btn-gold-gradient inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold shadow-xs cursor-pointer transition"
             >
               <Save className="w-4 h-4" />
               Guardar Cambios
@@ -210,14 +208,14 @@ export default function ProfilePage() {
         </form>
 
         {/* Calculadora de Hándicap de Juego por Barras (Course Handicap) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div className="bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs space-y-4 transition-colors">
           <div className="flex items-center gap-2">
-            <Medal className="w-5 h-5 text-amber-600" />
-            <h2 className="text-base font-bold text-slate-900">
+            <Medal className="w-5 h-5 text-[var(--theme-accent)]" />
+            <h2 className="text-base font-bold text-[var(--theme-text-primary)]">
               Hándicap de Juego en {club.shortName}
             </h2>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--theme-text-secondary)] font-normal">
             Golpes concedidos según las barras de salida del recorrido principal (Par 72):
           </p>
 
@@ -232,21 +230,23 @@ export default function ProfilePage() {
               return (
                 <div
                   key={tee.name}
-                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-slate-50/60"
+                  className="flex items-center justify-between p-3 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)]"
                 >
                   <div className="flex items-center gap-2.5">
                     <span
                       style={{ backgroundColor: tee.color }}
-                      className="w-3.5 h-3.5 rounded-full border border-slate-300"
+                      className="w-3.5 h-3.5 rounded-full border border-[var(--theme-border)]"
                     />
                     <div>
-                      <div className="text-xs font-bold text-slate-800">{tee.name}</div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-xs font-bold text-[var(--theme-text-primary)]">
+                        {tee.name}
+                      </div>
+                      <div className="text-[11px] text-[var(--theme-text-secondary)] font-normal">
                         CR {tee.rating} · Slope {tee.slope}
                       </div>
                     </div>
                   </div>
-                  <span className="text-base font-extrabold text-slate-900">
+                  <span className="text-base font-metric text-[var(--theme-text-primary)]">
                     {playingHcp > 0 ? `+${playingHcp}` : playingHcp} golpes
                   </span>
                 </div>
@@ -257,25 +257,29 @@ export default function ProfilePage() {
       </div>
 
       {/* Historial de Revisiones de Hándicap */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
-        <h2 className="text-base font-bold text-slate-900 mb-3">
-          Historial de Evolución de Hándicap (`public.handicap_history`)
+      <div className="bg-[var(--theme-surface)] rounded-2xl border border-[var(--theme-border)] p-6 shadow-xs transition-colors">
+        <h2 className="text-base font-bold text-[var(--theme-text-primary)] mb-3">
+          Historial de Evolución de Hándicap (<code>public.handicap_history</code>)
         </h2>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-[var(--theme-border)]">
           {DEMO_HANDICAP_HISTORY.map((entry) => (
             <div
               key={entry.id}
               className="py-3 flex flex-wrap items-center justify-between gap-2 text-xs"
             >
               <div>
-                <span className="font-semibold text-slate-900">{entry.reason}</span>
-                <span className="text-slate-400 ml-2">({entry.effectiveDate})</span>
+                <span className="font-semibold text-[var(--theme-text-primary)]">
+                  {entry.reason}
+                </span>
+                <span className="text-[var(--theme-text-secondary)] ml-2">
+                  ({entry.effectiveDate})
+                </span>
               </div>
-              <div className="font-mono font-bold">
-                <span className="text-slate-400 line-through mr-2">
+              <div className="font-mono font-metric">
+                <span className="text-[var(--theme-text-secondary)] line-through mr-2">
                   {entry.previousHandicap?.toFixed(1)}
                 </span>
-                <span className="text-emerald-700">{entry.newHandicap.toFixed(1)}</span>
+                <span className="text-[var(--theme-accent)]">{entry.newHandicap.toFixed(1)}</span>
               </div>
             </div>
           ))}

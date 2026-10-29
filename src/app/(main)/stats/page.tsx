@@ -10,6 +10,7 @@ import {
 import { getOfflineRoundScores } from '@/lib/capacitor/sqlite';
 import { DEMO_HANDICAP_HISTORY } from '@/lib/supabase/client';
 import { getCourseById, GOLF_API_COURSES_CATALOG } from '@/lib/golf-api';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import {
   Activity,
   Award,
@@ -23,6 +24,8 @@ const ACTIVE_ROUND_ID = 'round-active-birdie-2026';
 
 export default function PlayerStatsPage() {
   const { club, profile } = useClub();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const [liveSamples, setLiveSamples] = useState<AnalyzedHoleSample[]>([]);
 
   useEffect(() => {
@@ -65,27 +68,26 @@ export default function PlayerStatsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
                 <BarChart3 className="h-3.5 w-3.5" />
                 Analítica Deportiva WHS · Tiempo Real + Histórico
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-slate-900">
+              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
                 Estadísticas de Rendimiento
               </h2>
-              <p className="text-sm text-slate-600">
-                Jugador: <span className="font-semibold">{profile.fullName}</span> ·
-                Hándicap Exacto <span className="font-bold">{profile.handicapIndex}</span>{' '}
-                · Muestra analizada: {stats.holesCount} hoyos ({stats.roundsCount}{' '}
-                vueltas)
+              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
+                Jugador: <span className="font-semibold text-[var(--theme-text-primary)]">{profile.fullName}</span> ·{' '}
+                Hándicap Exacto <span className="font-bold text-[var(--theme-accent)]">{profile.handicapIndex}</span>{' '}
+                · Muestra analizada: {stats.holesCount} hoyos ({stats.roundsCount} vueltas)
               </p>
             </div>
 
             {liveSamples.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-900">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 Incluye {liveSamples.length} hoyo(s) anotados en la ronda actual
               </span>
             )}
@@ -94,66 +96,78 @@ export default function PlayerStatsPage() {
 
         {/* KPIs Principales */}
         <section className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+            <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Media Bruta (18h)
             </span>
-            <p className="mt-1 text-2xl font-black text-slate-900">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
               {stats.averageGrossPer18}
             </p>
-            <span className="text-[11px] text-slate-500">Golpes por vuelta</span>
+            <span className="text-[11px] text-[var(--theme-text-secondary)]">Golpes por vuelta</span>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-sm">
-            <span className="text-xs font-semibold text-emerald-800">
+          <div
+            style={{
+              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(10, 58, 42, 0.08)',
+              borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+            }}
+            className="rounded-2xl border p-4 shadow-xs transition-colors"
+          >
+            <span
+              style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+              className="text-xs font-bold"
+            >
               Media Stableford
             </span>
-            <p className="mt-1 text-2xl font-black text-emerald-900">
+            <p
+              style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+              className="mt-1 text-2xl font-metric font-bold"
+            >
               {stats.averageStablefordPer18} pts
             </p>
-            <span className="text-[11px] text-emerald-700">Base 36 pts WHS</span>
+            <span className="text-[11px] opacity-80">Base 36 pts WHS</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+            <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Calles Cogidas (FIR)
             </span>
-            <p className="mt-1 text-2xl font-black text-slate-900">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
               {stats.fairwayHitPercentage}%
             </p>
-            <span className="text-[11px] text-slate-500">Precisión desde el Tee</span>
+            <span className="text-[11px] text-[var(--theme-text-secondary)]">Precisión desde el Tee</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+            <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Green en Reg. (GIR)
             </span>
-            <p className="mt-1 text-2xl font-black text-slate-900">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
               {stats.girPercentage}%
             </p>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-[var(--theme-text-secondary)]">
               Putts en GIR: {stats.averagePuttsOnGir}
             </span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+            <span className="text-xs font-medium text-[var(--theme-text-secondary)]">
               Scrambling (Up & Down)
             </span>
-            <p className="mt-1 text-2xl font-black text-slate-900">
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
               {stats.scramblingPercentage}%
             </p>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-[var(--theme-text-secondary)]">
               Sand Save: {stats.sandSavePercentage}%
             </span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">Putts por 18h</span>
-            <p className="mt-1 text-2xl font-black text-slate-900">
+          <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-xs transition-colors">
+            <span className="text-xs font-medium text-[var(--theme-text-secondary)]">Putts por 18h</span>
+            <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
               {stats.averagePuttsPer18}
             </p>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-[var(--theme-text-secondary)]">
               {stats.averagePuttsPerHole} putts / hoyo
             </span>
           </div>
@@ -162,14 +176,14 @@ export default function PlayerStatsPage() {
         {/* Grid: Rendimiento por Par de Hoyo + Distribución de Resultados */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Media de golpes por Par 3, Par 4 y Par 5 */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
             <div className="flex items-center gap-2">
-              <Compass className="h-5 w-5 text-emerald-700" />
-              <h3 className="text-lg font-bold text-slate-900">
+              <Compass className="h-5 w-5 text-[var(--theme-accent)]" />
+              <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
                 Rendimiento por Par de Hoyo
               </h3>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--theme-text-secondary)] font-normal">
               Promedio de golpes brutos según la tipología del hoyo.
             </p>
 
@@ -184,15 +198,15 @@ export default function PlayerStatsPage() {
                 return (
                   <div
                     key={item.par}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center"
+                    className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-4 text-center transition-colors"
                   >
-                    <span className="text-xs font-bold uppercase text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                       {item.label}
                     </span>
-                    <p className="mt-2 text-3xl font-black text-slate-900">
+                    <p className="mt-2 text-3xl font-metric text-[var(--theme-text-primary)]">
                       {item.avg.toFixed(2)}
                     </p>
-                    <span className="mt-1 inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                    <span className="mt-1 inline-block rounded-full bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-0.5 text-xs font-bold text-[var(--theme-accent)]">
                       {diffText} vs Par
                     </span>
                   </div>
@@ -202,14 +216,14 @@ export default function PlayerStatsPage() {
           </section>
 
           {/* Distribución de Golpes (Eagles, Birdies, Pares, Bogeys, Doble+) */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
             <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-500" />
-              <h3 className="text-lg font-bold text-slate-900">
+              <Award className="h-5 w-5 text-[var(--theme-accent)]" />
+              <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
                 Distribución de Resultados por Hoyo
               </h3>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--theme-text-secondary)] font-normal">
               Desglose sobre el total de {stats.holesCount} hoyos registrados.
             </p>
 
@@ -223,12 +237,12 @@ export default function PlayerStatsPage() {
                 {
                   label: 'Birdies (-1)',
                   count: stats.distribution.birdies,
-                  bar: 'bg-emerald-600',
+                  bar: isDark ? 'bg-[#D4AF37]' : 'bg-[#0A3A2A]',
                 },
                 {
                   label: 'Pares (E)',
                   count: stats.distribution.pars,
-                  bar: 'bg-sky-600',
+                  bar: 'bg-emerald-600',
                 },
                 {
                   label: 'Bogeys (+1)',
@@ -244,13 +258,13 @@ export default function PlayerStatsPage() {
                 const pct = Math.round((row.count / distTotal) * 100);
                 return (
                   <div key={row.label}>
-                    <div className="flex justify-between text-xs font-semibold text-slate-700">
+                    <div className="flex justify-between text-xs font-semibold text-[var(--theme-text-primary)]">
                       <span>{row.label}</span>
-                      <span>
+                      <span className="text-[var(--theme-text-secondary)]">
                         {row.count} hoyos ({pct}%)
                       </span>
                     </div>
-                    <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)]">
                       <div
                         className={`h-full rounded-full ${row.bar}`}
                         style={{ width: `${Math.max(pct, row.count > 0 ? 6 : 0)}%` }}
@@ -264,10 +278,10 @@ export default function PlayerStatsPage() {
         </div>
 
         {/* Evolución Histórica de Hándicap WHS */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
           <div className="flex items-center gap-2">
-            <TrendingDown className="h-5 w-5 text-emerald-700" />
-            <h3 className="text-lg font-bold text-slate-900">
+            <TrendingDown className="h-5 w-5 text-[var(--theme-accent)]" />
+            <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
               Evolución de Hándicap WHS
             </h3>
           </div>
@@ -275,21 +289,21 @@ export default function PlayerStatsPage() {
             {DEMO_HANDICAP_HISTORY.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+                className="flex items-center justify-between rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-4 transition-colors"
               >
                 <div>
-                  <span className="text-xs font-semibold text-slate-500">
+                  <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">
                     {entry.effectiveDate}
                   </span>
-                  <p className="mt-0.5 text-sm font-bold text-slate-900">
+                  <p className="mt-0.5 text-sm font-bold text-[var(--theme-text-primary)]">
                     {entry.reason}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 line-through">
+                  <span className="text-xs text-[var(--theme-text-secondary)] line-through">
                     {entry.previousHandicap}
                   </span>
-                  <p className=" flex items-center gap-1 text-lg font-black text-emerald-700">
+                  <p className="flex items-center gap-1 text-lg font-metric font-semibold text-[var(--theme-accent)]">
                     <Activity className="h-4 w-4" />
                     {entry.newHandicap}
                   </p>

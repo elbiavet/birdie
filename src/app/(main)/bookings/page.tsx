@@ -21,9 +21,12 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+import { useTheme } from '@/components/providers/ThemeProvider';
 
 export default function TeeTimeBookingsPage() {
   const { club, profile } = useClub();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const [slots, setSlots] = useState<TeeTimeSlot[]>(INITIAL_TEE_TIME_SLOTS);
   const [selectedDate, setSelectedDate] = useState<string>('2026-11-01');
   const [selectedSlotId, setSelectedSlotId] = useState<string>(
@@ -131,17 +134,17 @@ export default function TeeTimeBookingsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
                 <CalendarDays className="h-3.5 w-3.5" />
                 Control de Cupo en Vivo · RLS por Socio / Admin
               </span>
-              <h2 className="mt-2 text-2xl font-bold text-slate-900">
+              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
                 Reservas de Salidas (Tee Times)
               </h2>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
                 Selecciona tu fecha y franja horaria en {club.name}. Máximo 4 jugadores
                 por salida.
               </p>
@@ -153,10 +156,19 @@ export default function TeeTimeBookingsPage() {
                   key={d}
                   type="button"
                   onClick={() => setSelectedDate(d)}
-                  className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
+                  style={
                     selectedDate === d
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      ? {
+                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          color: isDark ? '#08130E' : '#FFFFFF',
+                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                        }
+                      : undefined
+                  }
+                  className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition cursor-pointer ${
+                    selectedDate === d
+                      ? 'shadow-xs'
+                      : 'border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-secondary)] hover:bg-[var(--theme-surface)]'
                   }`}
                 >
                   {d}
@@ -170,14 +182,14 @@ export default function TeeTimeBookingsPage() {
               role="status"
               className={`mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-xs font-semibold ${
                 feedback.type === 'ok'
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                  : 'border-rose-200 bg-rose-50 text-rose-900'
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                  : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
               }`}
             >
               {feedback.type === 'ok' ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-rose-600" />
+                <AlertCircle className="h-4 w-4 text-rose-500" />
               )}
               <span>{feedback.message}</span>
             </div>
@@ -197,27 +209,42 @@ export default function TeeTimeBookingsPage() {
                 <div
                   key={slot.id}
                   onClick={() => setSelectedSlotId(slot.id)}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: isDark ? '#16382A' : '#E8ECE9',
+                          borderColor: isDark ? '#D4AF37' : '#A38332',
+                        }
+                      : undefined
+                  }
                   className={`cursor-pointer rounded-2xl border p-5 transition ${
                     isSelected
-                      ? 'border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-600/20'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'border-2 shadow-xs'
+                      : 'border-[var(--theme-border)] bg-[var(--theme-surface)] hover:border-[var(--theme-accent)]'
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-16 items-center justify-center rounded-xl bg-slate-900 font-mono text-sm font-black text-white">
+                      <div
+                        style={{
+                          backgroundColor: isDark ? '#08130E' : '#0A3A2A',
+                          color: isDark ? '#D4AF37' : '#FFFFFF',
+                          borderColor: isDark ? '#255440' : '#1A4D3A',
+                        }}
+                        className="flex h-12 w-16 items-center justify-center rounded-xl border font-mono text-sm font-bold shadow-xs"
+                      >
                         {slot.slotTime}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-sm font-bold text-[var(--theme-text-primary)]">
                             Salida Tee 1 · {slot.slotDate}
                           </span>
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                          <span className="rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-2.5 py-0.5 text-xs font-semibold text-[var(--theme-text-secondary)]">
                             {slot.greenFeeEuros} € / jug.
                           </span>
                         </div>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-[var(--theme-text-secondary)] font-normal">
                           Ocupación: {bookedCount}/{slot.maxPlayers} plazas
                         </p>
                       </div>
@@ -225,16 +252,16 @@ export default function TeeTimeBookingsPage() {
 
                     <div>
                       {slot.isBlocked ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-800">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-400">
                           <Lock className="h-3.5 w-3.5" />
                           Bloqueada
                         </span>
                       ) : availableSeats === 0 ? (
-                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
+                        <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-400">
                           Completa (4/4)
                         </span>
                       ) : (
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-900">
+                        <span className="rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-accent)] px-3 py-1 text-xs font-bold text-[var(--theme-accent)]">
                           {availableSeats} plaza(s) libre(s)
                         </span>
                       )}
@@ -243,7 +270,7 @@ export default function TeeTimeBookingsPage() {
 
                   {/* Reservas confirmadas dentro de la franja */}
                   {slot.bookings.filter((b) => b.status === 'confirmed').length > 0 && (
-                    <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                    <div className="mt-4 space-y-2 border-t border-[var(--theme-border)] pt-3">
                       {slot.bookings
                         .filter((b) => b.status === 'confirmed')
                         .map((b) => {
@@ -255,18 +282,18 @@ export default function TeeTimeBookingsPage() {
                           return (
                             <div
                               key={b.id}
-                              className="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs"
+                              className="flex items-center justify-between rounded-xl bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3.5 py-2 text-xs"
                             >
                               <div className="flex items-center gap-2">
-                                <Users className="h-3.5 w-3.5 text-emerald-700" />
-                                <span className="font-bold text-slate-900">
+                                <Users className="h-3.5 w-3.5 text-[var(--theme-accent)]" />
+                                <span className="font-bold text-[var(--theme-text-primary)]">
                                   {b.userName}
                                 </span>
-                                <span className="text-slate-600">
+                                <span className="text-[var(--theme-text-secondary)]">
                                   ({b.playersCount} jug.)
                                 </span>
                                 {b.buggyRequested && (
-                                  <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                                  <span className="inline-flex items-center gap-1 rounded bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-400">
                                     <Car className="h-3 w-3" />
                                     Buggy
                                   </span>
@@ -280,7 +307,7 @@ export default function TeeTimeBookingsPage() {
                                     e.stopPropagation();
                                     handleCancelBooking(b.id);
                                   }}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-50"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-400 hover:bg-rose-500/20 cursor-pointer"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                   Cancelar
@@ -297,14 +324,14 @@ export default function TeeTimeBookingsPage() {
           </section>
 
           {/* Formulario de Reserva */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-5">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-              <Clock className="h-5 w-5 text-emerald-700" />
+          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs lg:col-span-5 transition-colors">
+            <div className="flex items-center gap-2 border-b border-[var(--theme-border)] pb-4">
+              <Clock className="h-5 w-5 text-[var(--theme-accent)]" />
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
                   Confirmar Salida: {activeSlot.slotTime}
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--theme-text-secondary)] font-normal">
                   Fecha: {activeSlot.slotDate} · Socio: {profile.fullName}
                 </p>
               </div>
@@ -312,7 +339,7 @@ export default function TeeTimeBookingsPage() {
 
             <form onSubmit={handleCreateBooking} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                   Número de Jugadores (1 - 4)
                 </label>
                 <div className="mt-2 grid grid-cols-4 gap-2">
@@ -321,10 +348,19 @@ export default function TeeTimeBookingsPage() {
                       key={num}
                       type="button"
                       onClick={() => setPlayersCount(num)}
-                      className={`rounded-xl border py-2.5 text-sm font-bold transition ${
+                      style={
                         playersCount === num
-                          ? 'border-emerald-700 bg-emerald-700 text-white'
-                          : 'border-slate-200 bg-slate-50 text-slate-700'
+                          ? {
+                              backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
+                              color: isDark ? '#08130E' : '#FFFFFF',
+                              borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                            }
+                          : undefined
+                      }
+                      className={`rounded-xl border py-2.5 text-sm font-bold transition cursor-pointer ${
+                        playersCount === num
+                          ? 'shadow-xs'
+                          : 'border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)]'
                       }`}
                     >
                       {num} {num === 1 ? 'Jug.' : 'Jug.'}
@@ -334,19 +370,19 @@ export default function TeeTimeBookingsPage() {
               </div>
 
               <div>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold text-slate-800">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3 text-xs font-semibold text-[var(--theme-text-primary)]">
                   <input
                     type="checkbox"
                     checked={buggyRequested}
                     onChange={(e) => setBuggyRequested(e.target.checked)}
-                    className="h-4 w-4 rounded accent-emerald-600"
+                    className="h-4 w-4 rounded accent-[var(--theme-accent)]"
                   />
                   <span>Solicitar Buggy eléctrico para la partida</span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                   Notas / Compañeros de Partida
                 </label>
                 <input
@@ -354,14 +390,18 @@ export default function TeeTimeBookingsPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Ej. Invitado socio RFEG..."
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-emerald-600 focus:outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)] px-3.5 py-2.5 text-sm focus:border-[var(--theme-accent)] focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={activeSlot.isBlocked}
-                className="w-full rounded-xl bg-club-primary px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95 disabled:opacity-40"
+                style={{
+                  backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
+                  color: isDark ? '#08130E' : '#FFFFFF',
+                }}
+                className="w-full rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition hover:opacity-95 disabled:opacity-40 cursor-pointer"
               >
                 Confirmar Reserva ({playersCount * activeSlot.greenFeeEuros} €)
               </button>

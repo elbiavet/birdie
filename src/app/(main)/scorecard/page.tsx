@@ -21,6 +21,7 @@ import {
   recordHoleScoreOfflineFirst,
 } from '@/lib/offline-sync';
 import { calculatePlayingHandicap } from '@/lib/supabase/client';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -37,6 +38,8 @@ const ACTIVE_ROUND_ID = 'round-active-birdie-2026';
 
 export default function ScorecardAndGpsPage() {
   const { club, profile: currentUser } = useClub();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   const [selectedCourseId, setSelectedCourseId] = useState<string>(() => {
     const home = getCourseById(club.defaultCourseExternalId);
@@ -214,22 +217,22 @@ export default function ScorecardAndGpsPage() {
   return (
     <div className="space-y-6">
         {/* Cabecera de la Ronda y Estado Offline SQLite */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-accent)]">
                   <Database className="h-3.5 w-3.5" />
                   SQLite Offline-First Activo
                 </span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                <span className="rounded-full bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-3 py-1 text-xs font-semibold text-[var(--theme-text-secondary)]">
                   Playing HCP: {playingHandicap} ({selectedTee.name})
                 </span>
               </div>
-              <h2 className="mt-2 text-2xl font-bold text-slate-900">
+              <h2 className="mt-2 text-2xl font-bold text-[var(--theme-text-primary)]">
                 Marcador Digital y Telémetro GPS
               </h2>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--theme-text-secondary)] font-normal">
                 {course.name} · Par {course.parTotal} · Jugador: {currentUser.fullName}
               </p>
             </div>
@@ -245,7 +248,7 @@ export default function ScorecardAndGpsPage() {
                   }
                 }}
                 aria-label="Modalidad de hoyos de la ronda"
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+                className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--theme-text-primary)] focus:outline-none"
               >
                 <option value={18}>Vuelta 18 Hoyos</option>
                 <option value={9}>Vuelta 9 Hoyos</option>
@@ -258,7 +261,7 @@ export default function ScorecardAndGpsPage() {
                   setActiveHoleNumber(1);
                 }}
                 aria-label="Seleccionar recorrido"
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+                className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-3 py-2 text-xs font-semibold text-[var(--theme-text-primary)] focus:outline-none"
               >
                 {GOLF_API_COURSES_CATALOG.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -270,9 +273,14 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={handleFlushQueue}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+                style={{
+                  backgroundColor: isDark ? '#16382A' : '#0A3A2A',
+                  color: isDark ? '#D4AF37' : '#FFFFFF',
+                  borderColor: isDark ? '#255440' : '#1A4D3A',
+                }}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition hover:opacity-90 border shadow-xs cursor-pointer"
               >
-                <CloudUpload className="h-4 w-4 text-emerald-400" />
+                <CloudUpload className="h-4 w-4" />
                 Sincronizar Cola ({pendingQueueCount})
               </button>
             </div>
@@ -281,9 +289,9 @@ export default function ScorecardAndGpsPage() {
           {statusBanner && (
             <div
               role="status"
-              className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-900"
+              className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs font-semibold text-emerald-400"
             >
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               <span>{statusBanner}</span>
             </div>
           )}
@@ -301,16 +309,31 @@ export default function ScorecardAndGpsPage() {
                   key={h.holeNumber}
                   type="button"
                   onClick={() => setActiveHoleNumber(h.holeNumber)}
-                  className={`flex h-11 min-w-[44px] flex-col items-center justify-center rounded-xl border text-xs font-bold transition ${
+                  style={
                     isCurrent
-                      ? 'border-emerald-700 bg-emerald-700 text-white shadow-sm'
+                      ? {
+                          backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+                          color: isDark ? '#08130E' : '#FFFFFF',
+                        }
                       : recorded
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        ? {
+                            backgroundColor: isDark ? '#16382A' : '#E8ECE9',
+                            borderColor: isDark ? '#255440' : '#CBD5E1',
+                            color: isDark ? '#D4AF37' : '#0A3A2A',
+                          }
+                        : undefined
+                  }
+                  className={`flex h-11 min-w-[44px] flex-col items-center justify-center rounded-xl border text-xs font-bold transition cursor-pointer ${
+                    isCurrent
+                      ? 'shadow-xs'
+                      : recorded
+                        ? 'font-semibold'
+                        : 'border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-secondary)] hover:bg-[var(--theme-surface)]'
                   }`}
                 >
                   <span>H{h.holeNumber}</span>
-                  <span className="text-[10px] font-normal opacity-80">
+                  <span className="text-[10px] font-normal opacity-85">
                     {recorded ? `${recorded.strokes}g` : `P${h.par}`}
                   </span>
                 </button>
@@ -322,20 +345,27 @@ export default function ScorecardAndGpsPage() {
         {/* Grid Central: Panel de Anotación del Hoyo Activo + Telémetro GPS */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Anotador del Hoyo Activo */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-7">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs lg:col-span-7 transition-colors">
+            <div className="flex items-center justify-between border-b border-[var(--theme-border)] pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-club-primary text-lg font-black text-white">
+                <div
+                  style={{
+                    backgroundColor: isDark ? '#16382A' : '#0A3A2A',
+                    color: isDark ? '#D4AF37' : '#FFFFFF',
+                    borderColor: isDark ? '#255440' : '#1A4D3A',
+                  }}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border text-lg font-bold shadow-xs"
+                >
                   {activeHole.holeNumber}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
                     Hoyo {activeHole.holeNumber} · Par {activeHole.par}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--theme-text-secondary)] font-normal">
                     HCP (Stroke Index) {activeHole.strokeIndex} ·{' '}
                     {activeHole.distanceYellowMeters} m · Recibes{' '}
-                    <span className="font-bold text-emerald-700">
+                    <span className="font-bold text-[var(--theme-accent)]">
                       {activeHoleStrokesReceived} golpe(s)
                     </span>
                   </p>
@@ -347,7 +377,7 @@ export default function ScorecardAndGpsPage() {
                   type="button"
                   disabled={activeHoleNumber <= 1}
                   onClick={() => setActiveHoleNumber((n) => Math.max(1, n - 1))}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-600 disabled:opacity-40"
+                  className="rounded-lg border border-[var(--theme-border)] p-2 text-[var(--theme-text-secondary)] hover:text-[var(--theme-text-primary)] bg-[var(--theme-surface-subtle)] disabled:opacity-40 cursor-pointer"
                   aria-label="Hoyo anterior"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -356,7 +386,7 @@ export default function ScorecardAndGpsPage() {
                   type="button"
                   disabled={activeHoleNumber >= 18}
                   onClick={() => setActiveHoleNumber((n) => Math.min(18, n + 1))}
-                  className="rounded-lg border border-slate-200 p-2 text-slate-600 disabled:opacity-40"
+                  className="rounded-lg border border-[var(--theme-border)] p-2 text-[var(--theme-text-secondary)] hover:text-[var(--theme-text-primary)] bg-[var(--theme-surface-subtle)] disabled:opacity-40 cursor-pointer"
                   aria-label="Hoyo siguiente"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -366,12 +396,12 @@ export default function ScorecardAndGpsPage() {
 
             {/* Controles de Golpes Brutos y Putts */}
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-4 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                     Golpes Totales
                   </span>
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-900">
+                  <span className="rounded-full bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-0.5 text-xs font-bold text-[var(--theme-accent)]">
                     {activeHoleStableford} pts Stableford
                   </span>
                 </div>
@@ -380,13 +410,13 @@ export default function ScorecardAndGpsPage() {
                     type="button"
                     onClick={() => setStrokes((s) => Math.max(1, s - 1))}
                     aria-label="Restar golpe"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-primary)] shadow-xs hover:border-[var(--theme-accent)] cursor-pointer"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
                   <span
                     data-testid="active-hole-strokes"
-                    className="text-3xl font-black text-slate-900"
+                    className="text-3xl font-metric font-semibold text-[var(--theme-text-primary)]"
                   >
                     {strokes}
                   </span>
@@ -394,35 +424,35 @@ export default function ScorecardAndGpsPage() {
                     type="button"
                     onClick={() => setStrokes((s) => Math.min(15, s + 1))}
                     aria-label="Sumar golpe"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-primary)] shadow-xs hover:border-[var(--theme-accent)] cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-4 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
                     Putts en Green
                   </span>
-                  <span className="text-xs text-slate-500">Estadística Putting</span>
+                  <span className="text-xs text-[var(--theme-text-secondary)] font-normal">Estadística Putting</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => setPutts((p) => Math.max(0, p - 1))}
                     aria-label="Restar putt"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-primary)] shadow-xs hover:border-[var(--theme-accent)] cursor-pointer"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="text-3xl font-black text-slate-900">{putts}</span>
+                  <span className="text-3xl font-metric font-semibold text-[var(--theme-text-primary)]">{putts}</span>
                   <button
                     type="button"
                     onClick={() => setPutts((p) => Math.min(10, p + 1))}
                     aria-label="Sumar putt"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-800 shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-primary)] shadow-xs hover:border-[var(--theme-accent)] cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -436,13 +466,13 @@ export default function ScorecardAndGpsPage() {
                 <button
                   type="button"
                   onClick={() => setFairwayHit((v) => !v)}
-                  className={`rounded-xl border p-3 text-left text-xs font-semibold transition ${
+                  className={`rounded-xl border p-3 text-left text-xs font-semibold transition cursor-pointer ${
                     fairwayHit
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                      : 'border-slate-200 bg-white text-slate-600'
+                      ? 'border-[var(--theme-accent)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)]'
+                      : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-secondary)]'
                   }`}
                 >
-                  <span className="block text-[10px] uppercase text-slate-400">
+                  <span className="block text-[10px] uppercase opacity-75">
                     Calle (FIR)
                   </span>
                   <span className="mt-1 block font-bold">
@@ -454,13 +484,13 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={() => setGreenInRegulation((v) => !v)}
-                className={`rounded-xl border p-3 text-left text-xs font-semibold transition ${
+                className={`rounded-xl border p-3 text-left text-xs font-semibold transition cursor-pointer ${
                   greenInRegulation
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                    : 'border-slate-200 bg-white text-slate-600'
+                    ? 'border-[var(--theme-accent)] bg-[var(--theme-surface-subtle)] text-[var(--theme-text-primary)]'
+                    : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-secondary)]'
                 }`}
               >
-                <span className="block text-[10px] uppercase text-slate-400">
+                <span className="block text-[10px] uppercase opacity-75">
                   Green (GIR)
                 </span>
                 <span className="mt-1 block font-bold">
@@ -471,13 +501,13 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={() => setSandSave((v) => !v)}
-                className={`rounded-xl border p-3 text-left text-xs font-semibold transition ${
+                className={`rounded-xl border p-3 text-left text-xs font-semibold transition cursor-pointer ${
                   sandSave
-                    ? 'border-amber-500 bg-amber-50 text-amber-900'
-                    : 'border-slate-200 bg-white text-slate-600'
+                    ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
+                    : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-secondary)]'
                 }`}
               >
-                <span className="block text-[10px] uppercase text-slate-400">
+                <span className="block text-[10px] uppercase opacity-75">
                   Bunker Save
                 </span>
                 <span className="mt-1 block font-bold">
@@ -485,23 +515,23 @@ export default function ScorecardAndGpsPage() {
                 </span>
               </button>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs">
-                <span className="block text-[10px] font-semibold uppercase text-slate-400">
+              <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-3 text-xs">
+                <span className="block text-[10px] font-semibold uppercase opacity-75">
                   Penalidades
                 </span>
                 <div className="mt-1 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => setPenaltyStrokes((p) => Math.max(0, p - 1))}
-                    className="rounded bg-slate-100 px-2 font-bold"
+                    className="rounded bg-[var(--theme-surface-subtle)] px-2 font-bold text-[var(--theme-text-primary)] cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="font-bold text-rose-600">{penaltyStrokes}</span>
+                  <span className="font-bold text-rose-500">{penaltyStrokes}</span>
                   <button
                     type="button"
                     onClick={() => setPenaltyStrokes((p) => p + 1)}
-                    className="rounded bg-slate-100 px-2 font-bold"
+                    className="rounded bg-[var(--theme-surface-subtle)] px-2 font-bold text-[var(--theme-text-primary)] cursor-pointer"
                   >
                     +
                   </button>
@@ -513,7 +543,11 @@ export default function ScorecardAndGpsPage() {
               <button
                 type="button"
                 onClick={handleSaveHoleOffline}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-club-primary px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+                style={{
+                  backgroundColor: isDark ? '#D4AF37' : '#0A3A2A',
+                  color: isDark ? '#08130E' : '#FFFFFF',
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition hover:opacity-95 cursor-pointer"
               >
                 <Flag className="h-4 w-4" />
                 Guardar Hoyo {activeHole.holeNumber} en SQLite Offline
@@ -528,76 +562,88 @@ export default function ScorecardAndGpsPage() {
         </div>
 
         {/* Resumen Acumulado de la Tarjeta (Ida / Vuelta / Total Stableford) */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-6 shadow-xs transition-colors">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              <h3 className="text-lg font-bold text-slate-900">
+              <Trophy className="h-5 w-5 text-[var(--theme-accent)]" />
+              <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
                 Resumen de Tarjeta en Vivo ({roundSummary.holesPlayed}/18 hoyos anotados)
               </h3>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <span className="text-xs text-slate-500">Golpes Brutos</span>
-              <p className="mt-1 text-2xl font-black text-slate-900">
+            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Golpes Brutos</span>
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
                 {roundSummary.totalGrossStrokes}
               </p>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[var(--theme-text-secondary)]">
                 Ida {roundSummary.outGrossStrokes} · Vta {roundSummary.inGrossStrokes}
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <span className="text-xs text-slate-500">Golpes Netos</span>
-              <p className="mt-1 text-2xl font-black text-slate-900">
+            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Golpes Netos</span>
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
                 {roundSummary.totalNetStrokes}
               </p>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[var(--theme-text-secondary)]">
                 Con HCP {playingHandicap}
               </span>
             </div>
 
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
-              <span className="text-xs font-semibold text-emerald-800">
+            <div
+              style={{
+                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.15)' : 'rgba(10, 58, 42, 0.08)',
+                borderColor: isDark ? '#D4AF37' : '#0A3A2A',
+              }}
+              className="rounded-xl border p-3.5"
+            >
+              <span
+                style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+                className="text-xs font-bold"
+              >
                 Puntos Stableford
               </span>
-              <p className="mt-1 text-2xl font-black text-emerald-900">
+              <p
+                style={{ color: isDark ? '#D4AF37' : '#0A3A2A' }}
+                className="mt-1 text-2xl font-metric font-bold"
+              >
                 {roundSummary.totalStablefordPoints} pts
               </p>
-              <span className="text-[11px] text-emerald-700">
+              <span className="text-[11px] opacity-80">
                 Ida {roundSummary.outStablefordPoints} · Vta{' '}
                 {roundSummary.inStablefordPoints}
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <span className="text-xs text-slate-500">Calles (FIR %)</span>
-              <p className="mt-1 text-2xl font-black text-slate-900">
+            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Calles (FIR %)</span>
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
                 {roundSummary.fairwayHitPercentage}%
               </p>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[var(--theme-text-secondary)]">
                 {roundSummary.fairwaysHitCount}/{roundSummary.fairwaysEligibleCount} calles
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <span className="text-xs text-slate-500">Greenes (GIR %)</span>
-              <p className="mt-1 text-2xl font-black text-slate-900">
+            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Greenes (GIR %)</span>
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
                 {roundSummary.girPercentage}%
               </p>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[var(--theme-text-secondary)]">
                 {roundSummary.greensInRegulationCount}/{roundSummary.holesPlayed} hoyos
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-              <span className="text-xs text-slate-500">Putts Totales</span>
-              <p className="mt-1 text-2xl font-black text-slate-900">
+            <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] p-3.5">
+              <span className="text-xs text-[var(--theme-text-secondary)] font-medium">Putts Totales</span>
+              <p className="mt-1 text-2xl font-metric text-[var(--theme-text-primary)]">
                 {roundSummary.totalPutts}
               </p>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-[var(--theme-text-secondary)]">
                 Penalidades: {roundSummary.penaltyStrokesTotal}
               </span>
             </div>

@@ -22,8 +22,11 @@ import {
   Users,
   Wifi,
   WifiOff,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useClub } from '@/components/providers/ClubProvider';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import type { ClubConfig, ClubFeatureKey } from '@/types/club';
 import type { UserRole } from '@/types/database';
 
@@ -213,107 +216,168 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isAlreadyInsideAppShell = useContext(AppShellNestedContext);
   const pathname = usePathname();
   const { club, availableClubIds, switchClub, profile, setRole, isOnline } = useClub();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const navItems = resolveNavigationItems(club, profile.role);
 
   if (isAlreadyInsideAppShell) {
     return <>{children}</>;
   }
 
+  const isDark = resolvedTheme === 'dark';
+
   return (
     <AppShellNestedContext.Provider value={true}>
-      <div className="min-h-screen flex flex-col bg-[var(--club-bg)] text-slate-900">
-      {/* Cabecera White-Label del Club */}
+      <div className="min-h-screen flex flex-col bg-[var(--theme-bg)] text-[var(--theme-text-primary)] transition-colors duration-200">
+      {/* Cabecera White-Label del Club con Estética de Alta Gama */}
       <header
         style={{
-          backgroundColor: club.theme.primary,
-          color: club.theme.primaryForeground,
+          backgroundColor: isDark ? '#06372D' : '#DCE6DD',
+          borderColor: isDark ? 'rgba(201, 173, 116, 0.25)' : '#CBD7CC',
+          color: isDark ? '#E4D3AC' : '#0A3A2A',
         }}
-        className="sticky top-0 z-30 border-b border-white/15 shadow-sm"
+        className="sticky top-0 z-30 border-b shadow-xs transition-colors duration-200"
       >
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
               style={{
-                backgroundColor: club.theme.secondary,
-                color: '#0f172a',
+                backgroundColor: isDark ? '#C9AD74' : '#A98A55',
+                color: isDark ? '#0B0C10' : '#FCFAF5',
+                boxShadow: isDark
+                  ? '0 2px 8px rgba(201, 173, 116, 0.35)'
+                  : '0 2px 8px rgba(169, 138, 85, 0.25)',
               }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-sm shadow-inner"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs tracking-wider"
             >
               {club.shortName.slice(0, 3).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base md:text-lg tracking-tight">
+                <span
+                  style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
+                  className="font-bold text-base md:text-lg tracking-tight"
+                >
                   {club.name}
                 </span>
-                <span className="text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/15 font-medium">
+                <span
+                  style={{
+                    backgroundColor: isDark ? '#0C3029' : '#C8D6C9',
+                    borderColor: isDark ? '#104238' : '#B8C8BA',
+                    color: isDark ? '#92A99E' : '#0A3A2A',
+                  }}
+                  className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border font-semibold"
+                >
                   {club.clubId}
                 </span>
               </div>
-              <p className="text-xs opacity-80">
-                {club.tagline || 'Plataforma Oficial del Socio'} · App ID:{' '}
+              <p
+                style={{ color: isDark ? '#92A99E' : '#52665B' }}
+                className="text-xs font-normal"
+              >
+                {club.tagline || 'Tradición y deporte desde 1968'} · App ID:{' '}
                 <code className="font-mono">{club.appId}</code>
               </p>
             </div>
           </div>
 
-          {/* Controles de Estado Offline/Online, Rol, Handicap y Selector Multi-Club */}
+          {/* Controles: Conmutador de Tema, Online/Offline, Rol, Handicap y Multi-Club */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Indicador Online/Offline */}
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium ${
-                isOnline
-                  ? 'bg-emerald-500/20 text-emerald-100 border border-emerald-400/30'
-                  : 'bg-amber-500/25 text-amber-100 border border-amber-400/40'
-              }`}
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                borderColor: isDark ? '#104238' : '#CBD7CC',
+                color: isDark ? '#92A99E' : '#0A3A2A',
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium border shadow-2xs"
             >
-              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-              {isOnline ? 'Online · Supabase Sync' : 'Offline · SQLite Local'}
+              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+              {isOnline ? 'Online · Supabase Sync' : 'Offline · SQLite'}
             </span>
 
+            {/* Badge de Hándicap */}
             <Link
               href="/profile"
               style={{
-                backgroundColor: club.theme.secondary,
-                color: '#0f172a',
+                backgroundColor: isDark ? '#0C3029' : '#0A3A2A',
+                color: isDark ? '#E4D3AC' : '#FCFAF5',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : '#0A3A2A',
               }}
-              className="px-2.5 py-1 rounded-full font-bold shadow-xs"
+              className="px-3 py-1.5 rounded-full font-bold border shadow-2xs transition hover:opacity-90"
             >
               HCP {profile.handicapIndex.toFixed(1)}
             </Link>
 
+            {/* Selector de Club */}
             <select
               aria-label="Selector de club white-label"
               value={club.clubId}
               onChange={(e) => switchClub(e.target.value)}
-              className="bg-black/25 text-white border border-white/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                borderColor: isDark ? '#104238' : '#CBD7CC',
+                color: isDark ? '#D5C7A5' : '#0A3A2A',
+              }}
+              className="rounded-full px-3 py-1.5 text-xs border font-medium focus:outline-none shadow-2xs cursor-pointer"
             >
               {availableClubIds.map((id) => (
-                <option key={id} value={id} className="text-slate-900">
+                <option key={id} value={id} className="text-slate-900 bg-white">
                   Club: {id}
                 </option>
               ))}
             </select>
 
+            {/* Selector de Rol */}
             <select
               aria-label="Selector de rol RLS"
               value={profile.role}
               onChange={(e) => setRole(e.target.value as UserRole)}
-              className="bg-black/25 text-white border border-white/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                borderColor: isDark ? '#104238' : '#CBD7CC',
+                color: isDark ? '#D5C7A5' : '#0A3A2A',
+              }}
+              className="rounded-full px-3 py-1.5 text-xs border font-medium focus:outline-none shadow-2xs cursor-pointer"
             >
-              <option value="player" className="text-slate-900">
-                Rol: Jugador (player)
+              <option value="player" className="text-slate-900 bg-white">
+                Rol: jugador (player)...
               </option>
-              <option value="club_admin" className="text-slate-900">
-                Rol: Admin Club (club_admin)
+              <option value="club_admin" className="text-slate-900 bg-white">
+                Rol: admin club (club_admin)...
               </option>
-              <option value="superadmin" className="text-slate-900">
-                Rol: Superadmin
+              <option value="superadmin" className="text-slate-900 bg-white">
+                Rol: superadmin...
               </option>
             </select>
 
+            {/* Conmutador Dark / Light */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Cambiar a modo ${isDark ? 'Light' : 'Dark'}`}
+              title={`Cambiar a modo ${isDark ? 'Light' : 'Dark'}`}
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                borderColor: isDark ? '#104238' : '#CBD7CC',
+              }}
+              className="p-1.5 rounded-full border shadow-2xs transition flex items-center justify-center cursor-pointer hover:border-[#C9AD74]"
+            >
+              {isDark ? (
+                <Sun className="w-4 h-4 text-[#C9AD74]" />
+              ) : (
+                <Moon className="w-4 h-4 text-[#A98A55]" />
+              )}
+            </button>
+
+            {/* Botón Acceso */}
             <Link
               href="/login"
-              className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition"
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#0A3A2A',
+                borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : '#0A3A2A',
+                color: isDark ? '#E4D3AC' : '#FCFAF5',
+              }}
+              className="px-3.5 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition hover:opacity-90"
             >
               Acceso
             </Link>
@@ -321,10 +385,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Cuerpo Principal con Sidebar en Escritorio y Contenido */}
-      <div className="flex-1 max-w-7xl w-full mx-auto flex gap-6 px-4 py-6 pb-24 md:pb-8">
-        <aside className="hidden md:flex flex-col w-60 shrink-0">
-          <nav className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs space-y-1">
+      {/* Cuerpo Principal con Sidebar Flotante Redondeada y Contenido */}
+      <div className="flex-1 max-w-7xl w-full mx-auto flex gap-6 px-4 py-5 pb-24 md:pb-8">
+        <aside className="hidden md:flex flex-col w-64 shrink-0">
+          <nav
+            style={{
+              backgroundColor: isDark ? '#202127' : '#FCFAF5',
+              borderColor: isDark ? 'rgba(201, 173, 116, 0.2)' : '#D8DFD9',
+            }}
+            className="rounded-3xl border p-3.5 shadow-sm space-y-1.5"
+          >
             {navItems.map((item) => {
               const Icon = getNavIcon(item.id);
               const isActive =
@@ -339,18 +409,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   style={
                     isActive
                       ? {
-                          backgroundColor: club.theme.primary,
-                          color: club.theme.primaryForeground,
+                          background: isDark
+                            ? 'linear-gradient(135deg, #C9AD74 0%, #B8995E 100%)'
+                            : '#0A3A2A',
+                          color: isDark ? '#0B0C10' : '#FCFAF5',
+                          fontWeight: 700,
+                          boxShadow: isDark
+                            ? '0 2px 10px rgba(201, 173, 116, 0.35)'
+                            : '0 2px 10px rgba(10, 58, 42, 0.25)',
+                          border: isDark
+                            ? '1px solid #D8BF88'
+                            : '1px solid #0A3A2A',
                         }
                       : undefined
                   }
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition ${
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs md:text-sm transition ${
                     isActive
-                      ? 'shadow-xs'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'font-bold'
+                      : isDark
+                      ? 'text-[#92A99E] hover:text-[#E4D3AC] hover:bg-[#2A2B33] font-medium'
+                      : 'text-[#52665B] hover:text-[#0A3A2A] hover:bg-[#E8E3D4] font-medium'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${
+                      isActive
+                        ? isDark
+                          ? 'text-[#0B0C10]'
+                          : 'text-[#FCFAF5]'
+                        : isDark
+                        ? 'text-[#C9AD74]'
+                        : 'text-[#A98A55]'
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -362,7 +453,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Barra de Navegación Inferior para Móvil / APK Android */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around items-center shadow-lg">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-[var(--theme-surface)] border-t border-[var(--theme-border)] px-2 py-1.5 flex justify-around items-center shadow-lg">
         {navItems.slice(0, 5).map((item) => {
           const Icon = getNavIcon(item.id);
           const isActive =
@@ -373,9 +464,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.id}
               href={item.href}
-              style={isActive ? { color: club.theme.primary } : undefined}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[11px] font-medium ${
-                isActive ? 'font-bold' : 'text-slate-500'
+              style={
+                isActive
+                  ? { color: isDark ? '#D4AF37' : '#0A3A2A' }
+                  : undefined
+              }
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[11px] font-medium transition ${
+                isActive ? 'font-bold' : 'text-[var(--theme-text-secondary)]'
               }`}
             >
               <Icon className="w-5 h-5" />

@@ -8,6 +8,7 @@ import {
   resolveNavigationItems,
 } from '@/components/layout/AppShell';
 import { ClubProvider } from '@/components/providers/ClubProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import DashboardPage from '@/app/page';
 import EnHomePage from '@/app/en/home/page';
 import NotFoundPage from '@/app/not-found';
@@ -172,5 +173,24 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect(notFoundOnAliasHtml).not.toContain('This page could not be found');
     expect((notFoundOnAliasHtml.match(/<header/g) ?? []).length).toBe(1);
     expect((notFoundOnAliasHtml.match(/<aside/g) ?? []).length).toBe(1);
+  });
+
+  it('renderiza el selector reactivo de tema Dark/Light en AppShell con ThemeProvider sin alterar la navegación', () => {
+    const renderedHtml = renderToStaticMarkup(
+      React.createElement(ThemeProvider, {
+        initialTheme: 'dark',
+        children: React.createElement(ClubProvider, {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement('div', null, 'Vista con Tema'),
+          }),
+        }),
+      })
+    );
+
+    expect(renderedHtml).toContain('Vista con Tema');
+    expect(renderedHtml).toContain('aria-label="Cambiar a modo Light"');
+    expect((renderedHtml.match(/<header/g) ?? []).length).toBe(1);
+    expect((renderedHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
 });
