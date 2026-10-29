@@ -89,8 +89,8 @@ export default function TeeTimeBookingsPage() {
         slots,
         {
           slotId: activeSlot.id,
-          userId: profile.id,
-          userName: profile.fullName,
+          userId: profile?.id ?? 'guest-player',
+          userName: profile?.fullName ?? 'Invitado',
           playersCount,
           buggyRequested,
           notes,
@@ -115,8 +115,8 @@ export default function TeeTimeBookingsPage() {
       const { updatedSlots, meta } = await submitCancelTeeTimeBooking(
         slots,
         bookingId,
-        profile.id,
-        profile.role
+        profile?.id ?? 'guest-player',
+        profile?.role ?? 'player'
       );
       setSlots(updatedSlots);
       setFeedback({
@@ -295,9 +295,10 @@ export default function TeeTimeBookingsPage() {
                         .filter((b) => b.status === 'confirmed')
                         .map((b) => {
                           const canCancel =
-                            b.userId === profile.id ||
-                            profile.role === 'club_admin' ||
-                            profile.role === 'superadmin';
+                            profile &&
+                            (b.userId === profile.id ||
+                              profile.role === 'club_admin' ||
+                              profile.role === 'superadmin');
 
                           return (
                             <div
@@ -352,7 +353,7 @@ export default function TeeTimeBookingsPage() {
                   Confirmar Salida: {activeSlot.slotTime}
                 </h3>
                 <p className="text-xs text-[var(--theme-text-secondary)] font-normal">
-                  Fecha: {activeSlot.slotDate} · Socio: {profile.fullName}
+                  Fecha: {activeSlot.slotDate} · Socio: {profile?.fullName ?? 'Invitado'}
                 </p>
               </div>
             </div>

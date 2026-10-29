@@ -56,9 +56,9 @@ export default function TournamentsAndLeaderboardPage() {
   const handleRegister = () => {
     try {
       const updated = registerPlayerInTournament(activeTournament, {
-        playerId: profile.id,
-        playerName: profile.fullName,
-        handicapIndex: profile.handicapIndex,
+        playerId: profile?.id ?? 'guest-player',
+        playerName: profile?.fullName ?? 'Invitado',
+        handicapIndex: profile?.handicapIndex ?? 0,
       });
       const meta = resolvePersistenceMetadata();
       setTournaments((prev) =>
@@ -66,7 +66,7 @@ export default function TournamentsAndLeaderboardPage() {
       );
       setBanner({
         type: 'ok',
-        message: `Inscrito en "${activeTournament.name}" (${profile.fullName}). ${meta.notice}`,
+        message: `Inscrito en "${activeTournament.name}" (${profile?.fullName ?? 'Invitado'}). ${meta.notice}`,
       });
     } catch (err) {
       setBanner({

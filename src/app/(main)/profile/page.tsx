@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, CheckCircle2, Eye, EyeOff, Medal, Save, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, CheckCircle2, Eye, EyeOff, LogOut, Medal, Save, Shield } from 'lucide-react';
 import { useClub } from '@/components/providers/ClubProvider';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 import {
   calculatePlayingHandicap,
   DEMO_HANDICAP_HISTORY,
@@ -21,13 +23,14 @@ const COURSE_TEES_PREVIEW = [
 ];
 
 export default function ProfilePage() {
-  const { club, profile, updateProfile } = useClub();
+  const { club, profile, updateProfile, logout } = useClub();
   const { resolvedTheme } = useTheme();
-  const [fullName, setFullName] = useState(profile.fullName);
-  const [handicapInput, setHandicapInput] = useState(String(profile.handicapIndex));
-  const [license, setLicense] = useState(profile.federationLicense);
-  const [bio, setBio] = useState(profile.bio || '');
-  const [isDirectoryVisible, setIsDirectoryVisible] = useState(profile.isDirectoryVisible);
+  const { t } = useTranslation();
+  const [fullName, setFullName] = useState(profile?.fullName || '');
+  const [handicapInput, setHandicapInput] = useState(String(profile?.handicapIndex ?? '0.0'));
+  const [license, setLicense] = useState(profile?.federationLicense || '');
+  const [bio, setBio] = useState(profile?.bio || '');
+  const [isDirectoryVisible, setIsDirectoryVisible] = useState(profile?.isDirectoryVisible ?? true);
   const [pushTokenInfo, setPushTokenInfo] = useState<string | null>(null);
   const [currentPushToken, setCurrentPushToken] = useState<string | null>(null);
   const [isPushActive, setIsPushActive] = useState(false);
@@ -35,6 +38,32 @@ export default function ProfilePage() {
   const [pushError, setPushError] = useState<string | null>(null);
   const [savedBanner, setSavedBanner] = useState(false);
   const isDark = resolvedTheme === 'dark';
+
+  if (!profile) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="hero-banner-luxury relative overflow-hidden rounded-2xl border p-8 shadow-sm text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center border shadow-sm mb-4 bg-[var(--theme-surface-subtle)] text-[var(--theme-accent)]">
+            <Shield className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-[var(--theme-text-primary)]">
+            {t('profile.sessionRequired')}
+          </h1>
+          <p className="text-sm text-[var(--theme-text-secondary)] mt-2 max-w-md mx-auto">
+            {t('profile.sessionRequiredDesc')}
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-bold btn-gold-gradient transition shadow-sm text-xs"
+            >
+              {t('common.login')}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +163,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <p className="text-xs text-[var(--theme-text-secondary)] mt-0.5 font-normal">
-              Licencia Federativa: <strong className="text-[var(--theme-text-primary)]">{profile.federationLicense}</strong> · {profile.email}
+              {t('profile.federationNumber')}: <strong className="text-[var(--theme-text-primary)]">{profile.federationLicense}</strong> · {profile.email}
             </p>
           </div>
         </div>
@@ -156,6 +185,18 @@ export default function ProfilePage() {
               : isPushActive
               ? 'Desactivar Push (Activo)'
               : 'Activar Notificaciones Push (FCM / APNs)'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              window.location.href = '/login';
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+          >
+            <LogOut className="w-4 h-4" />
+            {t('common.logout')}
           </button>
         </div>
       </div>

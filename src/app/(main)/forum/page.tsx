@@ -72,7 +72,7 @@ export default function ForumPage() {
     message: string;
   } | null>(null);
 
-  const isAdmin = isClubAdminOrSuperadminRole(profile.role);
+  const isAdmin = profile ? isClubAdminOrSuperadminRole(profile.role) : false;
 
   // Carga inicial y suscripción Realtime
   useEffect(() => {
@@ -123,9 +123,9 @@ export default function ForumPage() {
     e.preventDefault();
     try {
       const { updatedThreads, createdThread, meta } = await createForumThread(threads, {
-        authorId: profile.id,
-        authorName: profile.fullName || 'Socio del Club',
-        actorRole: profile.role,
+        authorId: profile?.id ?? 'guest',
+        authorName: profile?.fullName || 'Socio del Club',
+        actorRole: profile?.role ?? 'player',
         category: newCategory,
         title: newTitle,
         body: newBody,
@@ -157,9 +157,9 @@ export default function ForumPage() {
     try {
       const { updatedThreads, meta } = await replyToForumThread(threads, {
         threadId,
-        authorId: profile.id,
-        authorName: profile.fullName || 'Socio del Club',
-        actorRole: profile.role,
+        authorId: profile?.id ?? 'guest',
+        authorName: profile?.fullName || 'Socio del Club',
+        actorRole: profile?.role ?? 'player',
         body: replyBody,
       });
 
@@ -183,7 +183,7 @@ export default function ForumPage() {
     try {
       const { updatedThreads, meta } = await toggleForumThreadLock(threads, {
         threadId,
-        actorRole: profile.role,
+        actorRole: profile?.role ?? 'player',
         isLocked: !currentLockState,
       });
 
@@ -293,7 +293,7 @@ export default function ForumPage() {
               Nuevo Debate en el Foro
             </h3>
             <p className="mt-0.5 text-xs text-[var(--theme-text-secondary)]">
-              Participando como: <span className="font-semibold text-[var(--theme-text-primary)]">{profile.fullName}</span> ({profile.role})
+              Participando como: <span className="font-semibold text-[var(--theme-text-primary)]">{profile?.fullName ?? 'Invitado'}</span> ({profile?.role ?? 'sin sesión'})
             </p>
 
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">

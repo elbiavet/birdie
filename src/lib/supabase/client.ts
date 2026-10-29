@@ -70,7 +70,7 @@ export const DEMO_PROFILES_BY_ROLE: Record<UserRole, PlayerProfile> = {
   superadmin: {
     id: 'aaaa0000-0000-0000-0000-000000000004',
     email: 'ops@birdie.app',
-    fullName: ' Javier Ruiz (Birdie Superadmin)',
+    fullName: 'Elbia Losana (Birdie Superadmin)',
     federationLicense: 'PRO-001122',
     handicapIndex: 1.8,
     role: 'superadmin',

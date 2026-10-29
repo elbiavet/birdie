@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ClubProvider } from '@/components/providers/ClubProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { LanguageProvider } from '@/components/providers/LanguageProvider';
 import { AppShell } from '@/components/layout/AppShell';
 
 export const metadata: Metadata = {
@@ -16,11 +17,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" data-theme="dark" className="dark" suppressHydrationWarning>
-      <body className="min-h-screen antialiased bg-[var(--theme-bg)] text-[var(--theme-text-primary)]">
+      <body className="min-h-screen antialiased bg-[var(--theme-bg)] text-[var(--theme-text-primary)]" suppressHydrationWarning>
         <ThemeProvider>
-          <ClubProvider>
-            <AppShell>{children}</AppShell>
-          </ClubProvider>
+          <LanguageProvider>
+            <ClubProvider>
+              <AppShell>{children}</AppShell>
+            </ClubProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

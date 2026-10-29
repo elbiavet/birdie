@@ -24,9 +24,13 @@ import {
   WifiOff,
   Sun,
   Moon,
+  KeyRound,
+  LogOut,
+  Globe,
 } from 'lucide-react';
 import { useClub } from '@/components/providers/ClubProvider';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 import type { ClubConfig, ClubFeatureKey } from '@/types/club';
 import type { UserRole } from '@/types/database';
 
@@ -41,6 +45,12 @@ export interface NavItem {
 
 export const ALL_NAVIGATION_ITEMS: readonly NavItem[] = [
   { id: 'dashboard', label: 'Inicio', href: '/', group: 'core' },
+  {
+    id: 'course',
+    label: 'Recorrido',
+    href: '/course',
+    group: 'core',
+  },
   {
     id: 'scorecard',
     label: 'Marcador & GPS',
@@ -177,6 +187,8 @@ function getNavIcon(id: string) {
   switch (id) {
     case 'dashboard':
       return Home;
+    case 'course':
+      return Compass;
     case 'scorecard':
       return Flag;
     case 'stats':
@@ -215,9 +227,20 @@ const AppShellNestedContext = createContext<boolean>(false);
 export function AppShell({ children }: { children: React.ReactNode }) {
   const isAlreadyInsideAppShell = useContext(AppShellNestedContext);
   const pathname = usePathname();
-  const { club, availableClubIds, switchClub, profile, setRole, isOnline } = useClub();
+  const {
+    club,
+    availableClubIds,
+    switchClub,
+    profile,
+    authenticatedProfile,
+    canSimulateRoles,
+    setRole,
+    logout,
+    isOnline,
+  } = useClub();
   const { resolvedTheme, toggleTheme } = useTheme();
-  const navItems = resolveNavigationItems(club, profile.role);
+  const { language, setLanguage, t } = useTranslation();
+  const navItems = resolveNavigationItems(club, profile?.role || 'player');
 
   if (isAlreadyInsideAppShell) {
     return <>{children}</>;
@@ -278,14 +301,65 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 style={{ color: isDark ? '#92A99E' : '#52665B' }}
                 className="text-xs font-normal"
               >
-                {club.tagline || 'Tradición y deporte desde 1968'} · App ID:{' '}
-                <code className="font-mono">{club.appId}</code>
+                {club.tagline || 'Tradición y deporte desde 1968'}
+                {profile?.role === 'superadmin' && (
+                  <>
+                    {' · App ID: '}
+                    <code className="font-mono">{club.appId}</code>
+                  </>
+                )}
               </p>
             </div>
           </div>
 
-          {/* Controles: Conmutador de Tema, Online/Offline, Rol, Handicap y Multi-Club */}
+          {/* Controles: Conmutador de Tema, Idioma, Online/Offline, Rol, Handicap y Multi-Club */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Selector de Idioma (ES / EN) */}
+            <div
+              style={{
+                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                borderColor: isDark ? '#104238' : '#CBD7CC',
+              }}
+              className="inline-flex rounded-full border p-0.5 shadow-2xs items-center text-xs"
+              role="group"
+              aria-label={t('common.language')}
+            >
+              <button
+                type="button"
+                onClick={() => setLanguage('es')}
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  language === 'es'
+                    ? isDark
+                      ? 'bg-[#D4BA80] text-stone-900 shadow-xs'
+                      : 'bg-[#BEA16D] text-stone-900 shadow-xs'
+                    : isDark
+                    ? 'text-[#92A99E] hover:text-[#E4D3AC]'
+                    : 'text-[#52665B] hover:text-[#0A3A2A]'
+                }`}
+                aria-pressed={language === 'es'}
+                aria-label="Cambiar a Español"
+              >
+                ES
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  language === 'en'
+                    ? isDark
+                      ? 'bg-[#D4BA80] text-stone-900 shadow-xs'
+                      : 'bg-[#BEA16D] text-stone-900 shadow-xs'
+                    : isDark
+                    ? 'text-[#92A99E] hover:text-[#E4D3AC]'
+                    : 'text-[#52665B] hover:text-[#0A3A2A]'
+                }`}
+                aria-pressed={language === 'en'}
+                aria-label="Switch to English"
+              >
+                EN
+              </button>
+            </div>
+
             {/* Indicador Online/Offline */}
             <span
               style={{
@@ -296,21 +370,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium border shadow-2xs"
             >
               <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-              {isOnline ? 'Online · Supabase Sync' : 'Offline · SQLite'}
+              {isOnline ? t('header.onlineSupabase') : t('header.offlineSqlite')}
             </span>
 
-            {/* Badge de Hándicap */}
-            <Link
-              href="/profile"
-              style={{
-                backgroundColor: isDark ? '#0C3029' : '#0A3A2A',
-                color: isDark ? '#E4D3AC' : '#FCFAF5',
-                borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : '#0A3A2A',
-              }}
-              className="px-3 py-1.5 rounded-full font-bold border shadow-2xs transition hover:opacity-90"
-            >
-              HCP {profile.handicapIndex.toFixed(1)}
-            </Link>
+            {/* Badge de Hándicap (visible con sesión) */}
+            {profile && (
+              <Link
+                href="/profile"
+                style={{
+                  backgroundColor: isDark ? '#0C3029' : '#0A3A2A',
+                  color: isDark ? '#E4D3AC' : '#FCFAF5',
+                  borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : '#0A3A2A',
+                }}
+                className="px-3 py-1.5 rounded-full font-bold border shadow-2xs transition hover:opacity-90"
+              >
+                HCP {profile.handicapIndex.toFixed(1)}
+              </Link>
+            )}
 
             {/* Selector de Club */}
             <select
@@ -331,28 +407,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ))}
             </select>
 
-            {/* Selector de Rol */}
-            <select
-              aria-label="Selector de rol RLS"
-              value={profile.role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-              style={{
-                backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
-                borderColor: isDark ? '#104238' : '#CBD7CC',
-                color: isDark ? '#D5C7A5' : '#0A3A2A',
-              }}
-              className="rounded-full px-3 py-1.5 text-xs border font-medium focus:outline-none shadow-2xs cursor-pointer"
-            >
-              <option value="player" className="text-slate-900 bg-white">
-                Rol: jugador (player)...
-              </option>
-              <option value="club_admin" className="text-slate-900 bg-white">
-                Rol: admin club (club_admin)...
-              </option>
-              <option value="superadmin" className="text-slate-900 bg-white">
-                Rol: superadmin...
-              </option>
-            </select>
+            {/* Selector de Rol o Badge informativo: controles de simulación exclusivos para superadmin con sesión */}
+            {profile ? (
+              canSimulateRoles ? (
+                <select
+                  aria-label="Selector de rol RLS"
+                  value={profile.role}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
+                  style={{
+                    backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                    borderColor: isDark ? '#104238' : '#CBD7CC',
+                    color: isDark ? '#D5C7A5' : '#0A3A2A',
+                  }}
+                  className="rounded-full px-3 py-1.5 text-xs border font-medium focus:outline-none shadow-2xs cursor-pointer"
+                >
+                  <option value="player" className="text-slate-900 bg-white">
+                    {language === 'en' ? 'Simulate: Member (player)' : 'Simular: jugador (player)'}
+                  </option>
+                  <option value="club_admin" className="text-slate-900 bg-white">
+                    {language === 'en' ? 'Simulate: Club admin (club_admin)' : 'Simular: admin club (club_admin)'}
+                  </option>
+                  <option value="superadmin" className="text-slate-900 bg-white">
+                    {language === 'en' ? 'Simulate: Superadmin' : 'Simular: superadmin'}
+                  </option>
+                </select>
+              ) : (
+                <span
+                  style={{
+                    backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                    borderColor: isDark ? '#104238' : '#CBD7CC',
+                    color: isDark ? '#92A99E' : '#0A3A2A',
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium border shadow-2xs"
+                >
+                  Rol: {profile.role === 'club_admin' ? (language === 'en' ? 'Club Admin' : 'Admin Club') : (language === 'en' ? 'Player' : 'Jugador')}
+                </span>
+              )
+            ) : null}
 
             {/* Conmutador Dark / Light */}
             <button
@@ -381,10 +472,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 borderColor: isDark ? 'rgba(201, 173, 116, 0.45)' : '#0A3A2A',
                 color: isDark ? '#E4D3AC' : '#FCFAF5',
               }}
-              className="px-3.5 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition hover:opacity-90"
+              className="px-3.5 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition hover:opacity-90 inline-flex items-center gap-1.5"
             >
-              Acceso
+              <KeyRound className="w-3.5 h-3.5" />
+              {profile ? t('common.demoAccess') : t('common.login')}
             </Link>
+
+            {/* Botón Cerrar Sesión universal (visible cuando hay sesión activa) */}
+            {profile && (
+              <button
+                type="button"
+                onClick={() => logout()}
+                title={t('common.logout')}
+                aria-label="Cerrar sesión"
+                style={{
+                  backgroundColor: isDark ? '#0C3029' : '#FCFAF5',
+                  borderColor: isDark ? '#104238' : '#CBD7CC',
+                  color: isDark ? '#92A99E' : '#52665B',
+                }}
+                className="p-1.5 rounded-full border shadow-2xs transition flex items-center justify-center cursor-pointer hover:text-rose-400 hover:border-rose-400/40"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -444,7 +554,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         : 'text-[#A98A55]'
                     }`}
                   />
-                  <span>{item.label}</span>
+                  <span>{t(`nav.${item.id}`, item.label)}</span>
                 </Link>
               );
             })}
@@ -476,7 +586,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="truncate max-w-[68px]">{item.label}</span>
+              <span className="truncate max-w-[68px]">{t(`nav.${item.id}`, item.label)}</span>
             </Link>
           );
         })}

@@ -35,10 +35,10 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { club, profile, setRole } = useClub();
+  const { club, profile, canSimulateRoles, setRole } = useClub();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const isAdmin = canAccessAdminPanel(profile.role);
+  const isAdmin = profile ? canAccessAdminPanel(profile.role) : false;
 
   const [stats, setStats] = useState<AdminDashboardStats>(() =>
     computeAdminDashboardStats()
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
           body: pushBody.trim(),
           targetUrl: pushTargetUrl,
         },
-        profile.role
+        profile?.role || 'player'
       );
 
       setPushResult(res);
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !profile) return;
     let active = true;
 
     loadAdminDashboardStats(profile.role)
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [isAdmin, profile.role]);
+  }, [isAdmin, profile]);
 
   // Si no es administrador, renderiza pantalla de acceso restringido (403)
   if (!isAdmin) {
@@ -120,7 +120,7 @@ export default function AdminDashboardPage() {
           </h1>
 
           <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-[var(--theme-text-secondary)]">
-            El Panel de Administración de <span className="font-semibold text-[var(--theme-text-primary)]">{club.name}</span> está restringido a usuarios con rol <code className="rounded-md bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-1.5 py-0.5 font-mono text-xs text-rose-400">club_admin</code> o <code className="rounded-md bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-1.5 py-0.5 font-mono text-xs text-rose-400">superadmin</code>. Tu rol actual es <strong className="capitalize text-[var(--theme-text-primary)]">{profile.role}</strong>.
+            El Panel de Administración de <span className="font-semibold text-[var(--theme-text-primary)]">{club.name}</span> está restringido a usuarios con rol <code className="rounded-md bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-1.5 py-0.5 font-mono text-xs text-rose-400">club_admin</code> o <code className="rounded-md bg-[var(--theme-surface-subtle)] border border-[var(--theme-border)] px-1.5 py-0.5 font-mono text-xs text-rose-400">superadmin</code>. Tu rol actual es <strong className="capitalize text-[var(--theme-text-primary)]">{profile?.role || 'invitado (sin sesión)'}</strong>.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -131,15 +131,17 @@ export default function AdminDashboardPage() {
               Volver al Inicio
             </Link>
 
-            {/* En modo demo, facilitamos conmutar de rol para probar la consola */}
-            <button
-              type="button"
-              onClick={() => setRole('club_admin')}
-              className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold shadow-sm cursor-pointer transition"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              Probar como Club Admin (Demo)
-            </button>
+            {/* Solo un superadmin autenticado puede simular o conmutar al rol club_admin */}
+            {canSimulateRoles && (
+              <button
+                type="button"
+                onClick={() => setRole('club_admin')}
+                className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold shadow-sm cursor-pointer transition"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Simular como Club Admin (Superadmin)
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -187,9 +189,9 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-2 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-4 py-2 text-xs">
             <Shield className="h-4 w-4 text-[var(--theme-accent)]" />
             <div>
-              <p className="font-bold text-[var(--theme-text-primary)]">{profile.fullName}</p>
+              <p className="font-bold text-[var(--theme-text-primary)]">{profile?.fullName || 'Administrador'}</p>
               <p className="text-[11px] capitalize text-[var(--theme-text-secondary)]">
-                Rol: {profile.role}
+                Rol: {profile?.role || 'admin'}
               </p>
             </div>
           </div>

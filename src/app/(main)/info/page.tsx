@@ -58,7 +58,7 @@ export default function ClubInfoPage() {
     message: string;
   } | null>(null);
 
-  const isAdmin = isClubAdminOrSuperadminRole(profile.role);
+  const isAdmin = profile ? isClubAdminOrSuperadminRole(profile.role) : false;
 
   useEffect(() => {
     let active = true;
@@ -101,8 +101,8 @@ export default function ClubInfoPage() {
           title: editTitle,
           category: editCategory,
           contentMarkdown: editMarkdown,
-          actorUserId: profile.id,
-          actorRole: profile.role,
+          actorUserId: profile?.id ?? 'guest',
+          actorRole: profile?.role ?? 'player',
         }
       );
       setPages(updatedPages);

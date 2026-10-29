@@ -63,12 +63,12 @@ export default function ScorecardAndGpsPage() {
   const playingHandicap = useMemo(
     () =>
       calculatePlayingHandicap({
-        handicapIndex: currentUser.handicapIndex,
+        handicapIndex: currentUser?.handicapIndex ?? 0,
         slopeRating: selectedTee.slopeRating,
         courseRating: selectedTee.courseRating,
         par: course.parTotal,
       }),
-    [currentUser.handicapIndex, selectedTee, course.parTotal]
+    [currentUser?.handicapIndex, selectedTee, course.parTotal]
   );
 
   const [activeHoleNumber, setActiveHoleNumber] = useState<number>(1);
@@ -92,8 +92,10 @@ export default function ScorecardAndGpsPage() {
   const [pendingQueueCount, setPendingQueueCount] = useState<number>(0);
   const [statusBanner, setStatusBanner] = useState<string | null>(null);
 
+  const currentUserId = currentUser?.id ?? 'guest-player';
+
   const loadRoundFromOfflineDb = useCallback(async () => {
-    const stored = await getOfflineRoundScores(ACTIVE_ROUND_ID, currentUser.id);
+    const stored = await getOfflineRoundScores(ACTIVE_ROUND_ID, currentUserId);
     const mapped: HoleScoreInput[] = stored.map((s) => ({
       holeNumber: s.holeNumber,
       strokes: s.strokes,
@@ -107,7 +109,7 @@ export default function ScorecardAndGpsPage() {
 
     const queue = await getSyncQueueState();
     setPendingQueueCount(queue.pendingCount);
-  }, [currentUser.id]);
+  }, [currentUserId]);
 
   useEffect(() => {
     loadRoundFromOfflineDb();
@@ -174,7 +176,7 @@ export default function ScorecardAndGpsPage() {
   const handleSaveHoleOffline = async () => {
     await recordHoleScoreOfflineFirst({
       roundId: ACTIVE_ROUND_ID,
-      playerId: currentUser.id,
+      playerId: currentUserId,
       holeNumber: activeHole.holeNumber,
       par: activeHole.par,
       strokeIndex: activeHole.strokeIndex,
@@ -247,7 +249,7 @@ export default function ScorecardAndGpsPage() {
                 Marcador Digital y Telémetro GPS
               </h2>
               <p className="text-sm font-normal opacity-90">
-                {course.name} · Par {course.parTotal} · Jugador: {currentUser.fullName}
+                {course.name} · Par {course.parTotal} · Jugador: {currentUser?.fullName ?? 'Invitado'}
               </p>
             </div>
 

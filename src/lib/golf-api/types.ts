@@ -25,6 +25,17 @@ export interface GolfApiTee {
   totalDistanceMeters: number;
 }
 
+/**
+ * Limitación documentada de Golf API:
+ * El payload estándar y los endpoints de Golf API proveen métricas deportivas exactas
+ * (par, handicap, distancias por barra, coordenadas GPS de tee, green frente/centro/fondo
+ * y POIs de bunkers/agua/doglegs), pero NO suministran imágenes fotográficas ráster ni
+ * planos vectoriales prediseñados por hoyo.
+ * Para solventarlo de forma verídica y sin falsear información, Birdie implementa un
+ * renderizador de trazado técnico vectorial SVG interactivo proyectado directamente
+ * desde las coordenadas GPS reales de Golf API, admitiendo opcionalmente imágenes
+ * fotográficas provistas por el club (`photoUrl`) cuando estén disponibles.
+ */
 export interface GolfApiHole {
   holeNumber: number;
   par: number;
@@ -42,6 +53,8 @@ export interface GolfApiHole {
   greenBackLat: number;
   greenBackLng: number;
   pois: GolfApiPoi[];
+  photoUrl?: string;
+  description?: string;
 }
 
 export interface GolfApiCourse {

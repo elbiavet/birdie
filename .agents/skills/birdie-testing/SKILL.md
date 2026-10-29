@@ -49,9 +49,9 @@ Para no asumir capacidades inexistentes, distingue estrictamente qué verifica c
 
 ## 3. Mapa de Suites Vitest Existentes y Cobertura Real
 
-A fecha actual, el proyecto cuenta exactamente con **13 suites de pruebas activas** (95 tests en total) en `src/**/__tests__/`. La cobertura debe describirse siempre en base al estado implementado, sin atribuir cobertura de subfases futuras:
+A fecha actual, el proyecto cuenta exactamente con **14 suites de pruebas activas** (117 tests en total) en `src/**/__tests__/`. La cobertura debe describirse siempre en base al estado implementado, sin atribuir cobertura de subfases futuras:
 
-1. **`src/lib/club-config/__tests__/club-config.test.ts` (8 tests)**: Registro de clubes (`demo-club`, `pinos-golf`), validación de esquemas, variables CSS de tema y correspondencia con la matriz CI.
+1. **`src/lib/club-config/__tests__/club-config.test.ts` (9 tests)**: Registro de clubes (`demo-club`, `pinos-golf`), validación de esquemas, variables CSS de tema y correspondencia con la matriz CI.
 2. **`src/lib/golf-api/__tests__/golf-api.test.ts` (6 tests)**: Catálogo de recorridos, coordenadas GPS de greens, filtros de búsqueda, totales de 9 y 18 hoyos y normalizador compartido.
 3. **`src/lib/scoring/__tests__/scoring-and-sync.test.ts` (5 tests)**: Distribución de golpes WHS en 9 y 18 hoyos, puntuación Stableford, clasificación respecto al par y sincronización con control de revisiones.
 4. **`src/lib/theme/__tests__/theme-manager.test.ts` (4 tests)**: Alternancia de temas Dark/Light, persistencia y consistencia de clases y variables visuales.
@@ -66,6 +66,7 @@ A fecha actual, el proyecto cuenta exactamente con **13 suites de pruebas activa
 11. **`src/lib/push/__tests__/push-dispatcher.test.ts` (8 tests)**: Validación de parámetros, normalización de payloads FCM v1 (Android/Web) y APNs (iOS), detección de tokens revocados y guardias de rol.
 12. **`src/lib/capacitor/__tests__/push-notifications.test.tsx` (11 tests)**: Suite integral de notificaciones push cubriendo ciclo de vida de tokens, fallback seguro, payloads multi-plataforma y renderizado SSR en `/profile` y `/admin`.
 13. **`src/lib/__tests__/env.test.ts` (2 tests)**: Detección y valores por defecto del entorno de ejecución.
+14. **`src/components/__tests__/role-authorization-and-simulator.test.tsx` (19 tests)**: Control de acceso por rol y restricción estricta del simulador al superadmin autenticado, ocultación de `club.appId` a `player` y `club_admin`, rechazo lógico ante llamadas no autorizadas a `setRole`, resistencia a manipulaciones en `localStorage`, autenticación en modo demo y renderizado homogéneo de pantallas para los tres roles.
 
 ---
 

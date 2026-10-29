@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Award,
   CalendarClock,
@@ -14,11 +15,14 @@ import { useClub } from '@/components/providers/ClubProvider';
 import { isHomeAliasPath, resolveNavigationItems } from '@/components/layout/AppShell';
 import { calculatePlayingHandicap } from '@/lib/supabase/client';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { useTranslation } from '@/components/providers/LanguageProvider';
 
 export default function DashboardPage() {
-  const { club, profile, isOnline } = useClub();
+  const router = useRouter();
+  const { club, profile, isOnline, isAuthenticated } = useClub();
   const { resolvedTheme } = useTheme();
-  const enabledNavItems = resolveNavigationItems(club, profile.role);
+  const { t } = useTranslation();
+  const enabledNavItems = resolveNavigationItems(club, profile?.role || 'player');
   const isDark = resolvedTheme === 'dark';
 
   useEffect(() => {
@@ -31,12 +35,21 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const playingHcpYellow = calculatePlayingHandicap({
-    handicapIndex: profile.handicapIndex,
-    slopeRating: 128,
-    courseRating: 71.5,
-    par: 72,
-  });
+  // Al navegar a la dirección principal del sitio, muestra la página de acceso si el usuario no tiene una sesión válida
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  const playingHcpYellow = profile
+    ? calculatePlayingHandicap({
+        handicapIndex: profile.handicapIndex,
+        slopeRating: 128,
+        courseRating: 71.5,
+        par: 72,
+      })
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -107,7 +120,7 @@ export default function DashboardPage() {
           >
             <MapPin className="w-3.5 h-3.5 text-[#C9AD74]" />
             <span>
-              GPS CAMPO: {club.coordinates.lat.toFixed(4)}, {club.coordinates.lng.toFixed(4)}
+              {t('home.gpsField')}: {club.coordinates.lat.toFixed(4)}, {club.coordinates.lng.toFixed(4)}
             </span>
           </div>
 
@@ -115,19 +128,19 @@ export default function DashboardPage() {
             style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
             className="text-2xl md:text-3xl font-bold tracking-tight"
           >
-            Bienvenido, {profile.fullName}
+            {t('home.welcome')}, {profile ? profile.fullName : t('common.guest')}
           </h1>
 
           <p
             style={{ color: isDark ? '#92A99E' : '#42584A' }}
             className="text-xs md:text-sm font-normal"
           >
-            {club.name} - Licencia Federativa{' '}
+            {club.name} - {t('home.federationLicense')}{' '}
             <span
               className="font-mono font-semibold"
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
             >
-              {profile.federationLicense}
+              {profile ? profile.federationLicense : t('common.notAuthenticated')}
             </span>
           </p>
         </div>
@@ -151,13 +164,13 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#92A99E' : '#5A6F62' }}
               className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider"
             >
-              Hándicap Exacto
+              {t('home.exactHandicap')}
             </div>
             <div
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
               className="text-2xl md:text-3xl font-bold mt-1 tracking-tight"
             >
-              {profile.handicapIndex.toFixed(1)}
+              {profile ? profile.handicapIndex.toFixed(1) : '--'}
             </div>
           </div>
 
@@ -178,13 +191,13 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#92A99E' : '#5A6F62' }}
               className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider"
             >
-              Hándicap Juego (Amarillas)
+              {t('common.hcp')} ({t('course.yellowTees')})
             </div>
             <div
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
               className="text-2xl md:text-3xl font-bold mt-1 tracking-tight"
             >
-              {playingHcpYellow}
+              {profile ? playingHcpYellow : '--'}
             </div>
           </div>
 
@@ -205,7 +218,7 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#92A99E' : '#5A6F62' }}
               className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider"
             >
-              Motor Marcador
+              {t('home.scoreEngine')}
             </div>
             <div
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
@@ -232,7 +245,7 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#92A99E' : '#5A6F62' }}
               className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wider"
             >
-              Módulos Activos
+              {t('home.activeModules')}
             </div>
             <div
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
@@ -277,13 +290,13 @@ export default function DashboardPage() {
                 style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
                 className="font-bold text-sm md:text-base"
               >
-                Iniciar Vuelta (Marcador + GPS)
+                {t('home.startRoundTitle')}
               </h2>
               <p
                 style={{ color: isDark ? '#D5C7A5' : '#52665B' }}
                 className="text-xs font-normal mt-1 leading-relaxed"
               >
-                Distancias de frente/centro/fondo de green y anotación offline en SQLite.
+                {t('home.startRoundDesc')}
               </p>
             </div>
           </div>
@@ -303,7 +316,7 @@ export default function DashboardPage() {
             }}
             className="w-full py-3 px-4 rounded-xl text-center text-xs md:text-sm tracking-wide mt-5 cursor-pointer block transition hover:opacity-95"
           >
-            Iniciar Vuelta
+            {t('home.startRoundBtn')}
           </Link>
         </div>
 
@@ -338,13 +351,13 @@ export default function DashboardPage() {
                 style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
                 className="font-bold text-sm md:text-base"
               >
-                Reservar Salida (Tee Time)
+                {t('home.bookTeeTitle')}
               </h2>
               <p
                 style={{ color: isDark ? '#D5C7A5' : '#52665B' }}
                 className="text-xs font-normal mt-1 leading-relaxed"
               >
-                Consulta disponibilidad del campo y reserva de la partida de 1 a 4 jugadores.
+                {t('home.bookTeeDesc')}
               </p>
             </div>
           </div>
@@ -364,7 +377,7 @@ export default function DashboardPage() {
             }}
             className="w-full py-3 px-4 rounded-xl text-center text-xs md:text-sm tracking-wide mt-5 cursor-pointer block transition hover:opacity-95"
           >
-            Reservar Salida
+            {t('home.bookTeeBtn')}
           </Link>
         </div>
 
@@ -399,13 +412,13 @@ export default function DashboardPage() {
                 style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
                 className="font-bold text-sm md:text-base"
               >
-                Mi Perfil y Hándicap WHS
+                {t('home.profileTitle')}
               </h2>
               <p
                 style={{ color: isDark ? '#D5C7A5' : '#52665B' }}
                 className="text-xs font-normal mt-1 leading-relaxed"
               >
-                Evolución histórica de hándicap, visibilidad del directorio y notificaciones push.
+                {t('home.profileDesc')}
               </p>
             </div>
           </div>
@@ -425,7 +438,7 @@ export default function DashboardPage() {
             }}
             className="w-full py-3 px-4 rounded-xl text-center text-xs md:text-sm tracking-wide mt-5 cursor-pointer block transition hover:opacity-95"
           >
-            Mi Perfil WHS
+            {t('home.profileBtn')}
           </Link>
         </div>
       </section>
@@ -444,13 +457,13 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
               className="text-base md:text-lg font-bold"
             >
-              Club Ecosystem de Club ({club.shortName})
+              {t('home.ecosystemTitle')} ({club.shortName})
             </h2>
             <p
               style={{ color: isDark ? '#92A99E' : '#52665B' }}
               className="text-xs font-normal"
             >
-              Secciones habilitadas dinámicamente según <code>/clubs/{club.clubId}/config.json</code>
+              {t('home.ecosystemSubtitle')} <code>/clubs/{club.clubId}/config.json</code>
             </p>
           </div>
 

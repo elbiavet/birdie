@@ -48,15 +48,15 @@ export default function MatchCalendarPage() {
     try {
       const updated = joinOpenMatch(matches, {
         matchId,
-        playerId: profile.id,
-        playerName: profile.fullName,
-        handicapIndex: profile.handicapIndex,
+        playerId: profile?.id ?? 'guest-player',
+        playerName: profile?.fullName ?? 'Invitado',
+        handicapIndex: profile?.handicapIndex ?? 0,
       });
       const meta = resolvePersistenceMetadata();
       setMatches(updated);
       setBanner({
         type: 'ok',
-        message: `Unido a la partida con hándicap ${profile.handicapIndex}. ${meta.notice}`,
+        message: `Unido a la partida con hándicap ${profile?.handicapIndex ?? 0}. ${meta.notice}`,
       });
     } catch (err) {
       setBanner({
@@ -157,9 +157,9 @@ export default function MatchCalendarPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {visibleMatches.map((match) => {
             const seatsLeft = Math.max(0, match.maxPlayers - match.enrolledPlayers.length);
-            const alreadyJoined = match.enrolledPlayers.some(
-              (p) => p.playerId === profile.id
-            );
+            const alreadyJoined = profile
+              ? match.enrolledPlayers.some((p) => p.playerId === profile.id)
+              : false;
 
             return (
               <div

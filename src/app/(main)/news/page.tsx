@@ -40,11 +40,11 @@ export default function ClubNewsPage() {
     message: string;
   } | null>(null);
 
-  const isAdmin = isClubAdminOrSuperadminRole(profile.role);
+  const isAdmin = profile ? isClubAdminOrSuperadminRole(profile.role) : false;
 
   useEffect(() => {
     let active = true;
-    loadNewsArticles(profile.role)
+    loadNewsArticles(profile?.role ?? 'player')
       .then(({ articles: remoteArticles }) => {
         if (!active || remoteArticles.length === 0) return;
         setArticles(remoteArticles);
@@ -55,17 +55,17 @@ export default function ClubNewsPage() {
     return () => {
       active = false;
     };
-  }, [profile.role]);
+  }, [profile?.role]);
 
   const visibleArticles = useMemo(
     () =>
       filterNewsArticles(articles, {
         searchQuery,
         onlyPinned,
-        viewerRole: profile.role,
+        viewerRole: profile?.role ?? 'player',
         includeUnpublished: isAdmin,
       }),
-    [articles, searchQuery, onlyPinned, profile.role, isAdmin]
+    [articles, searchQuery, onlyPinned, profile?.role, isAdmin]
   );
 
   const handlePublish = async (e: React.FormEvent) => {
@@ -78,8 +78,8 @@ export default function ClubNewsPage() {
           content,
           isPinned,
           isPublished: true,
-          authorId: profile.id,
-          actorRole: profile.role,
+          authorId: profile?.id ?? 'guest',
+          actorRole: profile?.role ?? 'player',
         });
       setArticles(updatedArticles);
       setTitle('');
@@ -259,7 +259,7 @@ export default function ClubNewsPage() {
                   Publicar Comunicado Oficial
                 </h3>
                 <p className="text-xs font-normal text-[var(--theme-text-secondary)]">
-                  Exclusivo Comité / Administración ({profile.role})
+                  Exclusivo Comité / Administración ({profile?.role || 'admin'})
                 </p>
               </div>
             </div>

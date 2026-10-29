@@ -32,7 +32,8 @@ export default function PlayerStatsPage() {
     async function loadOfflineSamples() {
       const course =
         getCourseById(club.defaultCourseExternalId) ?? GOLF_API_COURSES_CATALOG[0];
-      const stored = await getOfflineRoundScores(ACTIVE_ROUND_ID, profile.id);
+      const currentUserId = profile?.id ?? 'guest-player';
+      const stored = await getOfflineRoundScores(ACTIVE_ROUND_ID, currentUserId);
       const mapped: AnalyzedHoleSample[] = stored.map((s) => {
         const holeDef = course.holes.find((h) => h.holeNumber === s.holeNumber);
         return {
@@ -51,7 +52,7 @@ export default function PlayerStatsPage() {
       setLiveSamples(mapped);
     }
     loadOfflineSamples();
-  }, [club.defaultCourseExternalId, profile.id]);
+  }, [club.defaultCourseExternalId, profile?.id]);
 
   const combinedSamples = useMemo(
     () => [...DEMO_HISTORICAL_HOLE_SAMPLES, ...liveSamples],
@@ -86,8 +87,8 @@ export default function PlayerStatsPage() {
                 Estadísticas de Rendimiento
               </h2>
               <p className="text-sm font-normal opacity-90">
-                Jugador: <span className="font-semibold">{profile.fullName}</span> ·{' '}
-                Hándicap Exacto <span className="font-bold">{profile.handicapIndex}</span>{' '}
+                Jugador: <span className="font-semibold">{profile?.fullName ?? 'Invitado'}</span> ·{' '}
+                Hándicap Exacto <span className="font-bold">{profile ? profile.handicapIndex : '--'}</span>{' '}
                 · Muestra analizada: {stats.holesCount} hoyos ({stats.roundsCount} vueltas)
               </p>
             </div>

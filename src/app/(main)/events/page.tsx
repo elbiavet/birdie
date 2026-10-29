@@ -64,8 +64,8 @@ export default function SpecialEventsPage() {
         events,
         {
           eventId,
-          userId: profile.id,
-          userName: profile.fullName,
+          userId: profile?.id ?? 'guest-player',
+          userName: profile?.fullName ?? 'Invitado',
           guestsCount,
           desiredStatus,
         }
@@ -75,7 +75,7 @@ export default function SpecialEventsPage() {
       if (assignedStatus === 'attending') {
         setBanner({
           type: 'ok',
-          message: `Asistencia registrada para ${profile.fullName}${
+          message: `Asistencia registrada para ${profile?.fullName ?? 'Invitado'}${
             guestsCount > 0 ? ` + ${guestsCount} acompañante(s)` : ''
           }. ${meta.notice}`,
         });
@@ -147,7 +147,7 @@ export default function SpecialEventsPage() {
           {events.map((ev) => {
             const confirmedSeats = getConfirmedEventAttendeesCount(ev);
             const remainingSeats = Math.max(0, ev.maxCapacity - confirmedSeats);
-            const myRsvp = ev.rsvps.find((r) => r.userId === profile.id);
+            const myRsvp = profile ? ev.rsvps.find((r) => r.userId === profile.id) : undefined;
             const selectedGuests =
               guestsByEvent[ev.id] ?? myRsvp?.guestsCount ?? 0;
 

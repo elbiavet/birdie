@@ -40,10 +40,11 @@ export default function AdminChatPage() {
     message: string;
   } | null>(null);
 
-  const isAdmin = isClubAdminOrSuperadminRole(profile.role);
+  const isAdmin = profile ? isClubAdminOrSuperadminRole(profile.role) : false;
 
   // Carga inicial y suscripción Realtime
   useEffect(() => {
+    if (!profile) return;
     let active = true;
     loadAdminChatRooms({ id: profile.id, role: profile.role, name: profile.fullName })
       .then(({ rooms: loadedRooms }) => {
@@ -60,6 +61,7 @@ export default function AdminChatPage() {
     const unsubscribe = subscribeToAdminChatRealtime({
       channelName: `admin_chat_channel_${club.clubId}`,
       onMessageReceived: () => {
+        if (!profile) return;
         loadAdminChatRooms({ id: profile.id, role: profile.role, name: profile.fullName })
           .then(({ rooms: reloaded }) => {
             if (active && reloaded.length > 0) setRooms(reloaded);
@@ -72,17 +74,19 @@ export default function AdminChatPage() {
       active = false;
       unsubscribe();
     };
-  }, [club.clubId, profile.id, profile.role, profile.fullName, activeRoomId]);
+  }, [club.clubId, profile?.id, profile?.role, profile?.fullName, activeRoomId]);
 
   // Filtrado estricto por privacidad: un player solo ve sus salas; admins ven todas
   const visibleRooms = useMemo(
     () =>
-      getVisibleAdminChatRooms(rooms, {
-        id: profile.id,
-        role: profile.role,
-        name: profile.fullName,
-      }),
-    [rooms, profile.id, profile.role, profile.fullName]
+      profile
+        ? getVisibleAdminChatRooms(rooms, {
+            id: profile.id,
+            role: profile.role,
+            name: profile.fullName,
+          })
+        : [],
+    [rooms, profile?.id, profile?.role, profile?.fullName]
   );
 
   const filteredRoomsForAdmin = useMemo(() => {
@@ -113,9 +117,9 @@ export default function AdminChatPage() {
     try {
       const { updatedRooms, meta } = await sendAdminChatMessage(rooms, {
         roomId: activeRoom.id,
-        senderId: profile.id,
-        senderName: profile.fullName || (isAdmin ? 'Administración' : 'Socio'),
-        senderRole: profile.role,
+        senderId: profile?.id ?? 'guest',
+        senderName: profile?.fullName || (isAdmin ? 'Administración' : 'Socio'),
+        senderRole: profile?.role ?? 'player',
         body: messageText,
       });
 
@@ -184,8 +188,8 @@ export default function AdminChatPage() {
           <div className="flex items-center gap-2 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-4 py-2 text-xs">
             <User className="h-4 w-4 text-[var(--theme-accent)]" />
             <div>
-              <p className="font-bold text-[var(--theme-text-primary)]">{profile.fullName}</p>
-              <p className="text-[11px] capitalize text-[var(--theme-text-secondary)]">{profile.role}</p>
+              <p className="font-bold text-[var(--theme-text-primary)]">{profile?.fullName || 'Invitado'}</p>
+              <p className="text-[11px] capitalize text-[var(--theme-text-secondary)]">{profile?.role || 'sin sesión'}</p>
             </div>
           </div>
         </div>
@@ -368,7 +372,7 @@ export default function AdminChatPage() {
               </div>
             ) : (
               activeRoom.messages.map((msg) => {
-                const isMine = msg.senderId === profile.id;
+                const isMine = profile ? msg.senderId === profile.id : false;
                 const isAdminSender = isClubAdminOrSuperadminRole(msg.senderRole);
 
                 return (
