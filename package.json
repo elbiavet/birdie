@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "configure:club": "tsx scripts/configure-club.ts",
     "verify:supabase": "tsx scripts/verify-supabase.ts",
-    "cap:sync": "npx cap sync android"
+    "cap:sync": "npx cap sync android",
+    "import:osm": "tsx scripts/import-osm-courses.ts"
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.0",

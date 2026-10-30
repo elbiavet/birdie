@@ -185,3 +185,35 @@ Sigue estos pasos para mantener, ampliar o depurar el visor cartográfico de hoy
    - **Prohibido dibujar polígonos inventados** de calles, antegreens o bunkers si la fuente no los proporciona. La ortofoto satelital PNOA es la que aporta el contexto y textura visual fidedigna del terreno.
 
 
+
+---
+
+## Flujo 8: Importación y Actualización del Catálogo OSM con Overpass API (ODbL 1.0)
+
+Sigue estos pasos para sincronizar, actualizar o depurar el inventario geográfico nacional comunitario de campos de golf de España derivado de OpenStreetMap:
+
+1. **Naturaleza del Catálogo y Cumplimiento Legal (ODbL 1.0)**:
+   - Los datos de OSM son un **inventario comunitario con cobertura no garantizada**, nunca un censo oficial ni telemetría deportiva homologada por la RFEG.
+   - En cualquier vista o exportación que distribuya datos derivados de OSM es **estrictamente obligatorio** mostrar de forma visible la atribución:
+     `Datos geográficos comunitarios: © OpenStreetMap contributors` enlazado a `https://www.openstreetmap.org/copyright` e indicar que se distribuyen bajo la licencia `Open Database License (ODbL) 1.0`.
+   - **Prohibición de llamadas a Overpass en tiempo de ejecución**: Toda la información se sirve desde el archivo local estático versionable [`src/data/osm-golf-courses.json`](../../../src/data/osm-golf-courses.json). Nunca realizar llamadas HTTP a Overpass en cliente ni durante `next build`.
+
+2. **Ejecutar el Script Reproducible de Importación**:
+   - Para re-importar o actualizar el catálogo desde Overpass API:
+     ```powershell
+     npm run import:osm
+     ```
+   - **Opciones avanzadas y cambio de instancia**:
+     - Cambiar la instancia de Overpass: `npm run import:osm -- --instance=https://overpass.kumi.systems/api/interpreter` o vía variable de entorno `OVERPASS_INSTANCE_URL`.
+     - Ajustar tiempo límite de consulta: `npm run import:osm -- --timeout=90`.
+     - Modo simulación sin sobrescribir el archivo: `npm run import:osm -- --dry-run`.
+     - Ruta alternativa de destino: `npm run import:osm -- --file=src/data/osm-custom.json`.
+
+3. **Política de Protección Atómica y Salvaguarda de Versión Previa**:
+   - Si la petición de red falla, la instancia de Overpass arroja un error (`runtime error`) o la respuesta está vacía (`elements: []`), el importador cancela la operación y **conserva intacta la versión previa de `src/data/osm-golf-courses.json`**.
+
+4. **Reglas de Normalización e Integridad de Datos**:
+   - Deduplicación estricta por `${type}/${id}` (osmKey).
+   - Coordenadas geodésicas: toma `lat`/`lon` en nodos y centroide (`center` o media de `bounds`) en vías y relaciones.
+   - **No inventar datos ausentes**: si faltan nombres, se etiquetan como `Campo de golf (sin nombre en OSM #<id>)` con `hasExplicitName: false`. No inventar provincias, pares, distancias, barras (`tees: []`) ni hoyos (`holes: []`).
+   - Las funciones de marcador de partida y descarga offline permanecen siempre deshabilitadas para registros que carezcan de telemetría deportiva homologada (`hasHoleDetail: false`).
