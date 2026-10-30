@@ -14,10 +14,10 @@ import {
 import { configureClub, parseCliArgs } from '../../../../scripts/configure-club';
 
 describe('Motor White-Label Multi-Club (club-config)', () => {
-  it('registra los clubes demo-club y pinos-golf en el catálogo', () => {
+  it('registra los clubes demo-club y senorio-illescas en el catálogo', () => {
     const ids = listRegisteredClubIds();
     expect(ids).toContain('demo-club');
-    expect(ids).toContain('pinos-golf');
+    expect(ids).toContain('senorio-illescas');
   });
 
   it('carga demo-club con sus 13 módulos habilitados y su appId de Android', () => {
@@ -29,16 +29,20 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
     expect(getClubDomain(club, 'production')).toBe('app.rcgvalleverde.es');
   });
 
-  it('carga pinos-golf con branding, dominio y features diferenciados', () => {
-    const club = getActiveClubConfig({ NEXT_PUBLIC_CLUB_ID: 'pinos-golf' });
-    expect(club.name).toBe('Club de Golf Los Pinos del Mar');
-    expect(club.appId).toBe('com.birdie.pinosgolf');
-    expect(club.theme.primary).toBe('#0C2D48');
+  it('carga senorio-illescas con branding, dominio y features oficiales', () => {
+    const club = getActiveClubConfig({ NEXT_PUBLIC_CLUB_ID: 'senorio-illescas' });
+    expect(club.name).toBe('Señorío de Illescas Club de Golf & Padel');
+    expect(club.shortName).toBe('Señorío de Illescas');
+    expect(club.appId).toBe('com.birdie.senorioillescas');
+    expect(club.theme.primary).toBe('#163A2B');
+    expect(club.theme.secondary).toBe('#C5A059');
 
     const enabled = getEnabledFeatures(club);
-    expect(enabled).toHaveLength(11);
-    expect(enabled).not.toContain('forum');
-    expect(enabled).not.toContain('specialEvents');
+    expect(enabled).toHaveLength(13);
+    expect(enabled).toContain('forum');
+    expect(enabled).toContain('specialEvents');
+    expect(getClubDomain(club, 'staging')).toBe('staging.illescas.birdie.app');
+    expect(getClubDomain(club, 'production')).toBe('app.senoriodeillescasgolf.com');
   });
 
   it('genera variables CSS y bloque :root a partir del tema del club', () => {
@@ -84,8 +88,8 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
   });
 
   it('parsea argumentos de CLI en formatos --club=, club= y variables npm_config_*', () => {
-    expect(parseCliArgs(['--club=pinos-golf', '--env=production'], {})).toEqual({
-      clubId: 'pinos-golf',
+    expect(parseCliArgs(['--club=senorio-illescas', '--env=production'], {})).toEqual({
+      clubId: 'senorio-illescas',
       environment: 'production',
     });
 
@@ -96,26 +100,26 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
 
     expect(
       parseCliArgs([], {
-        npm_config_club: 'pinos-golf',
+        npm_config_club: 'senorio-illescas',
         npm_config_env: 'production',
       })
     ).toEqual({
-      clubId: 'pinos-golf',
+      clubId: 'senorio-illescas',
       environment: 'production',
     });
   });
 
-  it('ejecuta configureClub generando artefactos para pinos-golf y restaurando demo-club', () => {
-    const pinosResult = configureClub({
-      clubId: 'pinos-golf',
+  it('ejecuta configureClub generando artefactos para senorio-illescas y restaurando demo-club', () => {
+    const illescasResult = configureClub({
+      clubId: 'senorio-illescas',
       environment: 'production',
     });
-    expect(pinosResult.appId).toBe('com.birdie.pinosgolf');
-    expect(pinosResult.domain).toBe('app.lospinosgolf.com');
-    expect(fs.existsSync(pinosResult.generatedConfigPath)).toBe(true);
-    expect(pinosResult.androidSynced).toBe(true);
-    expect(pinosResult.androidPackageName).toBe('com.birdie.pinosgolf');
-    expect(pinosResult.googleServicesSynced).toBe(true);
+    expect(illescasResult.appId).toBe('com.birdie.senorioillescas');
+    expect(illescasResult.domain).toBe('app.senoriodeillescasgolf.com');
+    expect(fs.existsSync(illescasResult.generatedConfigPath)).toBe(true);
+    expect(illescasResult.androidSynced).toBe(true);
+    expect(illescasResult.androidPackageName).toBe('com.birdie.senorioillescas');
+    expect(illescasResult.googleServicesSynced).toBe(true);
 
     // Restaurar demo-club en staging por defecto
     const demoResult = configureClub({
@@ -169,10 +173,10 @@ describe('Motor White-Label Multi-Club (club-config)', () => {
 
     // 3. Validar resolución de variables de entorno típicas de Vercel
     const vercelEnvResult = parseCliArgs([], {
-      NEXT_PUBLIC_CLUB_ID: 'pinos-golf',
+      NEXT_PUBLIC_CLUB_ID: 'senorio-illescas',
       NEXT_PUBLIC_APP_ENV: 'production',
     });
-    expect(vercelEnvResult.clubId).toBe('pinos-golf');
+    expect(vercelEnvResult.clubId).toBe('senorio-illescas');
     expect(vercelEnvResult.environment).toBe('production');
 
     // 4. Validar existencia de la documentación de despliegue en Vercel

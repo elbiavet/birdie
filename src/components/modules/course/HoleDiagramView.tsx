@@ -1,9 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import type { GolfApiHole, GolfApiPoi } from '@/lib/golf-api/types';
 import { useTranslation } from '@/components/providers/LanguageProvider';
-import { Compass, AlertCircle, RefreshCw, Layers, Image as ImageIcon } from 'lucide-react';
+import { Compass, AlertCircle, RefreshCw, Layers, Image as ImageIcon, Satellite } from 'lucide-react';
+
+const HoleCartographyMap = dynamic(
+  () =>
+    import('./HoleCartographyMap').then((mod) => mod.HoleCartographyMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="w-full h-[460px] rounded-2xl border border-[var(--border-luxury)] bg-[var(--card-bg)] flex flex-col items-center justify-center p-6 animate-pulse"
+        role="status"
+        aria-label="Cargando mapa cartográfico del hoyo"
+      >
+        <div className="w-10 h-10 rounded-full border-2 border-[var(--gold-accent)] border-t-transparent animate-spin mb-3" />
+        <p className="text-xs font-semibold text-[var(--gold-title)]">
+          Cargando ortofoto satelital PNOA...
+        </p>
+        <p className="text-[11px] text-[var(--gold-meta)] mt-0.5">
+          Proyectando coordenadas GPS oficiales
+        </p>
+      </div>
+    ),
+  }
+);
 
 interface HoleDiagramViewProps {
   hole: GolfApiHole | null;
@@ -12,6 +36,10 @@ interface HoleDiagramViewProps {
   onRetry?: () => void;
   clubName?: string;
   courseName?: string;
+  initialMode?: 'cartography' | 'vector' | 'photo';
+  hasVerifiedGpsTelemetry?: boolean;
+  courseLatitude?: number;
+  courseLongitude?: number;
 }
 
 export function HoleDiagramView({
@@ -21,11 +49,21 @@ export function HoleDiagramView({
   onRetry,
   clubName = 'Club de Golf',
   courseName = 'Campo Principal',
+  initialMode,
+  hasVerifiedGpsTelemetry = true,
+  courseLatitude,
+  courseLongitude,
 }: HoleDiagramViewProps) {
   const { t } = useTranslation();
+  const isFullCourseMode = hasVerifiedGpsTelemetry === false;
+  const resolvedInitialMode = isFullCourseMode ? 'cartography' : (initialMode ?? 'cartography');
   const [selectedPoi, setSelectedPoi] = useState<GolfApiPoi | null>(null);
-  const [viewMode, setViewMode] = useState<'vector' | 'photo'>('vector');
+  const [viewMode, setViewMode] = useState<'cartography' | 'vector' | 'photo'>(resolvedInitialMode);
   const [photoError, setPhotoError] = useState(false);
+
+  useEffect(() => {
+    setViewMode(isFullCourseMode ? 'cartography' : (initialMode ?? 'cartography'));
+  }, [initialMode, isFullCourseMode, hole?.holeNumber]);
 
   if (isLoading) {
     return (
@@ -103,20 +141,45 @@ export function HoleDiagramView({
         </div>
 
         <div className="flex items-center gap-2">
-          {hasPhoto && (
-            <div className="inline-flex rounded-full p-0.5 bg-black/20 border border-[var(--border-luxury)] text-xs">
+          <div className="inline-flex rounded-full p-0.5 bg-black/20 border border-[var(--border-luxury)] text-xs">
+            {isFullCourseMode ? (
               <button
                 type="button"
-                onClick={() => setViewMode('vector')}
-                className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 text-[11px] font-medium ${
-                  viewMode === 'vector'
-                    ? 'bg-[var(--gold-accent)] text-stone-900 font-bold shadow-sm'
-                    : 'text-[var(--gold-meta)] hover:text-[var(--gold-title)]'
-                }`}
+                onClick={() => setViewMode('cartography')}
+                className="px-2.5 py-1 rounded-full bg-[var(--gold-accent)] text-stone-900 font-bold shadow-sm transition-all flex items-center gap-1.5 text-[11px]"
               >
-                <Layers className="w-3 h-3" />
-                {t('course.technicalDiagram')}
+                <Satellite className="w-3 h-3" />
+                Campo Completo (PNOA)
               </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cartography')}
+                  className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 text-[11px] font-medium ${
+                    viewMode === 'cartography'
+                      ? 'bg-[var(--gold-accent)] text-stone-900 font-bold shadow-sm'
+                      : 'text-[var(--gold-meta)] hover:text-[var(--gold-title)]'
+                  }`}
+                >
+                  <Satellite className="w-3 h-3" />
+                  Satélite PNOA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('vector')}
+                  className={`px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 text-[11px] font-medium ${
+                    viewMode === 'vector'
+                      ? 'bg-[var(--gold-accent)] text-stone-900 font-bold shadow-sm'
+                      : 'text-[var(--gold-meta)] hover:text-[var(--gold-title)]'
+                  }`}
+                >
+                  <Layers className="w-3 h-3" />
+                  {t('course.technicalDiagram')}
+                </button>
+              </>
+            )}
+            {hasPhoto && (
               <button
                 type="button"
                 onClick={() => setViewMode('photo')}
@@ -129,19 +192,55 @@ export function HoleDiagramView({
                 <ImageIcon className="w-3 h-3" />
                 {t('course.photography')}
               </button>
+            )}
+          </div>
+
+          {hasVerifiedGpsTelemetry ? (
+            <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-950/40 text-emerald-300 border border-emerald-600/30 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              {t('course.gpsOfficial')}
+            </div>
+          ) : (
+            <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-950/40 text-amber-300 border border-amber-600/30 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Campo Completo · Telemetría pendiente
             </div>
           )}
-
-          <div className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-950/40 text-emerald-300 border border-emerald-600/30 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {t('course.gpsOfficial')}
-          </div>
         </div>
       </div>
 
-      {/* Contenido principal: Fotografía o Trazado Técnico Vectorial */}
+      {/* Contenido principal: Ortofoto Satelital PNOA, Fotografía o Trazado Técnico Vectorial */}
       <div className="relative w-full bg-gradient-to-b from-stone-950 via-[#0B1512] to-stone-950 flex flex-col items-center justify-center p-4 min-h-[460px]">
-        {viewMode === 'photo' && hasPhoto ? (
+        {viewMode === 'cartography' || isFullCourseMode ? (
+          <>
+            {isFullCourseMode && (
+              <div
+                role="status"
+                className="w-full mb-3 px-3.5 py-2.5 rounded-xl bg-amber-950/70 border border-amber-600/40 text-amber-200 text-xs flex items-center gap-2.5 shadow-sm"
+              >
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1.5">
+                  <span className="font-semibold text-amber-100">Vista aérea del campo completo:</span>
+                  <span className="text-amber-200/90">
+                    Mostrando ortofoto general PNOA/IGN. La posición precisa y el plano de cada hoyo todavía no están disponibles.
+                  </span>
+                </div>
+              </div>
+            )}
+            <HoleCartographyMap
+              hole={hole}
+              clubName={clubName}
+              courseName={courseName}
+              hasVerifiedGpsTelemetry={hasVerifiedGpsTelemetry}
+              courseCoordinates={
+                courseLatitude !== undefined && courseLongitude !== undefined
+                  ? { latitude: courseLatitude, longitude: courseLongitude }
+                  : null
+              }
+              onSwitchToVector={hasVerifiedGpsTelemetry ? () => setViewMode('vector') : undefined}
+            />
+          </>
+        ) : viewMode === 'photo' && hasPhoto ? (
           <div className="w-full h-full min-h-[420px] flex items-center justify-center rounded-xl overflow-hidden relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -150,14 +249,14 @@ export function HoleDiagramView({
               className="w-full h-full object-cover max-h-[460px] rounded-xl"
               onError={() => {
                 setPhotoError(true);
-                setViewMode('vector');
+                setViewMode('cartography');
               }}
             />
             <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-md border border-white/10 text-xs text-white">
               {t('course.photoOfficial')}
             </div>
           </div>
-        ) : (
+        ) : !isFullCourseMode ? (
           <div className="relative w-full max-w-[340px] aspect-[340/520] flex items-center justify-center">
             {/* SVG Vectorial Técnico */}
             <svg
@@ -341,7 +440,7 @@ export function HoleDiagramView({
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Leyenda y especificación de datos de Golf API */}
         <div className="w-full mt-2 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between text-[11px] text-[var(--gold-meta)] gap-2 px-2">

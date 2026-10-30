@@ -152,6 +152,10 @@ export default function CourseTourPage() {
               hole={activeHole}
               clubName={course.clubName}
               courseName={course.name}
+              hasVerifiedGpsTelemetry={course.hasVerifiedGpsTelemetry ?? true}
+              courseLatitude={course.latitude}
+              courseLongitude={course.longitude}
+              initialMode={course.hasVerifiedGpsTelemetry === false ? 'cartography' : undefined}
             />
           </div>
 
@@ -234,41 +238,61 @@ export default function CourseTourPage() {
               </div>
             </div>
 
-            {/* Coordenadas GPS Oficiales del Hoyo */}
+            {/* Coordenadas GPS del Hoyo */}
             <div className="rounded-2xl border border-[var(--border-luxury)] bg-[var(--card-bg)] p-5 shadow-sm">
-              <h3 className="text-xs font-bold text-[var(--gold-title)] uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-[var(--gold-accent)]" />
-                {t('course.gpsCoordsTitle')}
+              <h3 className="text-xs font-bold text-[var(--gold-title)] uppercase tracking-wider mb-3 flex flex-wrap items-center justify-between gap-1.5">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-[var(--gold-accent)]" />
+                  {course.hasVerifiedGpsTelemetry === false
+                    ? 'Coordenadas del Hoyo (No verificadas)'
+                    : t('course.gpsCoordsTitle')}
+                </span>
+                {course.hasVerifiedGpsTelemetry === false && (
+                  <span className="text-[10px] font-normal text-amber-300 normal-case bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-600/30">
+                    Telemetría pendiente
+                  </span>
+                )}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.teeBox')}</span>
-                  <p className="font-mono text-xs text-[var(--gold-title)] font-semibold">
-                    {activeHole.teeLat.toFixed(5)}, {activeHole.teeLng.toFixed(5)}
+              {course.hasVerifiedGpsTelemetry === false ? (
+                <div className="p-3.5 rounded-xl bg-black/20 border border-[var(--border-luxury)] text-xs text-[var(--gold-meta)] space-y-1.5">
+                  <p className="font-semibold text-amber-200/90">
+                    Telemetría geodésica del hoyo no disponible
+                  </p>
+                  <p className="text-[11px] leading-relaxed">
+                    Las coordenadas geodésicas de salida y green de este hoyo no han sido provistas por Golf API ni por el club. Se muestra la imagen aérea general de las instalaciones ({course.latitude.toFixed(4)}, {course.longitude.toFixed(4)}).
                   </p>
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.teeBox')}</span>
+                    <p className="font-mono text-xs text-[var(--gold-title)] font-semibold">
+                      {activeHole.teeLat.toFixed(5)}, {activeHole.teeLng.toFixed(5)}
+                    </p>
+                  </div>
 
-                <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenCenter')}</span>
-                  <p className="font-mono text-xs text-emerald-400 font-semibold">
-                    {activeHole.greenCenterLat.toFixed(5)}, {activeHole.greenCenterLng.toFixed(5)}
-                  </p>
-                </div>
+                  <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenCenter')}</span>
+                    <p className="font-mono text-xs text-emerald-400 font-semibold">
+                      {activeHole.greenCenterLat.toFixed(5)}, {activeHole.greenCenterLng.toFixed(5)}
+                    </p>
+                  </div>
 
-                <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenFront')}</span>
-                  <p className="font-mono text-xs text-[var(--gold-title)]">
-                    {activeHole.greenFrontLat.toFixed(5)}, {activeHole.greenFrontLng.toFixed(5)}
-                  </p>
-                </div>
+                  <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenFront')}</span>
+                    <p className="font-mono text-xs text-[var(--gold-title)]">
+                      {activeHole.greenFrontLat.toFixed(5)}, {activeHole.greenFrontLng.toFixed(5)}
+                    </p>
+                  </div>
 
-                <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenBack')}</span>
-                  <p className="font-mono text-xs text-[var(--gold-title)]">
-                    {activeHole.greenBackLat.toFixed(5)}, {activeHole.greenBackLng.toFixed(5)}
-                  </p>
+                  <div className="p-3 rounded-xl bg-black/10 border border-[var(--border-luxury)] space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-[var(--gold-meta)]">{t('course.greenBack')}</span>
+                    <p className="font-mono text-xs text-[var(--gold-title)]">
+                      {activeHole.greenBackLat.toFixed(5)}, {activeHole.greenBackLng.toFixed(5)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Obstáculos y Puntos de Interés Registrados */}
@@ -342,10 +366,10 @@ export default function CourseTourPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className={`grid grid-cols-1 ${course.holesCount === 18 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
             <div className="p-4 rounded-xl border border-[var(--border-luxury)] bg-black/10 text-center">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold-meta)]">
-                {t('course.outNine')}
+                {course.holesCount === 9 ? t('course.roundSummaryTitle') : t('course.outNine')}
               </span>
               <p className="text-xl font-bold text-[var(--gold-title)] mt-1">{t('common.par')} {nineTotals.outPar}</p>
               <p className="text-xs text-[var(--gold-meta)] mt-0.5">
@@ -353,19 +377,21 @@ export default function CourseTourPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-[var(--border-luxury)] bg-black/10 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold-meta)]">
-                {t('course.inNine')}
-              </span>
-              <p className="text-xl font-bold text-[var(--gold-title)] mt-1">{t('common.par')} {nineTotals.inPar}</p>
-              <p className="text-xs text-[var(--gold-meta)] mt-0.5">
-                {nineTotals.inMeters} {t('common.meters')} · {toYards(nineTotals.inMeters)} {t('common.yards')}
-              </p>
-            </div>
+            {course.holesCount === 18 && (
+              <div className="p-4 rounded-xl border border-[var(--border-luxury)] bg-black/10 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold-meta)]">
+                  {t('course.inNine')}
+                </span>
+                <p className="text-xl font-bold text-[var(--gold-title)] mt-1">{t('common.par')} {nineTotals.inPar}</p>
+                <p className="text-xs text-[var(--gold-meta)] mt-0.5">
+                  {nineTotals.inMeters} {t('common.meters')} · {toYards(nineTotals.inMeters)} {t('common.yards')}
+                </p>
+              </div>
+            )}
 
             <div className="p-4 rounded-xl border border-[var(--gold-accent)]/40 bg-[var(--gold-accent)]/10 text-center">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold-title)]">
-                {t('course.totalCourse')}
+                {course.holesCount === 9 ? t('course.totalCourseNine') : t('course.totalCourse')}
               </span>
               <p className="text-xl font-bold text-[var(--gold-title)] mt-1">{t('common.par')} {nineTotals.totalPar}</p>
               <p className="text-xs text-[var(--gold-title)] font-semibold mt-0.5">

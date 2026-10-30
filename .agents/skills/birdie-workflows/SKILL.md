@@ -1,7 +1,7 @@
 ---
 name: birdie-workflows
 description: >-
-  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, (3) sincronizar campos desde Golf API y cola offline SQLite, (4) ejecutar la revisión de cierre de fase en BACKLOG.md, y (5) desplegar proyectos de club white-label en Vercel. Úsala siempre que trabajes en alta de clubes, cambios de base de datos, núcleo deportivo, cierres de fase o despliegue.
+  Procedimientos detallados y reutilizables del proyecto Birdie para: (1) dar de alta o cambiar la configuración white-label de un club de golf, (2) añadir migraciones SQL de Supabase con políticas RLS y tests pgTAP, (3) sincronizar campos desde Golf API y cola offline SQLite, (4) ejecutar la revisión de cierre de fase en BACKLOG.md, (5) desplegar proyectos de club white-label en Vercel, y (6) integrar ortofotos satelitales PNOA/IGN con aislamiento SSR y telemetría de hoyos. Úsala siempre que trabajes en alta de clubes, cambios de base de datos, núcleo deportivo, cierres de fase, despliegue o cartografía.
 ---
 
 # Flujos de Trabajo Reutilizables de Birdie (`birdie-workflows`)
@@ -10,16 +10,16 @@ Esta skill contiene las instrucciones operativas paso a paso para los flujos de 
 
 ---
 
-## Flujo 1: Alta o Cambio de Club White-Label
+## Flujo 1: Alta, Cambio o Sustitución de Club White-Label
 
-Sigue estos pasos cuando añadas un nuevo club al repositorio o cambies el club activo para compilación Web / Android APK:
+Sigue estos pasos cuando añadas un nuevo club al repositorio, cambies el club activo para compilación Web / Android APK o sustituyas un club existente:
 
 1. **Crear archivos del club**:
    - Crea `clubs/<clubId>/config.json` cumpliendo estrictamente el esquema [`clubs/schema.json`](../../../clubs/schema.json).
-   - Añade el logotipo vectorial en `clubs/<clubId>/assets/logo.svg`.
+   - Añade el logotipo vectorial en `clubs/<clubId>/assets/logo.svg` y assets nativos (`icon.png`, `splash.png`, `google-services.json`).
 2. **Registrar el club en el catálogo y en CI/CD**:
    - Importa el JSON y añádelo al mapa `CLUB_REGISTRY` en [`src/lib/club-config/index.ts`](../../../src/lib/club-config/index.ts).
-   - Añade `<clubId>` a la lista `strategy.matrix.club` en [`.github/workflows/build-club-apk.yml`](../../../.github/workflows/build-club-apk.yml).
+   - Añade `<clubId>` a la lista `strategy.matrix.club` en [`.github/workflows/build-club-apk.yml`](../../../.github/workflows/build-club-apk.yml) y actualiza el paso de verificación en [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml).
 3. **Aplicar y verificar la configuración del club**:
    - Ejecuta el configurador indicando club y entorno (`staging` o `production`):
      ```powershell
@@ -31,6 +31,10 @@ Sigue estos pasos cuando añadas un nuevo club al repositorio o cambies el club 
    npm run test
    ```
    *(El test `club-config.test.ts` comprobará automáticamente que todos los clubes de `listRegisteredClubIds()` estén presentes en `build-club-apk.yml` y cumplan el esquema).*
+5. **Sustitución o retirada de un club obsoleto**:
+   - Si se retira un club anterior, elimina su clave e importación en `src/lib/club-config/index.ts`.
+   - Elimina la carpeta `clubs/<clubIdObsoleto>/` y su entrada en `build-club-apk.yml` y `ci.yml`.
+   - Adapta las aserciones de pruebas en `src/**/__tests__/` que hacían referencia al club retirado para verificar el nuevo club activo.
 
 ---
 
@@ -103,6 +107,12 @@ Sigue estos pasos cuando añadas un nuevo recorrido al catálogo, ajustes la ló
    - `flushPendingScoresToSupabase()` utiliza un mutex en vuelo (`activeFlushPromise`) para evitar que dos vaciados concurrentes dupliquen envíos, y pasa `expectedRevision = scoreSnapshot.revision` a `markScoreAsSynced` para que una respuesta tardía de una versión antigua nunca marque como `'synced'` una edición más reciente.
    - Si no hay conexión (`skipped_offline`) o Supabase no está configurado (`skipped_unconfigured`), **nunca** marca golpes como sincronizados de forma ficticia: devuelve `syncedCount: 0` y conserva los registros en `'pending'`.
    - En los tests unitarios de Vitest, limpia siempre el almacén en `beforeEach` mediante `await clearOfflineStore()`.
+4. **Soporte Universal de Recorridos de 9 Hoyos y Adaptación de Vistas y WHS**:
+   - Para campos homologados de 9 hoyos (como Señorío de Illescas `senorio-illescas`, Par 35 con Stroke Indexes 1..9):
+     - El reparto de golpes WHS en `calculateStrokesReceivedOnHole` reconoce si `strokeIndex` ya está en 1..9 (`effectiveSi = strokeIndex <= 9 ? strokeIndex : Math.ceil(strokeIndex / 2)`), garantizando que el resto de golpes se asigne con precisión de 1 en 1 sin duplicar golpes en hoyos contiguos.
+     - En hándicaps plus (jugadores que ceden golpes), el índice inverso se calcula como `maxSi + 1 - effectiveSi` (con `maxSi = 9` para campos de 9 hoyos y `18` para campos de 18 hoyos).
+     - En el catálogo (`GOLF_API_COURSES_CATALOG`), `holesCount` define la longitud real del recorrido (`9` o `18`), con distancias y valoraciones de campo (Course Rating / Slope) acordes al número de hoyos homologados.
+     - En las vistas de usuario (`/clubs`, `/course`, `/scorecard`), las tablas y tarjetas de segunda vuelta (`VUELTA / IN`) solo se renderizan si `inHoles.length > 0` o `course.holesCount === 18`. En recorridos de 9 hoyos, la tabla de Ida incorpora la columna de Total y el marcador restringe la navegación y resumen a los 9 hoyos sin tarjetas vacías ni botones de hoyos inexistentes.
 
 ---
 
@@ -131,14 +141,47 @@ Sigue estos pasos cuando modifiques o extiendas los módulos de Reservas (`/book
 Sigue estos pasos para desplegar Birdie en Vercel manteniendo la independencia de cada club:
 
 1. **Estrategia de Proyectos Multi-Club**:
-   - Cada club cuenta con un proyecto independiente en Vercel conectado al mismo repositorio GitHub (ej. `birdie-valleverde` y `birdie-pinosgolf`).
+   - Cada club cuenta con un proyecto independiente en Vercel conectado al mismo repositorio GitHub (ej. `birdie-valleverde` y `birdie-senorioillescas`).
    - El hook `npm run prebuild` se ejecuta automáticamente antes de `next build` en Vercel, leyendo `NEXT_PUBLIC_CLUB_ID` y `NEXT_PUBLIC_APP_ENV` para inyectar el branding, assets y variables del club activo.
 2. **Variables de Entorno Obligatorias en Vercel**:
-   - `NEXT_PUBLIC_CLUB_ID`: ID del club (`demo-club`, `pinos-golf`, etc.).
+   - `NEXT_PUBLIC_CLUB_ID`: ID del club (`demo-club`, `senorio-illescas`, etc.).
    - `NEXT_PUBLIC_APP_ENV`: `staging` o `production`.
    - `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Credenciales del proyecto Supabase del club.
 3. **Despliegue con Vercel CLI o Git**:
    - Vía Git: Vercel recompila automáticamente ante cada `git push origin main`.
    - Vía CLI: `npx vercel` (preview) o `npx vercel --prod` (producción).
 4. **Verificación**: Consulta la guía detallada en [`docs/deployment/vercel.md`](../../../docs/deployment/vercel.md).
+
+---
+
+## Flujo 7: Integración Cartográfica Satelital PNOA/IGN y Capa de Datos Reales del Hoyo (`src/components/modules/course/`)
+
+Sigue estos pasos para mantener, ampliar o depurar el visor cartográfico de hoyos con ortofotos oficiales del PNOA/IGN y telemetría de Golf API:
+
+1. **Servicio Oficial WMTS y Proyecciones Cartográficas**:
+   - Utiliza siempre la plantilla KVP estándar del servicio oficial WMTS del Instituto Geográfico Nacional:
+     `https://www.ign.es/wmts/pnoa-ma?Service=WMTS&Request=GetTile&Version=1.0.0&Layer=OI.OrthoimageCoverage&Style=default&Format=image/jpeg&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileCol={x}&TileRow={y}`
+   - **Diferenciación estricta de sistemas de coordenadas**:
+     - `EPSG:4326` (WGS 84): Coordenadas geográficas angulares en grados (`lat`, `lng`) entregadas por Golf API y el hardware GPS móvil.
+     - `EPSG:3857` (Web Mercator / `GoogleMapsCompatible`): Coordenadas planas proyectadas en metros utilizadas por la malla de teselas WMTS. Leaflet se encarga de la reproyección interna matemática entre ambos sistemas.
+2. **Atribución Oficial Obligatoria**:
+   - Por mandato de la autodescripción del servicio (`<ows:AccessConstraints>CC BY 4.0 scne.es</ows:AccessConstraints>`) y la Orden FOM/2807/2015, es **estrictamente obligatorio** mostrar de forma visible la atribución:
+     `PNOA CC BY 4.0 scne.es` (con enlace a `https://www.scne.es`).
+3. **Aislamiento SSR y Exportación Estática en Next.js**:
+   - Dado que Leaflet interactúa con el DOM (`window`, `document`, Canvas), cualquier visor cartográfico debe encapsularse en un componente cliente (`'use client'`) e importarse en las vistas mediante:
+     ```tsx
+     const HoleCartographyMap = dynamic(
+       () => import('./HoleCartographyMap').then((m) => m.HoleCartographyMap),
+       { ssr: false, loading: () => <HoleCartographySkeleton /> }
+     );
+     ```
+   - Esto evita errores de `ReferenceError: window is not defined` durante `next build` con `output: 'export'`.
+4. **Política Offline y Estrategia de Fallback**:
+   - **Decisión técnica explícita**: No se pre-descargan ni almacenan teselas ráster pesadas en SQLite ni en el disco local de Capacitor Android para evitar colapsar el almacenamiento móvil (cientos de megabytes por campo).
+   - Ante desconexión de red (`navigator.onLine === false` o evento `offline`) o error en la descarga de teselas (`tileerror`), el visor muestra un aviso estructurado con botón de reintento y permite la conmutación inmediata al **esquema técnico vectorial SVG interactivo**, garantizando la continuidad de juego sin red.
+5. **Fidelidad de Geometrías y Restricción de Datos**:
+   - Golf API provee coordenadas discretas oficiales (Tee, Green Centro/Frente/Fondo y POIs).
+   - La línea discontinua entre Salida, Doglegs y Centro de Green es un **eje de tiro teórico / línea de juego estimada**, nunca el contorno real de la calle (*fairway*).
+   - **Prohibido dibujar polígonos inventados** de calles, antegreens o bunkers si la fuente no los proporciona. La ortofoto satelital PNOA es la que aporta el contexto y textura visual fidedigna del terreno.
+
 

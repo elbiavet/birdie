@@ -48,9 +48,17 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect(superAdminNav.map((i) => i.id)).toContain('admin');
   });
 
-  it('filtra automáticamente en AppShell las secciones deshabilitadas en pinos-golf (forum=false, specialEvents=false)', () => {
-    const pinosGolf = getClubConfig('pinos-golf');
-    const nav = resolveNavigationItems(pinosGolf, 'player');
+  it('filtra automáticamente en AppShell las secciones según las features configuradas del club (ej. forum=false, specialEvents=false)', () => {
+    const illescasClub = getClubConfig('senorio-illescas');
+    const customConfig = {
+      ...illescasClub,
+      features: {
+        ...illescasClub.features,
+        forum: false,
+        specialEvents: false,
+      },
+    };
+    const nav = resolveNavigationItems(customConfig, 'player');
     const ids = nav.map((i) => i.id);
 
     expect(ids).toContain('scorecard');
@@ -58,6 +66,12 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect(ids).toContain('tournaments');
     expect(ids).not.toContain('forum');
     expect(ids).not.toContain('events');
+
+    // Comprobar que en la configuración oficial de Señorío de Illescas sí están habilitados
+    const officialNav = resolveNavigationItems(illescasClub, 'player');
+    const officialIds = officialNav.map((i) => i.id);
+    expect(officialIds).toContain('forum');
+    expect(officialIds).toContain('events');
   });
 
   it('calcula correctamente el Playing Handicap WHS según Slope, Course Rating y Par', () => {

@@ -35,10 +35,10 @@ jobs:
       - name: Verify static export build for demo-club
         run: npm run build
 
-      - name: Verify static export build for pinos-golf (production)
+      - name: Verify static export build for senorio-illescas (production)
         run: |
-          npm run configure:club -- --club=pinos-golf --env=production
-          NEXT_PUBLIC_CLUB_ID=pinos-golf NEXT_PUBLIC_APP_ENV=production npm run build
+          npm run configure:club -- --club=senorio-illescas --env=production
+          NEXT_PUBLIC_CLUB_ID=senorio-illescas NEXT_PUBLIC_APP_ENV=production npm run build
 
   supabase-pgtap:
     name: Supabase PostgreSQL Migrations & pgTAP RLS Tests

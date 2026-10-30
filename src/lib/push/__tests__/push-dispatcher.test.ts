@@ -82,10 +82,10 @@ describe('Motor de Notificaciones Push y Edge Function (F5.1-T02)', () => {
     const normalized = normalizePushDataRecord(
       { numericId: 42, booleanFlag: true, text: 'hola' },
       '/news/art-1',
-      'pinos-golf'
+      'senorio-illescas'
     );
 
-    expect(normalized.club_id).toBe('pinos-golf');
+    expect(normalized.club_id).toBe('senorio-illescas');
     expect(normalized.target_url).toBe('/news/art-1');
     expect(normalized.numericId).toBe('42');
     expect(normalized.booleanFlag).toBe('true');

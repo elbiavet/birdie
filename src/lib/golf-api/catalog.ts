@@ -39,6 +39,83 @@ const VALLE_VERDE_HOLES_RAW: Array<
   [18, 4, 8, 396, 378, 344, 322, 40.46815, -3.7811, 40.46818, -3.78122, 40.46821, -3.78134, 40.4682, -3.7795],
 ];
 
+const SENORIO_ILLESCAS_HOLES_RAW: Array<
+  [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
+> = [
+  // NOTA TÉCNICA Y LIMITACIÓN DOCUMENTADA:
+  // Las métricas deportivas (par, handicap y distancias por barra) de los 9 hoyos
+  // están verificadas oficialmente por RFEG/FGM y la ficha técnica del club.
+  // Sin embargo, las coordenadas geodésicas individuales por hoyo (tees y green)
+  // no han sido provistas por Golf API ni por un levantamiento topográfico oficial.
+  // Se mantienen coordenadas de referencia a nivel de instalación con hasVerifiedGpsTelemetry: false,
+  // y la interfaz de usuario muestra por defecto el esquema técnico vectorial con el aviso correspondiente.
+  [1, 4, 5, 355, 345, 320, 273, 40.1542, -3.8441, 40.1543, -3.844, 40.1544, -3.8439, 40.1533, -3.8452],
+  [2, 3, 3, 165, 159, 142, 114, 40.1553, -3.8432, 40.1554, -3.8431, 40.1555, -3.843, 40.1545, -3.8438],
+  [3, 4, 7, 306, 287, 264, 230, 40.1565, -3.8445, 40.1566, -3.8444, 40.1567, -3.8443, 40.1556, -3.8429],
+  [4, 3, 9, 116, 100, 86, 81, 40.1572, -3.8455, 40.1573, -3.8454, 40.1574, -3.8453, 40.1568, -3.8442],
+  [5, 4, 1, 418, 394, 363, 313, 40.1585, -3.8468, 40.1586, -3.8467, 40.1587, -3.8466, 40.1575, -3.8452],
+  [6, 5, 4, 474, 436, 380, 375, 40.1571, -3.8482, 40.157, -3.8483, 40.1569, -3.8484, 40.1588, -3.8465],
+  [7, 3, 8, 192, 173, 151, 124, 40.1558, -3.8475, 40.1557, -3.8476, 40.1556, -3.8477, 40.1568, -3.8485],
+  [8, 5, 6, 431, 400, 376, 344, 40.1545, -3.8461, 40.1544, -3.8462, 40.1543, -3.8463, 40.1555, -3.8478],
+  [9, 4, 2, 343, 316, 295, 264, 40.1534, -3.8449, 40.1533, -3.845, 40.1532, -3.8451, 40.1542, -3.8464],
+];
+
+function buildSenorioIllescasHoles(): GolfApiHole[] {
+  return SENORIO_ILLESCAS_HOLES_RAW.map(
+    ([
+      holeNumber,
+      par,
+      strokeIndex,
+      w,
+      y,
+      b,
+      r,
+      gfLat,
+      gfLng,
+      gcLat,
+      gcLng,
+      gbLat,
+      gbLng,
+      tLat,
+      tLng,
+    ]) => ({
+      holeNumber,
+      par,
+      strokeIndex,
+      distanceWhiteMeters: w,
+      distanceYellowMeters: y,
+      distanceBlueMeters: b,
+      distanceRedMeters: r,
+      teeLat: tLat,
+      teeLng: tLng,
+      greenFrontLat: gfLat,
+      greenFrontLng: gfLng,
+      greenCenterLat: gcLat,
+      greenCenterLng: gcLng,
+      greenBackLat: gbLat,
+      greenBackLng: gbLng,
+      // Los POIs no se inventan ni derivan sintéticamente si no están presentes en Golf API
+      pois: [],
+    })
+  );
+}
+
 function buildHolesWithOffset(latOffset = 0, lngOffset = 0): GolfApiHole[] {
   return VALLE_VERDE_HOLES_RAW.map(
     ([
@@ -123,6 +200,7 @@ export const GOLF_API_COURSES_CATALOG: readonly GolfApiCourse[] = [
     address: 'Carretera del Monte km 4.5, Madrid',
     phone: '+34 910 000 100',
     website: 'https://rcgvalleverde.es',
+    hasVerifiedGpsTelemetry: true,
     tees: [
       {
         id: 'tee-vv-white',
@@ -164,51 +242,6 @@ export const GOLF_API_COURSES_CATALOG: readonly GolfApiCourse[] = [
     holes: buildHolesWithOffset(0, 0),
   },
   {
-    id: '11111111-1111-1111-1111-111111111102',
-    externalGolfApiId: 'golfapi_course_2048',
-    name: 'Recorrido Links del Mar',
-    clubName: 'Club de Golf Los Pinos del Mar',
-    city: 'Marbella',
-    country: 'España',
-    holesCount: 18,
-    parTotal: 72,
-    latitude: 36.5101,
-    longitude: -4.8824,
-    address: 'Avenida Litoral s/n, Marbella',
-    phone: '+34 952 000 200',
-    website: 'https://lospinosgolf.com',
-    tees: [
-      {
-        id: 'tee-pm-white',
-        name: 'Blancas',
-        colorHex: '#E2E8F0',
-        gender: 'men',
-        courseRating: 72.9,
-        slopeRating: 132,
-        totalDistanceMeters: 6280,
-      },
-      {
-        id: 'tee-pm-yellow',
-        name: 'Amarillas',
-        colorHex: '#FACC15',
-        gender: 'men',
-        courseRating: 71.0,
-        slopeRating: 126,
-        totalDistanceMeters: 5990,
-      },
-      {
-        id: 'tee-pm-red',
-        name: 'Rojas',
-        colorHex: '#EF4444',
-        gender: 'women',
-        courseRating: 70.6,
-        slopeRating: 122,
-        totalDistanceMeters: 5120,
-      },
-    ],
-    holes: buildHolesWithOffset(-3.9581, -1.1009),
-  },
-  {
     id: '11111111-1111-1111-1111-111111111103',
     externalGolfApiId: 'golfapi_course_3096',
     name: 'Recorrido Sur — Correspondencia',
@@ -222,6 +255,7 @@ export const GOLF_API_COURSES_CATALOG: readonly GolfApiCourse[] = [
     address: 'Camino del Saler 12, Valencia',
     phone: '+34 960 000 300',
     website: 'https://costamedgolf.es',
+    hasVerifiedGpsTelemetry: false,
     tees: [
       {
         id: 'tee-cm-yellow',
@@ -243,5 +277,60 @@ export const GOLF_API_COURSES_CATALOG: readonly GolfApiCourse[] = [
       },
     ],
     holes: buildHolesWithOffset(-0.9983, 3.4052),
+  },
+  {
+    id: '11111111-1111-1111-1111-111111111104',
+    externalGolfApiId: 'golfapi_course_8833',
+    name: 'Recorrido 9 Hoyos Señorío de Illescas',
+    clubName: 'Señorío de Illescas Club de Golf & Padel',
+    city: 'Illescas (Toledo)',
+    country: 'España',
+    holesCount: 9,
+    parTotal: 35,
+    latitude: 40.1533,
+    longitude: -3.8452,
+    address: 'Av. de Europa, 14, Urb. Señorío de Illescas, 45200 Illescas, Toledo',
+    phone: '+34 925 518 359',
+    website: 'https://senoriodeillescasgolf.com',
+    hasVerifiedGpsTelemetry: false,
+    tees: [
+      {
+        id: 'tee-si-white',
+        name: 'Blancas',
+        colorHex: '#E2E8F0',
+        gender: 'men',
+        courseRating: 34.8,
+        slopeRating: 122,
+        totalDistanceMeters: 2800,
+      },
+      {
+        id: 'tee-si-yellow',
+        name: 'Amarillas',
+        colorHex: '#FACC15',
+        gender: 'men',
+        courseRating: 33.9,
+        slopeRating: 118,
+        totalDistanceMeters: 2610,
+      },
+      {
+        id: 'tee-si-blue',
+        name: 'Azules',
+        colorHex: '#3B82F6',
+        gender: 'women',
+        courseRating: 35.5,
+        slopeRating: 120,
+        totalDistanceMeters: 2377,
+      },
+      {
+        id: 'tee-si-red',
+        name: 'Rojas',
+        colorHex: '#EF4444',
+        gender: 'women',
+        courseRating: 34.6,
+        slopeRating: 116,
+        totalDistanceMeters: 2118,
+      },
+    ],
+    holes: buildSenorioIllescasHoles(),
   },
 ];

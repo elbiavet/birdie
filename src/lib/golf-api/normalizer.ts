@@ -49,7 +49,7 @@ export function normalizeExternalCoursePayload(
         typeof h.hole !== 'number' ||
         !Number.isInteger(h.hole) ||
         h.hole < 1 ||
-        h.hole > 18
+        h.hole > (raw.holes.length === 9 ? 9 : 18)
       ) {
         throw new Error(`Payload de Golf API inválido: número de hoyo fuera de rango (${String(h.hole)}).`);
       }

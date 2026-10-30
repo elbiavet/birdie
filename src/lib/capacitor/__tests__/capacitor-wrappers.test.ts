@@ -279,10 +279,10 @@ describe('Capacitor Config & Wrappers Nativos (Geolocation, SQLite Offline, Push
   it('registra token de notificaciones push en modo fallback web', async () => {
     clearInMemoryPushTokens();
     expect(detectPushPlatform()).toBe('web');
-    const reg = await registerForPushNotifications('pinos-golf');
+    const reg = await registerForPushNotifications('senorio-illescas');
     expect(reg.platform).toBe('web');
-    expect(reg.token).toContain('pinos-golf');
-    expect(reg.deviceName).toContain('pinos-golf');
+    expect(reg.token).toContain('senorio-illescas');
+    expect(reg.deviceName).toContain('senorio-illescas');
   });
 
   it('extrae rutas de navegación interna para deep-linking desde distintos payloads push', () => {

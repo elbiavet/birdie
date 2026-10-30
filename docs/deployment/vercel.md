@@ -21,7 +21,7 @@ Dado que Birdie es un monorepo white-label, puedes alojar infinitos clubes desde
 | Club | Proyecto en Vercel | Dominio sugerido | Variable `NEXT_PUBLIC_CLUB_ID` |
 | :--- | :--- | :--- | :--- |
 | **Real Club Valle Verde** | `birdie-valleverde` | `valleverde.birdie.app` o propio | `demo-club` |
-| **Club Los Pinos del Mar** | `birdie-pinosgolf` | `pinosgolf.birdie.app` o propio | `pinos-golf` |
+| **Señorío de Illescas Golf & Padel** | `birdie-senorioillescas` | `app.senoriodeillescasgolf.com` o `staging.illescas.birdie.app` | `senorio-illescas` |
 
 Cada proyecto en Vercel apunta al mismo repositorio de GitHub (`elbiavet/birdie`), pero define sus propias **Environment Variables** en Vercel Dashboard.
 
@@ -45,7 +45,7 @@ git push origin main
 
 ### Paso 3: Configurar el proyecto
 En la pantalla de configuración de Vercel:
-- **Project Name**: Asigna el nombre del club (ej. `birdie-valleverde` o `birdie-pinosgolf`).
+- **Project Name**: Asigna el nombre del club (ej. `birdie-valleverde` o `birdie-senorioillescas`).
 - **Framework Preset**: Detectará automáticamente **Next.js**.
 - **Root Directory**: Déjalo en `./` (raíz).
 - **Build and Output Settings**:
@@ -57,7 +57,7 @@ Despliega la sección **Environment Variables** y añade las siguientes claves:
 
 | Variable | Valor de ejemplo | Entornos requeridos |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_CLUB_ID` | `demo-club` (o `pinos-golf`) | Production, Preview, Development |
+| `NEXT_PUBLIC_CLUB_ID` | `demo-club` (o `senorio-illescas`) | Production, Preview, Development |
 | `NEXT_PUBLIC_APP_ENV` | `production` (o `staging`) | Production, Preview, Development |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | Production, Preview, Development |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJh...` | Production, Preview, Development |
@@ -92,7 +92,7 @@ Selecciona tu cuenta o equipo y confirma si deseas vincular a un proyecto existe
 ### 3. Configurar variables de entorno desde la CLI
 ```bash
 npx vercel env add NEXT_PUBLIC_CLUB_ID
-# Introduce 'demo-club' o 'pinos-golf' y selecciona Production, Preview y Development
+# Introduce 'demo-club' o 'senorio-illescas' y selecciona Production, Preview y Development
 
 npx vercel env add NEXT_PUBLIC_APP_ENV
 # Introduce 'production'
@@ -112,7 +112,7 @@ npx vercel env add NEXT_PUBLIC_APP_ENV
 
 ## 5. Asignación de Dominio Personalizado
 
-Para asociar el dominio oficial de cada club (ej. `socios.valleverde.es` o `app.pinosgolf.com`):
+Para asociar el dominio oficial de cada club (ej. `socios.valleverde.es` o `app.senoriodeillescasgolf.com`):
 1. Ve a tu proyecto en Vercel → **Settings** → **Domains**.
 2. Escribe tu dominio y pulsa **"Add"**.
 3. Configura los registros DNS según te indique Vercel:

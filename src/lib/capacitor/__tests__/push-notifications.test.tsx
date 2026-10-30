@@ -128,7 +128,7 @@ describe('Suite Integral de Notificaciones Push (FCM / APNs / Web) - Subfase 5.1
   // BLOQUE 2: Despacho Multi-Plataforma y Lógica de Edge Function
   // ============================================================================
   const sampleParams: SendPushNotificationParams = {
-    clubId: 'pinos-golf',
+    clubId: 'senorio-illescas',
     title: 'Aviso Importante de Mantenimiento',
     body: 'El green del hoyo 7 permanecerá cerrado por pinchado hasta las 14:00.',
     targetUrl: '/info',
@@ -192,7 +192,7 @@ describe('Suite Integral de Notificaciones Push (FCM / APNs / Web) - Subfase 5.1
     expect(androidPayload.message.android?.notification?.channel_id).toBe(
       'birdie_club_announcements'
     );
-    expect(androidPayload.message.data.club_id).toBe('pinos-golf');
+    expect(androidPayload.message.data.club_id).toBe('senorio-illescas');
     expect(androidPayload.message.data.target_url).toBe('/info');
     expect(androidPayload.message.data.hole).toBe('7');
 

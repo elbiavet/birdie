@@ -126,6 +126,7 @@ describe('Fase 8 - Subfase 8.2: Módulo Recorrido y Trazados Técnicos de Hoyos'
           hole={sampleHole}
           clubName="RCG Valle Verde"
           courseName="Campo Principal"
+          initialMode="vector"
         />
       );
 
@@ -184,6 +185,26 @@ describe('Fase 8 - Subfase 8.2: Módulo Recorrido y Trazados Técnicos de Hoyos'
       expect(html).toContain('Ida (Hoyos 1 a 9)');
       expect(html).toContain('Vuelta (Hoyos 10 a 18)');
       expect(html).toContain('Total del Campo (18 Hoyos)');
+    });
+
+    it('renderiza la página de recorrido para un club de 9 hoyos (Señorío de Illescas) sin tarjeta de segunda vuelta espuria', () => {
+      const html = renderToStaticMarkup(
+        <ThemeProvider>
+          <ClubProvider initialClubId="senorio-illescas">
+            <CourseTourPage />
+          </ClubProvider>
+        </ThemeProvider>
+      );
+
+      // Banner principal y recorrido
+      expect(html).toContain('Recorrido del Campo');
+      expect(html).toContain('Señorío de Illescas');
+      expect(html).toContain('9 Hoyos · Par 35');
+
+      // Resumen de vueltas para 9 hoyos: contiene Ida/Resumen y Total 9 Hoyos, pero NO Vuelta (Hoyos 10 a 18)
+      expect(html).toContain('Resumen Técnico de Vueltas');
+      expect(html).not.toContain('Vuelta (Hoyos 10 a 18)');
+      expect(html).toContain('Total del Campo (9 Hoyos)');
     });
 
     it('ALL_NAVIGATION_ITEMS incluye la opción Recorrido (/course) para todos los clubes', () => {

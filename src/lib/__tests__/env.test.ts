@@ -12,11 +12,11 @@ describe('resolveRuntimeEnvironment', () => {
 
   it('respeta el clubId y el entorno production cuando se configuran explícitamente', () => {
     const result = resolveRuntimeEnvironment({
-      NEXT_PUBLIC_CLUB_ID: 'pinos-golf',
+      NEXT_PUBLIC_CLUB_ID: 'senorio-illescas',
       NEXT_PUBLIC_APP_ENV: 'production',
     });
     expect(result).toEqual({
-      clubId: 'pinos-golf',
+      clubId: 'senorio-illescas',
       appEnv: 'production',
     });
   });

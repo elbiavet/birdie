@@ -1,5 +1,5 @@
 import demoClubJson from '../../../clubs/demo-club/config.json';
-import pinosGolfJson from '../../../clubs/pinos-golf/config.json';
+import senorioIllescasJson from '../../../clubs/senorio-illescas/config.json';
 import type { ClubConfig, ClubFeatureKey, ClubFeatures } from '@/types/club';
 import { resolveRuntimeEnvironment, type AppEnvironment } from '@/lib/env';
 
@@ -25,7 +25,7 @@ const REQUIRED_FEATURE_KEYS: readonly ClubFeatureKey[] = [
 
 const CLUB_REGISTRY: Record<string, ClubConfig> = {
   'demo-club': demoClubJson as ClubConfig,
-  'pinos-golf': pinosGolfJson as ClubConfig,
+  'senorio-illescas': senorioIllescasJson as ClubConfig,
 };
 
 /**

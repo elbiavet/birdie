@@ -97,6 +97,37 @@ describe('Motor Matemático de Golf (Stableford / WHS) y Cola Offline (Subfase 2
     expect(summary.girPercentage).toBe(100);
   });
 
+  it('resume una tarjeta de 9 hoyos (Señorío de Illescas) calculando totales de Ida y Total sin Vuelta espuria', () => {
+    const course = getCourseById('golfapi_course_8833')!;
+    expect(course.holesCount).toBe(9);
+
+    const scores = course.holes.map((h) => ({
+      holeNumber: h.holeNumber,
+      strokes: h.par,
+      putts: 2,
+      fairwayHit: h.par >= 4 ? true : null,
+      greenInRegulation: true,
+      sandSave: null,
+      penaltyStrokes: 0,
+    }));
+
+    // Con hándicap 9 en 9 hoyos: 1 golpe por hoyo
+    const summary = summarizeRoundScorecard(course.holes, scores, 9);
+    expect(summary.holesPlayed).toBe(9);
+    expect(summary.outGrossStrokes).toBe(35);
+    expect(summary.inGrossStrokes).toBe(0);
+    expect(summary.totalGrossStrokes).toBe(35);
+    // Neto = 35 - 9 = 26
+    expect(summary.outNetStrokes).toBe(26);
+    expect(summary.inNetStrokes).toBe(0);
+    expect(summary.totalNetStrokes).toBe(26);
+    // Par jugado con 1 golpe recibido = Birdie neto = 3 puntos Stableford por hoyo x 9 = 27 pts
+    expect(summary.outStablefordPoints).toBe(27);
+    expect(summary.inStablefordPoints).toBe(0);
+    expect(summary.totalStablefordPoints).toBe(27);
+    expect(summary.totalPutts).toBe(18);
+  });
+
   it('persiste hoyos offline-first en SQLite, conserva pendientes ante fallos parciales de red y vacía la cola al recuperar conexión', async () => {
     const roundId = 'round-offline-2026';
     const playerId = 'player-demo-01';

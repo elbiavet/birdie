@@ -71,6 +71,7 @@ export interface GolfApiCourse {
   address: string;
   phone: string;
   website: string;
+  hasVerifiedGpsTelemetry?: boolean;
   tees: GolfApiTee[];
   holes: GolfApiHole[];
 }

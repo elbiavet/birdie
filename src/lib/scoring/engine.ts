@@ -67,17 +67,28 @@ export function calculateStrokesReceivedOnHole(
   if (playingHandicap > 0) {
     const baseStrokes = Math.floor(playingHandicap / holesCount);
     const remainder = playingHandicap % holesCount;
-    const normalizedIndex =
-      holesCount === 9 ? Math.ceil(strokeIndex / 2) : strokeIndex;
-    const extraStroke = normalizedIndex <= remainder ? 1 : 0;
+    const effectiveSi =
+      holesCount === 9
+        ? strokeIndex <= 9
+          ? strokeIndex
+          : Math.ceil(strokeIndex / 2)
+        : strokeIndex;
+    const extraStroke = effectiveSi <= remainder ? 1 : 0;
     return baseStrokes + extraStroke;
   }
 
-  // Jugador con hándicap plus (ej. -2 da golpe en los hoyos de menor dificutad: SI 18, 17...)
+  // Jugador con hándicap plus (ej. -2 da golpe en los hoyos de menor dificultad: SI 18, 17... o SI 9, 8...)
   const absHandicap = Math.abs(playingHandicap);
   const baseGiven = Math.floor(absHandicap / holesCount);
   const remainderGiven = absHandicap % holesCount;
-  const reverseIndex = 19 - strokeIndex;
+  const effectiveSi =
+    holesCount === 9
+      ? strokeIndex <= 9
+        ? strokeIndex
+        : Math.ceil(strokeIndex / 2)
+      : strokeIndex;
+  const maxSi = holesCount === 9 ? 9 : 18;
+  const reverseIndex = maxSi + 1 - effectiveSi;
   const extraGiven = reverseIndex <= remainderGiven ? 1 : 0;
   const totalGiven = baseGiven + extraGiven;
   return totalGiven === 0 ? 0 : -totalGiven;

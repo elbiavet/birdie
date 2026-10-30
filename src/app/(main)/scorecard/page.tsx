@@ -271,14 +271,21 @@ export default function ScorecardAndGpsPage() {
                 }}
                 className="rounded-xl border px-3 py-2 text-xs font-semibold focus:outline-none cursor-pointer"
               >
-                <option value={18}>Vuelta 18 Hoyos</option>
+                {course.holesCount === 18 && (
+                  <option value={18}>Vuelta 18 Hoyos</option>
+                )}
                 <option value={9}>Vuelta 9 Hoyos</option>
               </select>
 
               <select
                 value={selectedCourseId}
                 onChange={(e) => {
-                  setSelectedCourseId(e.target.value);
+                  const nextId = e.target.value;
+                  setSelectedCourseId(nextId);
+                  const nextCourse = getCourseById(nextId);
+                  if (nextCourse && nextCourse.holesCount === 9) {
+                    setRoundHolesMode(9);
+                  }
                   setActiveHoleNumber(1);
                 }}
                 aria-label="Seleccionar recorrido"
@@ -413,8 +420,8 @@ export default function ScorecardAndGpsPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={activeHoleNumber >= 18}
-                  onClick={() => setActiveHoleNumber((n) => Math.min(18, n + 1))}
+                  disabled={activeHoleNumber >= course.holesCount}
+                  onClick={() => setActiveHoleNumber((n) => Math.min(course.holesCount, n + 1))}
                   className="rounded-lg border border-[var(--theme-border)] p-2 text-[var(--theme-text-secondary)] hover:text-[var(--theme-text-primary)] bg-[var(--theme-surface-subtle)] disabled:opacity-40 cursor-pointer"
                   aria-label="Hoyo siguiente"
                 >
@@ -592,7 +599,7 @@ export default function ScorecardAndGpsPage() {
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[var(--theme-accent)]" />
               <h3 className="text-lg font-bold text-[var(--theme-text-primary)]">
-                Resumen de Tarjeta en Vivo ({roundSummary.holesPlayed}/18 hoyos anotados)
+                Resumen de Tarjeta en Vivo ({roundSummary.holesPlayed}/{roundHolesMode} hoyos anotados)
               </h3>
             </div>
           </div>
@@ -604,7 +611,9 @@ export default function ScorecardAndGpsPage() {
                 {roundSummary.totalGrossStrokes}
               </p>
               <span className="text-[11px] text-[var(--theme-text-secondary)]">
-                Ida {roundSummary.outGrossStrokes} · Vta {roundSummary.inGrossStrokes}
+                {roundHolesMode === 9
+                  ? 'Vuelta 9H'
+                  : `Ida ${roundSummary.outGrossStrokes} · Vta ${roundSummary.inGrossStrokes}`}
               </span>
             </div>
 
@@ -643,8 +652,9 @@ export default function ScorecardAndGpsPage() {
                 {roundSummary.totalStablefordPoints} pts
               </p>
               <span className="text-[11px] opacity-80 font-medium">
-                Ida {roundSummary.outStablefordPoints} · Vta{' '}
-                {roundSummary.inStablefordPoints}
+                {roundHolesMode === 9
+                  ? 'Vuelta 9H'
+                  : `Ida ${roundSummary.outStablefordPoints} · Vta ${roundSummary.inStablefordPoints}`}
               </span>
             </div>
 

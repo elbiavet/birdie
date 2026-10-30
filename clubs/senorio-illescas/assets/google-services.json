@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "897654321098",
-    "project_id": "birdie-pinos-golf",
-    "storage_bucket": "birdie-pinos-golf.appspot.com"
+    "project_number": "789012345678",
+    "project_id": "birdie-senorio-illescas",
+    "storage_bucket": "birdie-senorio-illescas.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:897654321098:android:f9e8d7c6b5a40321",
+        "mobilesdk_app_id": "1:789012345678:android:a1b2c3d4e5f60718",
         "android_client_info": {
-          "package_name": "com.birdie.pinosgolf"
+          "package_name": "com.birdie.senorioillescas"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBirdiePinosGolfFakeApiKeyForTesting456"
+          "current_key": "AIzaSyBirdieSenorioIllescasApiKeyForTesting789"
         }
       ],
       "services": {

@@ -17,16 +17,17 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     await clearOfflineStore();
   });
 
-  it('contiene recorridos completos de 18 hoyos con coordenadas GPS de frente, centro y fondo de green', () => {
+  it('contiene recorridos completos de 9 o 18 hoyos con coordenadas GPS de frente, centro y fondo de green', () => {
     expect(GOLF_API_COURSES_CATALOG.length).toBeGreaterThanOrEqual(3);
 
     for (const course of GOLF_API_COURSES_CATALOG) {
-      expect(course.holes).toHaveLength(18);
+      expect(course.holes).toHaveLength(course.holesCount);
+      expect([9, 18]).toContain(course.holesCount);
       expect(course.tees.length).toBeGreaterThanOrEqual(2);
 
-      // Verificar que los strokeIndex 1..18 son únicos en cada campo
+      // Verificar que los strokeIndex 1..holesCount son únicos en cada campo
       const strokeIndexes = new Set(course.holes.map((h) => h.strokeIndex));
-      expect(strokeIndexes.size).toBe(18);
+      expect(strokeIndexes.size).toBe(course.holesCount);
 
       for (const hole of course.holes) {
         expect(hole.greenFrontLat).toBeGreaterThan(35);
@@ -41,17 +42,36 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     expect(madridCourses).toHaveLength(1);
     expect(madridCourses[0].externalGolfApiId).toBe('golfapi_course_1024');
 
-    const pinosMatches = searchCourses('pinos');
-    expect(pinosMatches).toHaveLength(1);
-    expect(pinosMatches[0].city).toBe('Marbella');
+    const valenciaMatches = searchCourses('valencia');
+    expect(valenciaMatches).toHaveLength(1);
+    expect(valenciaMatches[0].city).toBe('Valencia');
 
-    const byExternal = getCourseById('golfapi_course_2048');
+    const byExternal = getCourseById('golfapi_course_3096');
     expect(byExternal).not.toBeNull();
-    expect(byExternal?.clubName).toContain('Pinos');
-    expect(byExternal?.name).toContain('Links del Mar');
+    expect(byExternal?.clubName).toContain('Costa Mediterránea');
+    expect(byExternal?.name).toContain('Recorrido Sur');
 
     const byInternalId = getCourseById('11111111-1111-1111-1111-111111111101');
     expect(byInternalId?.externalGolfApiId).toBe('golfapi_course_1024');
+
+    const illescasMatches = searchCourses('illescas');
+    expect(illescasMatches).toHaveLength(1);
+    expect(illescasMatches[0].externalGolfApiId).toBe('golfapi_course_8833');
+    expect(illescasMatches[0].city).toBe('Illescas (Toledo)');
+    expect(illescasMatches[0].parTotal).toBe(35);
+    expect(illescasMatches[0].holesCount).toBe(9);
+    expect(illescasMatches[0].holes).toHaveLength(9);
+
+    const byIllescasId = getCourseById('golfapi_course_8833');
+    expect(byIllescasId).not.toBeNull();
+    expect(byIllescasId?.clubName).toBe('Señorío de Illescas Club de Golf & Padel');
+    const illescasTotals = calculateCourseNineTotals(byIllescasId!.holes, 'yellow');
+    expect(illescasTotals.outPar).toBe(35);
+    expect(illescasTotals.inPar).toBe(0);
+    expect(illescasTotals.totalPar).toBe(35);
+    expect(illescasTotals.outMeters).toBe(2610);
+    expect(illescasTotals.inMeters).toBe(0);
+    expect(illescasTotals.totalMeters).toBe(2610);
 
     expect(getCourseById('course-inexistente-999')).toBeNull();
   });
@@ -187,14 +207,23 @@ describe('Adaptador Golf API, Edge Function y Directorio de Campos (Subfases 2.1
     ).toThrow(/strokeIndex\/handicap duplicado/);
   });
 
-  it('sincroniza los 18 hoyos de un recorrido en la caché SQLite local y lanza error si el campo no existe', async () => {
-    const result = await syncCourseToOfflineCache('golfapi_course_1024');
-    expect(result.cachedHolesCount).toBe(18);
+  it('sincroniza los hoyos de un recorrido (9 o 18 hoyos) en la caché SQLite local y lanza error si el campo no existe', async () => {
+    const result18 = await syncCourseToOfflineCache('golfapi_course_1024');
+    expect(result18.cachedHolesCount).toBe(18);
 
-    const cachedHoles = await getCachedCourseData(result.course.id);
-    expect(cachedHoles).toHaveLength(18);
-    expect(cachedHoles[0].holeNumber).toBe(1);
-    expect(cachedHoles[17].holeNumber).toBe(18);
+    const cached18 = await getCachedCourseData(result18.course.id);
+    expect(cached18).toHaveLength(18);
+    expect(cached18[0].holeNumber).toBe(1);
+    expect(cached18[17].holeNumber).toBe(18);
+
+    // Recorrido real de 9 hoyos de Señorío de Illescas
+    const result9 = await syncCourseToOfflineCache('golfapi_course_8833');
+    expect(result9.cachedHolesCount).toBe(9);
+
+    const cached9 = await getCachedCourseData(result9.course.id);
+    expect(cached9).toHaveLength(9);
+    expect(cached9[0].holeNumber).toBe(1);
+    expect(cached9[8].holeNumber).toBe(9);
 
     await expect(syncCourseToOfflineCache('id-invalido')).rejects.toThrow(
       /No se encontró el campo/

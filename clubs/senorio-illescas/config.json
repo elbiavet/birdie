@@ -1,0 +1,44 @@
+{
+  "clubId": "senorio-illescas",
+  "name": "Señorío de Illescas Club de Golf & Padel",
+  "shortName": "Señorío de Illescas",
+  "tagline": "Golf, pádel y naturaleza en La Sagra",
+  "appId": "com.birdie.senorioillescas",
+  "domains": {
+    "staging": "staging.illescas.birdie.app",
+    "production": "app.senoriodeillescasgolf.com"
+  },
+  "theme": {
+    "primary": "#163A2B",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#C5A059",
+    "accent": "#245842",
+    "background": "#F5F6F4"
+  },
+  "coordinates": {
+    "lat": 40.1533,
+    "lng": -3.8452
+  },
+  "defaultCourseExternalId": "golfapi_course_8833",
+  "contact": {
+    "email": "info@senoriodeillescasgolf.com",
+    "phone": "+34 925 518 359",
+    "address": "Av. de Europa, 14, Urb. Señorío de Illescas, 45200 Illescas, Toledo",
+    "website": "https://senoriodeillescasgolf.com"
+  },
+  "features": {
+    "scorecard": true,
+    "gps": true,
+    "stats": true,
+    "calendar": true,
+    "tournaments": true,
+    "bookings": true,
+    "playerDirectory": true,
+    "clubDirectory": true,
+    "news": true,
+    "clubInfo": true,
+    "forum": true,
+    "adminChat": true,
+    "specialEvents": true
+  }
+}

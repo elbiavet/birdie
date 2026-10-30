@@ -142,16 +142,16 @@ describe('Fase 9: Página de Acceso White-Label como Punto de Entrada, Autentica
       expect(html).toContain('Portal de Acceso · demo-club');
     });
 
-    it('refleja la configuración del segundo club white-label (pinos-golf)', () => {
+    it('refleja la configuración del segundo club white-label (senorio-illescas)', () => {
       const html = renderToStaticMarkup(
-        <ClubProvider initialClubId="pinos-golf">
+        <ClubProvider initialClubId="senorio-illescas">
           <AuthAccessView />
         </ClubProvider>
       );
 
-      expect(html).toContain('Club de Golf Los Pinos del Mar');
-      expect(html).toContain('Portal de Acceso · pinos-golf');
-      expect(html).toContain('alt="Logo oficial de Club de Golf Los Pinos del Mar"');
+      expect(html).toContain('Señorío de Illescas');
+      expect(html).toContain('Portal de Acceso · senorio-illescas');
+      expect(html).toContain('alt="Logo oficial de Señorío de Illescas Club de Golf &amp; Padel"');
     });
 
     it('renderiza la estructura de tabs para alternar entre Iniciar Sesión y Registrarse', () => {
