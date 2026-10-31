@@ -154,7 +154,7 @@ describe('Analizador de Estadísticas Deportivas, Panel GPS y Pantallas Fase 2 (
       )
     );
     expect(scorecardHtml).toContain('Marcador Digital y Telémetro GPS');
-    expect(scorecardHtml).toContain('Guardar Hoyo 1 en SQLite Offline');
+    expect(scorecardHtml).toContain('Guardar Hoyo 1');
     expect(scorecardHtml).toContain('Resumen de Tarjeta en Vivo');
     expect((scorecardHtml.match(/<header/g) ?? []).length).toBe(1);
     expect((scorecardHtml.match(/<aside/g) ?? []).length).toBe(1);

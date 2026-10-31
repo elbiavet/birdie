@@ -52,3 +52,6 @@ android/captures/
 *.aab
 *.keystore
 *.jks
+
+.vercel
+.env*

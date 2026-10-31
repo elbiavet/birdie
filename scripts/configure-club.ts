@@ -113,11 +113,32 @@ export function configureClub({
     'assets',
     'logo.svg'
   );
+  const sourceLogoPngPath = path.join(
+    projectRoot,
+    'clubs',
+    clubId,
+    'assets',
+    'logo.png'
+  );
   const publicDir = path.join(projectRoot, 'public');
   const publicLogoPath = path.join(publicDir, 'club-logo.svg');
+  const publicLogoPngPath = path.join(publicDir, 'club-logo.png');
   fs.mkdirSync(publicDir, { recursive: true });
   if (fs.existsSync(sourceLogoPath)) {
     fs.copyFileSync(sourceLogoPath, publicLogoPath);
+  }
+  if (fs.existsSync(sourceLogoPngPath)) {
+    fs.copyFileSync(sourceLogoPngPath, publicLogoPngPath);
+  }
+
+  // Sincronizar catálogo estático de assets por club en public/clubs/<clubId> para multi-club dinámico
+  const clubPublicDir = path.join(publicDir, 'clubs', clubId);
+  fs.mkdirSync(clubPublicDir, { recursive: true });
+  if (fs.existsSync(sourceLogoPath)) {
+    fs.copyFileSync(sourceLogoPath, path.join(clubPublicDir, 'logo.svg'));
+  }
+  if (fs.existsSync(sourceLogoPngPath)) {
+    fs.copyFileSync(sourceLogoPngPath, path.join(clubPublicDir, 'logo.png'));
   }
 
   // 3. Actualizar variables CSS en src/app/globals.css preservando estilos y tokens

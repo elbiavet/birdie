@@ -244,6 +244,8 @@ describe('Fase 8 - Subfase 8.3: Sistema de Internacionalización (i18n Español 
       expect(html).toContain('Federation License');
       expect(html).toContain('Exact Handicap');
       expect(html).toContain('Scorecard Engine');
+      expect(html).toContain('Synchronized');
+      expect(html).not.toContain('Realtime + SQLite');
       expect(html).toContain('Active Modules');
       expect(html).toContain('Start Round (Scorecard + GPS)');
       expect(html).toContain('Book Tee Time');

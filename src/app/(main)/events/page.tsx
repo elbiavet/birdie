@@ -46,7 +46,7 @@ export default function SpecialEventsPage() {
           message:
             err instanceof Error
               ? err.message
-              : 'No se pudieron cargar los eventos especiales desde Supabase.',
+              : 'No se pudieron cargar los eventos especiales desde el servidor.',
         });
       });
     return () => {

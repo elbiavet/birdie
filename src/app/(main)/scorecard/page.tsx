@@ -192,7 +192,7 @@ export default function ScorecardAndGpsPage() {
 
     await loadRoundFromOfflineDb();
     setStatusBanner(
-      `Hoyo ${activeHole.holeNumber} guardado en SQLite local [pendiente de envío a Supabase] (${strokes} golpes · ${activeHoleStableford} pts Stableford).`
+      `Hoyo ${activeHole.holeNumber} guardado (${strokes} golpes · ${activeHoleStableford} pts Stableford).`
     );
 
     if (activeHoleNumber < roundHolesMode) {
@@ -206,19 +206,19 @@ export default function ScorecardAndGpsPage() {
     if (res.status === 'synced') {
       setStatusBanner(
         res.attemptedCount === 0
-          ? 'No hay golpes pendientes de sincronizar en la cola SQLite.'
-          : `Sincronización confirmada en servidor Supabase: ${res.syncedCount}/${res.attemptedCount} hoyos sincronizados.`
+          ? 'No hay golpes pendientes de sincronizar.'
+          : `Sincronización completada: ${res.syncedCount}/${res.attemptedCount} hoyos confirmados.`
       );
     } else {
       setStatusBanner(
-        `${res.reason ?? 'Sincronización incompleta.'} (${res.remainingPendingCount} hoyo[s] siguen en estado 'pending' en SQLite local).`
+        `${res.reason ?? 'Sincronización pendiente.'} (${res.remainingPendingCount} hoyo[s] guardados localmente).`
       );
     }
   };
 
   return (
     <div className="space-y-6">
-        {/* Cabecera de la Ronda y Estado Offline SQLite */}
+        {/* Cabecera de la Ronda y Estado de Tarjeta */}
         <section className="hero-banner-luxury p-6 shadow-sm relative overflow-hidden transition-all duration-200">
           <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center relative z-10">
             <div>
@@ -232,7 +232,7 @@ export default function ScorecardAndGpsPage() {
                   className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-xs"
                 >
                   <Database className="h-3.5 w-3.5" />
-                  SQLite Offline-First Activo
+                  Tarjeta Digital Activa
                 </span>
                 <span
                   style={{
@@ -309,7 +309,7 @@ export default function ScorecardAndGpsPage() {
                 className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
               >
                 <CloudUpload className="h-4 w-4" />
-                Sincronizar Cola ({pendingQueueCount})
+                Sincronizar Tarjeta ({pendingQueueCount})
               </button>
             </div>
           </div>
@@ -582,7 +582,7 @@ export default function ScorecardAndGpsPage() {
                 className="btn-gold-gradient flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-xs transition cursor-pointer"
               >
                 <Flag className="h-4 w-4" />
-                Guardar Hoyo {activeHole.holeNumber} en SQLite Offline
+                Guardar Hoyo {activeHole.holeNumber}
               </button>
             </div>
           </section>

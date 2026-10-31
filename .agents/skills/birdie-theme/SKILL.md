@@ -75,7 +75,7 @@ Se utiliza **Inter** como tipografía principal, con **Montserrat** y `sans-seri
   - Nombre oficial del club en la cabecera.
 - **Medium / Semi-Bold (`font-medium` 500 / `font-semibold` 600)**:
   - Etiquetas descriptivas superiores de las tarjetas de métricas (`HÁNDICAP EXACTO`, etc.).
-  - Píldoras de estado (`Online · Supabase Sync`, `HCP 11.4`, `DEMO CLUB`).
+  - Píldoras de estado (ej. aviso de desconexión sin jerga técnica, `HCP 11.4`, `DEMO CLUB`).
   - Títulos de tarjetas modulares secundarias.
 - **Regular (`font-normal`, peso 400)**:
   - Textos descriptivos de tarjetas de acciones y párrafos explicativos.

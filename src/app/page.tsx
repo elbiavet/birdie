@@ -44,11 +44,11 @@ export default function DashboardPage() {
 
   const playingHcpYellow = profile
     ? calculatePlayingHandicap({
-        handicapIndex: profile.handicapIndex,
-        slopeRating: 128,
-        courseRating: 71.5,
-        par: 72,
-      })
+      handicapIndex: profile.handicapIndex,
+      slopeRating: 128,
+      courseRating: 71.5,
+      par: 72,
+    })
     : 0;
 
   return (
@@ -106,24 +106,6 @@ export default function DashboardPage() {
 
         {/* Contenido del Panel */}
         <div className="relative z-10 max-w-2xl space-y-2">
-          {/* Badge GPS del Campo */}
-          <div
-            style={{
-              backgroundColor: isDark ? '#0D3028' : 'rgba(255, 255, 255, 0.7)',
-              borderColor: isDark ? 'rgba(201, 173, 116, 0.35)' : 'rgba(197, 160, 89, 0.45)',
-              color: isDark ? '#D5C7A5' : '#0A3A2A',
-              boxShadow: isDark
-                ? '0 1px 3px rgba(0, 0, 0, 0.2)'
-                : '0 2px 8px rgba(180, 150, 100, 0.1)',
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border backdrop-blur-xs"
-          >
-            <MapPin className="w-3.5 h-3.5 text-[#C9AD74]" />
-            <span>
-              {t('home.gpsField')}: {club.coordinates.lat.toFixed(4)}, {club.coordinates.lng.toFixed(4)}
-            </span>
-          </div>
-
           <h1
             style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
             className="text-2xl md:text-3xl font-bold tracking-tight"
@@ -224,7 +206,7 @@ export default function DashboardPage() {
               style={{ color: isDark ? '#E4D3AC' : '#0A3A2A' }}
               className="text-base md:text-lg font-bold mt-2"
             >
-              {isOnline ? 'Realtime + SQLite' : 'Offline SQLite'}
+              {isOnline ? t('home.scoreEngineOnline') : t('home.scoreEngineOffline')}
             </div>
           </div>
 
@@ -459,24 +441,9 @@ export default function DashboardPage() {
             >
               {t('home.ecosystemTitle')} ({club.shortName})
             </h2>
-            <p
-              style={{ color: isDark ? '#92A99E' : '#52665B' }}
-              className="text-xs font-normal"
-            >
-              {t('home.ecosystemSubtitle')} <code>/clubs/{club.clubId}/config.json</code>
-            </p>
           </div>
 
-          <span
-            style={{
-              backgroundColor: isDark ? '#19191E' : '#E8ECE9',
-              borderColor: isDark ? 'rgba(201, 173, 116, 0.25)' : '#CBD7CC',
-              color: isDark ? '#D5C7A5' : '#0A3A2A',
-            }}
-            className="inline-flex items-center text-xs font-mono px-3 py-1 rounded-full border font-medium self-start sm:self-auto"
-          >
-            Golf API ID: {club.defaultCourseExternalId}
-          </span>
+
         </div>
 
         {/* Las 3 Tarjetas de Módulos: Verde #0C3029 a #104238 (Dark) / Salvia #D8E4D9 (Light) */}

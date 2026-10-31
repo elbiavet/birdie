@@ -207,4 +207,21 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect((renderedHtml.match(/<header/g) ?? []).length).toBe(1);
     expect((renderedHtml.match(/<aside/g) ?? []).length).toBe(1);
   });
+
+  it('no renderiza etiquetas técnicas como "Online · Supabase Sync" ni "Offline · Local SQLite" en el AppShell', () => {
+    const onlineHtml = renderToStaticMarkup(
+      React.createElement(ClubProvider, {
+        initialClubId: 'demo-club',
+        children: React.createElement(AppShell, {
+          children: React.createElement('div', null, 'Contenido'),
+        }),
+      })
+    );
+
+    expect(onlineHtml).not.toContain('Online · Supabase Sync');
+    expect(onlineHtml).not.toContain('Offline · Local SQLite');
+    expect(onlineHtml).not.toContain('Offline · SQLite Local');
+    expect(onlineHtml).not.toContain('Supabase Sync');
+    expect(onlineHtml).not.toContain('Local SQLite');
+  });
 });

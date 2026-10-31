@@ -350,7 +350,7 @@ export function AuthAccessView({
                     ? '0 4px 16px rgba(0, 0, 0, 0.4)'
                     : '0 4px 16px rgba(169, 138, 85, 0.2)',
                 }}
-                className="w-16 h-16 rounded-2xl bg-[var(--theme-surface)] border p-2 flex items-center justify-center overflow-hidden"
+                className="w-16 h-16 rounded-2xl bg-white border border-[var(--theme-border)] p-2 flex items-center justify-center overflow-hidden"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

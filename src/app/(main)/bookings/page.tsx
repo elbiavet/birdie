@@ -56,7 +56,7 @@ export default function TeeTimeBookingsPage() {
           message:
             err instanceof Error
               ? err.message
-              : 'No se pudieron sincronizar las franjas desde Supabase.',
+              : 'No se pudieron sincronizar las franjas horarias con el servidor.',
         });
       });
     return () => {

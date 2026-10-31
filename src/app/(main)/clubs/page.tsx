@@ -102,7 +102,7 @@ export default function ClubsDirectoryPage() {
         [course.id]: verifyCache.length || result.cachedHolesCount,
       }));
       setSyncMessage(
-        `Recorrido "${course.name}" descargado en SQLite local (${result.cachedHolesCount} hoyos listos sin conexión).`
+        `Recorrido "${course.name}" descargado (${result.cachedHolesCount} hoyos listos sin conexión).`
       );
       setTimeout(() => setSyncMessage(null), 5000);
     } catch (err) {
@@ -172,7 +172,7 @@ export default function ClubsDirectoryPage() {
               className="btn-gold-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition cursor-pointer self-start md:self-auto shrink-0"
             >
               <DownloadCloud className="h-4 w-4" />
-              Descargar Recorrido a SQLite Offline
+              Descargar Recorrido Offline
             </button>
           )}
         </div>
