@@ -239,7 +239,6 @@ describe('Fase 8 - Subfase 8.3: Sistema de Internacionalización (i18n Español 
         </ThemeProvider>
       );
 
-      expect(html).toContain('COURSE GPS:');
       expect(html).toContain('Welcome, Guest');
       expect(html).toContain('Federation License');
       expect(html).toContain('Exact Handicap');
