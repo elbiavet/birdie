@@ -351,9 +351,15 @@ export default function ClubsDirectoryPage() {
                   <div className="flex items-center gap-1.5">
                     <Flag className="h-3.5 w-3.5 text-[var(--theme-accent)] shrink-0" />
                     <span>
-                      {course.holesCount} Hoyos
-                      {course.parTotal ? ` · Par ${course.parTotal}` : ''}
-                      {isOsm && ' (estimado OSM)'}
+                      {course.hasExplicitHoles !== false ? (
+                        <>
+                          {course.holesCount} Hoyos
+                          {course.parTotal ? ` · Par ${course.parTotal}` : ''}
+                          {isOsm && ' (etiqueta OSM)'}
+                        </>
+                      ) : (
+                        'Hoyos y recorrido no registrados en OSM'
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -404,9 +410,15 @@ export default function ClubsDirectoryPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-accent)]">
                 {selectedCourse.autonomousCommunity} · {selectedCourse.province}
               </span>
-              <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--theme-text-secondary)]">
-                {selectedCourse.holesCount} Hoyos {selectedCourse.parTotal ? `· Par ${selectedCourse.parTotal}` : ''}
-              </span>
+              {selectedCourse.hasExplicitHoles !== false ? (
+                <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--theme-text-secondary)]">
+                  {selectedCourse.holesCount} Hoyos {selectedCourse.parTotal ? `· Par ${selectedCourse.parTotal}` : ''}
+                </span>
+              ) : (
+                <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface-subtle)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--theme-text-secondary)]">
+                  Hoyos sin registrar en OSM
+                </span>
+              )}
               {selectedCourse.isBirdieClub && (
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
                   Plataforma Birdie
@@ -900,12 +912,20 @@ export default function ClubsDirectoryPage() {
                     )}
                   </p>
                   <div className="pt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
-                      Par del Campo: <strong className="text-[var(--theme-text-primary)]">{selectedCourse.parTotal}</strong>
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
-                      Total Hoyos: <strong className="text-[var(--theme-text-primary)]">{selectedCourse.holesCount}</strong>
-                    </span>
+                    {selectedCourse.hasExplicitHoles !== false ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
+                          Par del Campo: <strong className="text-[var(--theme-text-primary)]">{selectedCourse.parTotal}</strong>
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
+                          Total Hoyos: <strong className="text-[var(--theme-text-primary)]">{selectedCourse.holesCount}</strong>
+                        </span>
+                      </>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
+                        Recorrido: <strong className="text-[var(--theme-text-primary)]">Sin hoyos registrados en OSM</strong>
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1 rounded-md bg-[var(--theme-surface)] border border-[var(--theme-border)] px-2.5 py-1 text-[var(--theme-text-secondary)]">
                       Barras homologadas: <strong className="text-[var(--theme-text-primary)]">{selectedCourse.tees.length}</strong>
                     </span>

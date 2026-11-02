@@ -18,6 +18,7 @@ import {
   calculateDistanceKm,
   extractElementCoordinates,
   isOsmCourseDuplicateOfCurated,
+  isOsmCourseEligibleForCatalog,
   normalizeOsmCourse,
   normalizeOsmElements,
   resolveGeodeticLocation,
@@ -428,16 +429,17 @@ describe('Fase 11: Catálogo Geográfico Nacional de Campos de Golf (OpenStreetM
       expect(galicia.province).toBe('A Coruña');
     });
 
-    it('el catálogo contiene entre 45 y 60 campos en la Comunidad de Madrid, eliminando el sesgo erróneo de 574', () => {
+    it('el catálogo contiene campos reales y verificados con nombre en la Comunidad de Madrid, eliminando el sesgo erróneo de 574 y los polígonos anónimos', () => {
       const madridCourses = searchSpainGolfCourses({ community: 'Comunidad de Madrid' });
 
-      // Verificación estricta del rango real (aprox. 45 a 60 campos en toda la región)
-      expect(madridCourses.length).toBeGreaterThanOrEqual(45);
-      expect(madridCourses.length).toBeLessThanOrEqual(60);
+      // Verificación estricta: Madrid cuenta con 31 campos reales con nombre tras depurar entidades anónimas
+      expect(madridCourses.length).toBe(31);
 
       // Todos los campos filtrados bajo Madrid deben pertenecer rigurosamente a la Comunidad de Madrid
       for (const course of madridCourses) {
         expect(course.autonomousCommunity).toBe('Comunidad de Madrid');
+        expect(course.hasExplicitName).not.toBe(false);
+        expect(course.name.startsWith('Campo de golf (sin nombre')).toBe(false);
       }
 
       // No debe contener campos de la Costa del Sol, Baleares o Cataluña
@@ -447,7 +449,7 @@ describe('Fase 11: Catálogo Geográfico Nacional de Campos de Golf (OpenStreetM
       expect(names.some((n) => n.includes('pga catalunya'))).toBe(false); // Girona
     });
 
-    it('distribuye el inventario nacional de forma coherente en las 17 Comunidades Autónomas', () => {
+    it('distribuye el inventario nacional de forma coherente en las 17 Comunidades Autónomas tras excluir entidades anónimas', () => {
       const andalucia = searchSpainGolfCourses({ community: 'Andalucía' });
       const cataluna = searchSpainGolfCourses({ community: 'Cataluña' });
       const baleares = searchSpainGolfCourses({ community: 'Illes Balears' });
@@ -457,6 +459,65 @@ describe('Fase 11: Catálogo Geográfico Nacional de Campos de Golf (OpenStreetM
       expect(cataluna.length).toBeGreaterThanOrEqual(50);
       expect(baleares.length).toBeGreaterThanOrEqual(25);
       expect(canarias.length).toBeGreaterThanOrEqual(25);
+    });
+  });
+
+  describe('8. Depuración de Entidades Anónimas de OSM sin Recorrido ni Hoyos (Fase 14)', () => {
+    it('isOsmCourseEligibleForCatalog rechaza elementos sin nombre explícito que carecen de hoyos verificados', () => {
+      const unnamedWithoutHoles = normalizeOsmCourse({
+        type: 'way',
+        id: 313172082,
+        center: { lat: 40.45, lon: -3.7 },
+        tags: { leisure: 'golf_course' }, // Sin name ni holes
+      })!;
+
+      expect(unnamedWithoutHoles.hasExplicitName).toBe(false);
+      expect(isOsmCourseEligibleForCatalog(unnamedWithoutHoles)).toBe(false);
+
+      // Si tuviese hoyos explícitos, sí sería admisible
+      const unnamedWithHoles = normalizeOsmCourse({
+        type: 'way',
+        id: 313172083,
+        center: { lat: 40.45, lon: -3.7 },
+        tags: { leisure: 'golf_course', holes: '18' },
+      })!;
+      expect(isOsmCourseEligibleForCatalog(unnamedWithHoles)).toBe(true);
+
+      // Si tiene nombre explícito, es admisible
+      const namedCourse = normalizeOsmCourse({
+        type: 'way',
+        id: 313172084,
+        center: { lat: 40.45, lon: -3.7 },
+        tags: { leisure: 'golf_course', name: 'Golf Club Las Encinas' },
+      })!;
+      expect(isOsmCourseEligibleForCatalog(namedCourse)).toBe(true);
+    });
+
+    it('excluye rigurosamente el elemento anónimo #313172082 y ningún campo del catálogo carece de nombre', () => {
+      const allCourses = searchSpainGolfCourses();
+
+      // Ningún campo devuelto debe ser el ID anónimo del ejemplo
+      expect(allCourses.some((c) => c.id === 'osm-way-313172082' || c.osmId === 313172082)).toBe(false);
+
+      // Ningún campo devuelto en toda España debe comenzar por "Campo de golf (sin nombre en OSM"
+      for (const course of allCourses) {
+        expect(course.name.startsWith('Campo de golf (sin nombre en OSM')).toBe(false);
+        if (course.provenance === 'osm') {
+          expect(course.hasExplicitName).toBe(true);
+        }
+      }
+    });
+
+    it('los campos de OSM sin hoyos especificados marcan hasExplicitHoles en false y no muestran (estimado OSM)', () => {
+      const allOsm = searchSpainGolfCourses({ provenance: 'osm' });
+      const withoutHoles = allOsm.filter((c) => c.hasExplicitHoles === false);
+
+      expect(withoutHoles.length).toBeGreaterThan(0);
+      for (const c of withoutHoles) {
+        expect(c.hasExplicitHoles).toBe(false);
+        // Sus facilities deben reflejar que los hoyos no están especificados
+        expect(c.facilities.some((f) => f.includes('Hoyos y recorrido no especificados en OSM'))).toBe(true);
+      }
     });
   });
 });

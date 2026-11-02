@@ -42,6 +42,8 @@ export interface SpainGolfCourse extends GolfApiCourse {
   osmKey?: string;
   importedAt?: string;
   hasExplicitName?: boolean;
+  /** Indica si los hoyos provienen de datos explícitos verificados en la fuente */
+  hasExplicitHoles?: boolean;
   rawTags?: Record<string, string>;
 }
 

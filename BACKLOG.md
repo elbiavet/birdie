@@ -649,3 +649,32 @@
 >   3. **Conteo en Madrid Verificado**: Tras deduplicar campos frente al catálogo curado, Madrid cuenta con exactamente **51 campos de golf** (4 del catálogo curado y 47 de OpenStreetMap), encajando con precisión en el rango esperado de 45 a 60.
 >   4. **Distribución Nacional Coherente**: Andalucía cuenta con 138 campos, Cataluña con 87, Castilla y León con 51, Región de Murcia con 47, Canarias con 36, Comunitat Valenciana con 36, Illes Balears con 31, etc.
 >   5. **Verificación Oficial Completa**: 0 errores en `npm run typecheck`, 213/213 tests en verde en 22 suites (`npm run test`) y compilación Next.js 100% estática (`npm run build`).
+
+---
+
+## Fase 14: Depuración de Entidades Anónimas de OSM sin Recorrido ni Hoyos y Supresión de Datos Estimados
+
+### Diagnóstico y Alcance
+
+> [!IMPORTANT]
+> **Eliminación de Entidades Sin Nombre ni Recorrido**:
+> 1. En OpenStreetMap existen elementos mapeados como `leisure=golf_course` que carecen de nombre (`hasExplicitName: false`), de número de hoyos (`holesCount === undefined`) y de recorrido o contacto.
+> 2. Estos elementos (ej. `"Campo de golf (sin nombre en OSM #313172082)"`) son polígonos anónimos que no aportan valor al usuario de la guía y degradan la calidad del catálogo.
+> 3. En la versión previa, además, el sistema imputaba artificialmente `18 Hoyos · Par 72` y la interfaz mostraba `18 Hoyos · Par 72 (estimado OSM)`, fabricando datos deportivos no verificados.
+> 4. **Criterio estricto de elegibilidad**:
+>    - Todo elemento de OSM que no disponga de nombre explícito Y carezca de hoyos o recorrido verificado queda estrictamente excluido del catálogo nacional y del buscador `/clubs`.
+>    - Para los campos de OSM con nombre real pero sin desglose de hoyos en OSM, se elimina la estimación inventada de 18 hoyos / Par 72 y se rotula con fidelidad: `"Hoyos y recorrido no registrados en OSM"`.
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F14-T01` | **Filtro de Elegibilidad de Catálogo en `src/lib/spain-courses/search.ts` y `osm-normalizer.ts`**: Implementar `isOsmCourseEligibleForCatalog(osmCourse)` para excluir entidades sin nombre explícito (`hasExplicitName: false`) que carezcan de hoyos verificados (`!holesCount`) o recorrido, asegurando que polígonos anónimos como `#313172082` no se incorporen al catálogo de la app. | `completada` | `getOsmGolfCourses()` y `searchSpainGolfCourses()` no retornan ningún campo anónimo ni con nombre autogenerado `'Campo de golf (sin nombre...'`. | **Ejecutado**: Sí (`npm run test` ejecutando `osm-inventory.test.tsx`). **Resultado**: PASS — `isOsmCourseEligibleForCatalog` implementado y aplicado en `getOsmGolfCourses()`. Todas las entidades anónimas quedan excluidas. |
+| `F14-T02` | **Supresión de Datos Estimados e Integridad de Recorrido en `osm-normalizer.ts` y `/clubs/page.tsx`**: Añadir `hasExplicitHoles?: boolean` en `SpainGolfCourse`. Eliminar la imputación de `18 Hoyos · Par 72 (estimado OSM)`; si el campo no tiene hoyos en OSM, renderizar `"Hoyos y recorrido no registrados en OSM"` tanto en las tarjetas como en la ficha técnica del modal. | `completada` | La interfaz de `/clubs` no muestra ningún texto de `(estimado OSM)` ni pares inventados cuando no están en la fuente. | **Ejecutado**: Sí (`npm run test`, `npm run typecheck`). **Resultado**: PASS — `hasExplicitHoles` integrado; textos de `(estimado OSM)` eliminados; `/clubs` renderiza con fidelidad `"Hoyos y recorrido no registrados en OSM"`. |
+| `F14-T03` | **[TEST] Suite de Pruebas Automatizadas en Vitest**: Actualizar `src/lib/spain-courses/__tests__/osm-inventory.test.tsx` verificando: (a) exclusión absoluta de `#313172082` y campos sin nombre ni hoyos, (b) ausencia total de campos anónimos en el buscador, (c) presentación honesta de campos con nombre pero sin hoyos, y (d) conteos limpios nacionales y en Madrid (31 campos reales con nombre). | `completada` | 100% de tests en verde en Vitest sin regresiones en las 22 suites del proyecto. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — 24/24 tests en verde en `osm-inventory.test.tsx`; 22/22 suites y 216/216 tests globales en verde. |
+| `F14-T04` | **[REVISIÓN DE CIERRE FASE 14]**: Ejecutar `npm run typecheck`, `npm run test`, `npm run build`, verificar exportación estática en `out/`, registrar en `BACKLOG.md`, confirmar cambios en git y desplegar en Vercel. | `completada` | Comandos oficiales finalizan con código `0` y despliegue actualizado. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`, Vercel deploy). **Resultado**: PASS — `tsc --noEmit` código 0; Vitest 22 suites / 216 tests en verde; `next build` exportó 25 rutas estáticas limpias en `out/`. |
+
+> **Estado de la Fase 14**: **CERRADA (4/4 tareas completadas y verificadas)**.
+> - **Resumen de Cumplimiento de Criterios**:
+>   1. **Exclusión Absoluta de Entidades Anónimas**: Se implementó el predicado `isOsmCourseEligibleForCatalog` en `osm-normalizer.ts` y se aplicó en el motor de búsqueda `search.ts`. Todos los polígonos anónimos de OSM sin nombre ni hoyos (como el ejemplo `#313172082`) quedan estrictamente descartados del catálogo.
+>   2. **Supresión Total de Datos Deportivos Fabricados**: Se eliminó la etiqueta artificial `(estimado OSM)` y la imputación ficticia de 18 hoyos y Par 72 para campos sin desglose en OSM. Se introdujo `hasExplicitHoles?: boolean`, de modo que campos de OSM con nombre real pero sin hoyos reflejan con honestidad `"Hoyos y recorrido no registrados en OSM"`.
+>   3. **Conteo Real y Limpio en Madrid**: Tras eliminar las 20 entidades anónimas que inflaban la cuenca de Madrid, la Comunidad de Madrid cuenta con exactamente **31 campos reales y verificados con nombre** (4 curados + 27 de OSM).
+>   4. **Verificación Total**: 0 errores en `npm run typecheck`, 216/216 tests en verde en las 22 suites de Vitest y generación estática limpia de 25 páginas en `npm run build`.

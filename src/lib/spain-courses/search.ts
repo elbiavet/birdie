@@ -3,6 +3,7 @@ import { SPAIN_GOLF_COURSES_CATALOG } from './catalog';
 import {
   adaptOsmCourseToSpainGolfCourse,
   isOsmCourseDuplicateOfCurated,
+  isOsmCourseEligibleForCatalog,
 } from './osm-normalizer';
 import type { OsmDatasetFile } from './osm-types';
 import type {
@@ -69,6 +70,7 @@ export function getOsmGolfCourses(): SpainGolfCourse[] {
   const rawList = Array.isArray(dataset?.courses) ? dataset.courses : [];
 
   cachedOsmCourses = rawList
+    .filter(isOsmCourseEligibleForCatalog)
     .filter((osm) => !isOsmCourseDuplicateOfCurated(osm, SPAIN_GOLF_COURSES_CATALOG))
     .map(adaptOsmCourseToSpainGolfCourse);
 

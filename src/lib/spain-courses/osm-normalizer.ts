@@ -554,6 +554,23 @@ export const normalizeOsmElements = (elements: OverpassRawElement[], importedAt 
 };
 
 /**
+ * Determina si una entidad de OpenStreetMap es elegible para ser mostrada en la guía nacional de campos.
+ * Excluye rigurosamente elementos que no tienen nombre explícito (autogenerados como "Campo de golf (sin nombre en OSM #...)")
+ * y que tampoco disponen de hoyos conocidos ni recorrido verificado.
+ */
+export function isOsmCourseEligibleForCatalog(osmCourse: OsmGolfCourse): boolean {
+  const hasValidName = Boolean(
+    osmCourse.hasExplicitName &&
+    osmCourse.name &&
+    !osmCourse.name.startsWith('Campo de golf (sin nombre en OSM')
+  );
+  const hasVerifiedHoles = Boolean(osmCourse.holesCount && osmCourse.holesCount > 0);
+
+  // Debe tener al menos nombre explícito o datos verificados de hoyos
+  return hasValidName || hasVerifiedHoles;
+}
+
+/**
  * Comprueba si un campo de OSM ya está cubierto en el catálogo curado para evitar duplicados.
  * Compara por coincidencia léxica del nombre o proximidad geográfica (< 1.5 km) con coincidencia parcial.
  */
@@ -627,7 +644,8 @@ export function adaptOsmCourseToSpainGolfCourse(
 
   // Cumplimiento estricto: holesCount solo se establece si está disponible en OSM (9 o 18);
   // para el contrato de GolfApiCourse se usa 18 como estándar de visualización si no está definido,
-  // pero hasHoleDetail permanece en false y tees y holes vacíos.
+  // pero hasHoleDetail permanece en false, tees y holes vacíos y hasExplicitHoles en false.
+  const hasExplicitHoles = Boolean(osmCourse.holesCount && osmCourse.holesCount > 0);
   const holesCount: 9 | 18 = osmCourse.holesCount === 9 ? 9 : 18;
   const parTotal = osmCourse.parTotal ?? (holesCount === 9 ? 35 : 72);
 
@@ -644,12 +662,15 @@ export function adaptOsmCourseToSpainGolfCourse(
     email: osmCourse.email,
     holesCount,
     parTotal,
+    hasExplicitHoles,
     designer: undefined, // No inventar diseñador
     yearFounded: undefined, // No inventar año
     facilities: [
       'Inventario Geográfico Comunitario',
       `OSM ${osmCourse.osmType.toUpperCase()} #${osmCourse.osmId}`,
-      ...(osmCourse.holesCount ? [`${osmCourse.holesCount} hoyos (etiqueta OSM)`] : []),
+      ...(osmCourse.holesCount
+        ? [`${osmCourse.holesCount} hoyos (etiqueta OSM)`]
+        : ['Hoyos y recorrido no especificados en OSM']),
     ],
     hasHoleDetail: false, // ¡Sin tarjeta ni hoyos ficticios!
     hasVerifiedGpsTelemetry: false,
