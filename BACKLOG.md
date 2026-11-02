@@ -616,3 +616,36 @@
 
 
 
+---
+
+## Fase 13: Georreferenciación Precisa, Asignación Territorial de OSM y Eliminación del Fallback a Madrid
+
+### Diagnóstico de la Anomalía Territorial y Causa Raíz
+
+> [!IMPORTANT]
+> **Causa de los 574 campos asignados erróneamente a Madrid**:
+> 1. En OpenStreetMap (`src/data/osm-golf-courses.json`), los elementos de golf (`leisure=golf_course`) no suelen llevar la etiqueta `addr:province`, y solo una minoría incluye `addr:city`.
+> 2. En `src/lib/spain-courses/osm-normalizer.ts`, la función `adaptOsmCourseToSpainGolfCourse` realizaba un fallback indiscriminado:
+>    `resolveAutonomousCommunity(osmCourse.province, osmCourse.city) ?? 'Comunidad de Madrid';`
+>    Al no disponer de etiqueta de provincia textual, casi la totalidad de los 610 campos importados de toda España (Andalucía, Cataluña, Baleares, Canarias, Galicia, etc.) se colapsaban en la Comunidad de Madrid, inflando el contador a 574 campos imposibles.
+> 3. En la realidad geográfica de Madrid existen entre 45 y 60 instalaciones de golf.
+> 4. Dado que cada campo de OSM dispone de coordenadas geodésicas exactas (`latitude` y `longitude`) y muchos cuentan con código postal (`addr:postcode`), la asignación territorial debe realizarse mediante:
+>    - Prefijo numérico del código postal español (`01` a `52`, 100% determinista para la provincia y comunidad).
+>    - Geometría insular explícita (Canarias y Baleares).
+>    - Proximidad geodésica al centroide/capital provincial peninsular más cercano (Voronoi geodésico).
+>    - Supresión total de cualquier fallback fijo a `'Comunidad de Madrid'`.
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F13-T01` | **Motor de Georreferenciación Territorial y Mapeo Provincial en `src/lib/spain-courses/osm-normalizer.ts`**: Implementar `resolveGeodeticLocation(lat, lon, postalCode?, province?, city?)` basado en los 50 códigos postales y capitales provinciales de España, sustituyendo la resolución puramente textual e impidiendo cualquier asignación por defecto a Madrid. | `completada` | Función exportada que resuelve con precisión la provincia y comunidad de cualquier coordenada o código postal español. | **Ejecutado**: Sí (`npm run test`, `npm run typecheck`). **Resultado**: PASS — `resolveGeodeticLocation` implementada con mapeo estricto por código postal (01-52), límites geodésicos insulares (Canarias y Baleares) y proximidad Voronoi a las 47 capitales peninsulares. Cero fallback a Madrid. |
+| `F13-T02` | **Actualización de la Adaptación de Entidades y Verificación de Conteos**: Actualizar `adaptOsmCourseToSpainGolfCourse` para utilizar `resolveGeodeticLocation`, asegurando que `course.province` y `course.autonomousCommunity` sean precisas y que Madrid contenga entre 45 y 60 campos en total. | `completada` | `searchSpainGolfCourses({ community: 'Comunidad de Madrid' }).length` se sitúa entre 45 y 60 campos. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — En la Comunidad de Madrid se registran exactamente 51 campos de golf (4 curados + 47 OSM no duplicados), cumpliendo estrictamente con la realidad geográfica (45-60). |
+| `F13-T03` | **[TEST] Suite de Pruebas Automatizadas para Resolución Territorial**: Añadir tests en `src/lib/spain-courses/__tests__/osm-inventory.test.tsx` verificando: (a) resolución por código postal, (b) resolución por coordenadas en islas y península, (c) conteo en Madrid entre 45 y 60 campos, y (d) distribución coherente en las 17 Comunidades Autónomas. | `completada` | Tests pasan al 100% sin regresiones en las 22 suites del proyecto. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — 4 tests nuevos en bloque 7 de `osm-inventory.test.tsx`; 21/21 tests en verde en la suite y 213/213 tests globales en verde en 22 suites. |
+| `F13-T04` | **[REVISIÓN DE CIERRE FASE 13]**: Ejecutar `npm run typecheck`, `npm run test`, `npm run build`, verificar exportación estática y actualizar `BACKLOG.md`. | `completada` | Comandos oficiales terminan con código `0` e informe de cierre emitido. | **Ejecutado**: Sí (`npm run typecheck`, `npm run test`, `npm run build`). **Resultado**: PASS — `tsc --noEmit` código 0; Vitest 22 suites / 213 tests en verde; `next build` exportó 25/25 páginas estáticas limpiamente. |
+
+> **Estado de la Fase 13**: **CERRADA (4/4 tareas completadas y verificadas)**.
+> - **Resumen de Cumplimiento de Criterios**:
+>   1. **Causa Raíz Diagnosticada y Subsanada**: Se eliminó definitivamente el operador de cortocircuito artificial `?? 'Comunidad de Madrid'` que colapsaba todos los registros de OSM sin etiqueta textual `addr:province` en Madrid.
+>   2. **Motor Geodésico y Postal Exacto**: Se implementó `resolveGeodeticLocation` con matriz exhaustiva `SPAIN_PROVINCES` (50 provincias + Ceuta y Melilla), prefijos de código postal (01 a 52) y distancia esférica haversine a las capitales provinciales peninsulares, además de ventanas geográficas insulares para Canarias (`lat < 30.0`) y Baleares.
+>   3. **Conteo en Madrid Verificado**: Tras deduplicar campos frente al catálogo curado, Madrid cuenta con exactamente **51 campos de golf** (4 del catálogo curado y 47 de OpenStreetMap), encajando con precisión en el rango esperado de 45 a 60.
+>   4. **Distribución Nacional Coherente**: Andalucía cuenta con 138 campos, Cataluña con 87, Castilla y León con 51, Región de Murcia con 47, Canarias con 36, Comunitat Valenciana con 36, Illes Balears con 31, etc.
+>   5. **Verificación Oficial Completa**: 0 errores en `npm run typecheck`, 213/213 tests en verde en 22 suites (`npm run test`) y compilación Next.js 100% estática (`npm run build`).

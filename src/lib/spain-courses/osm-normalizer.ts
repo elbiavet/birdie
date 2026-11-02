@@ -97,6 +97,101 @@ const PROVINCE_TO_COMMUNITY: Record<string, SpainAutonomousCommunity> = {
   murcia: 'Región de Murcia',
 };
 
+export interface SpainProvinceDefinition {
+  code: string;
+  name: string;
+  community: SpainAutonomousCommunity;
+  lat: number;
+  lon: number;
+}
+
+/**
+ * Relación de las 50 provincias y 2 ciudades autónomas de España con código INE y coordenadas geodésicas.
+ */
+export const SPAIN_PROVINCES: readonly SpainProvinceDefinition[] = [
+  // 01-08
+  { code: '01', name: 'Álava', community: 'País Vasco', lat: 42.8469, lon: -2.6716 },
+  { code: '02', name: 'Albacete', community: 'Castilla-La Mancha', lat: 38.9943, lon: -1.8585 },
+  { code: '03', name: 'Alicante', community: 'Comunidad Valenciana', lat: 38.3452, lon: -0.481 },
+  { code: '04', name: 'Almería', community: 'Andalucía', lat: 36.8381, lon: -2.4597 },
+  { code: '05', name: 'Ávila', community: 'Castilla y León', lat: 40.6567, lon: -4.6812 },
+  { code: '06', name: 'Badajoz', community: 'Extremadura', lat: 38.8794, lon: -6.9706 },
+  { code: '07', name: 'Illes Balears', community: 'Illes Balears', lat: 39.5696, lon: 2.6502 },
+  { code: '08', name: 'Barcelona', community: 'Cataluña', lat: 41.3879, lon: 2.1699 },
+  // 09-16
+  { code: '09', name: 'Burgos', community: 'Castilla y León', lat: 42.344, lon: -3.6969 },
+  { code: '10', name: 'Cáceres', community: 'Extremadura', lat: 39.4753, lon: -6.3722 },
+  { code: '11', name: 'Cádiz', community: 'Andalucía', lat: 36.5271, lon: -6.2886 },
+  { code: '12', name: 'Castellón', community: 'Comunidad Valenciana', lat: 39.9864, lon: -0.0513 },
+  { code: '13', name: 'Ciudad Real', community: 'Castilla-La Mancha', lat: 38.9848, lon: -3.9274 },
+  { code: '14', name: 'Córdoba', community: 'Andalucía', lat: 37.8882, lon: -4.7794 },
+  { code: '15', name: 'A Coruña', community: 'Galicia', lat: 43.3623, lon: -8.4115 },
+  { code: '16', name: 'Cuenca', community: 'Castilla-La Mancha', lat: 40.0704, lon: -2.1374 },
+  // 17-24
+  { code: '17', name: 'Girona', community: 'Cataluña', lat: 41.9794, lon: 2.8214 },
+  { code: '18', name: 'Granada', community: 'Andalucía', lat: 37.1773, lon: -3.5986 },
+  { code: '19', name: 'Guadalajara', community: 'Castilla-La Mancha', lat: 40.6337, lon: -3.1674 },
+  { code: '20', name: 'Gipuzkoa', community: 'País Vasco', lat: 43.3183, lon: -1.9812 },
+  { code: '21', name: 'Huelva', community: 'Andalucía', lat: 37.2614, lon: -6.9447 },
+  { code: '22', name: 'Huesca', community: 'Aragón', lat: 42.1362, lon: -0.4087 },
+  { code: '23', name: 'Jaén', community: 'Andalucía', lat: 37.7796, lon: -3.7849 },
+  { code: '24', name: 'León', community: 'Castilla y León', lat: 42.5987, lon: -5.5671 },
+  // 25-32
+  { code: '25', name: 'Lleida', community: 'Cataluña', lat: 41.6176, lon: 0.62 },
+  { code: '26', name: 'La Rioja', community: 'La Rioja', lat: 42.4658, lon: -2.4499 },
+  { code: '27', name: 'Lugo', community: 'Galicia', lat: 43.0125, lon: -7.5558 },
+  { code: '28', name: 'Madrid', community: 'Comunidad de Madrid', lat: 40.4168, lon: -3.7038 },
+  { code: '29', name: 'Málaga', community: 'Andalucía', lat: 36.7213, lon: -4.4214 },
+  { code: '30', name: 'Murcia', community: 'Región de Murcia', lat: 37.9922, lon: -1.1307 },
+  { code: '31', name: 'Navarra', community: 'Navarra', lat: 42.8125, lon: -1.6458 },
+  { code: '32', name: 'Ourense', community: 'Galicia', lat: 42.3358, lon: -7.8639 },
+  // 33-40
+  { code: '33', name: 'Asturias', community: 'Asturias', lat: 43.3619, lon: -5.8494 },
+  { code: '34', name: 'Palencia', community: 'Castilla y León', lat: 42.0095, lon: -4.5288 },
+  { code: '35', name: 'Las Palmas', community: 'Canarias', lat: 28.1235, lon: -15.4363 },
+  { code: '36', name: 'Pontevedra', community: 'Galicia', lat: 42.431, lon: -8.6444 },
+  { code: '37', name: 'Salamanca', community: 'Castilla y León', lat: 40.9701, lon: -5.6635 },
+  { code: '38', name: 'Santa Cruz de Tenerife', community: 'Canarias', lat: 28.4636, lon: -16.2518 },
+  { code: '39', name: 'Cantabria', community: 'Cantabria', lat: 43.4623, lon: -3.8099 },
+  { code: '40', name: 'Segovia', community: 'Castilla y León', lat: 40.9429, lon: -4.1088 },
+  // 41-48
+  { code: '41', name: 'Sevilla', community: 'Andalucía', lat: 37.3891, lon: -5.9845 },
+  { code: '42', name: 'Soria', community: 'Castilla y León', lat: 41.7666, lon: -2.477 },
+  { code: '43', name: 'Tarragona', community: 'Cataluña', lat: 41.1189, lon: 1.2445 },
+  { code: '44', name: 'Teruel', community: 'Aragón', lat: 40.3456, lon: -1.1072 },
+  { code: '45', name: 'Toledo', community: 'Castilla-La Mancha', lat: 39.8628, lon: -4.0273 },
+  { code: '46', name: 'Valencia', community: 'Comunidad Valenciana', lat: 39.4699, lon: -0.3763 },
+  { code: '47', name: 'Valladolid', community: 'Castilla y León', lat: 41.6523, lon: -4.7245 },
+  { code: '48', name: 'Bizkaia', community: 'País Vasco', lat: 43.263, lon: -2.935 },
+  // 49-52
+  { code: '49', name: 'Zamora', community: 'Castilla y León', lat: 41.5063, lon: -5.7446 },
+  { code: '50', name: 'Zaragoza', community: 'Aragón', lat: 41.6488, lon: -0.8891 },
+  { code: '51', name: 'Ceuta', community: 'Andalucía', lat: 35.8894, lon: -5.3213 },
+  { code: '52', name: 'Melilla', community: 'Andalucía', lat: 35.2923, lon: -2.9381 },
+];
+
+/**
+ * Calcula la distancia aproximada en kilómetros entre dos puntos geodésicos usando Haversine.
+ */
+export function calculateDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 /**
  * Normaliza un texto para indexación y comparación (minúsculas, sin tildes ni caracteres especiales).
  */
@@ -110,6 +205,89 @@ export function normalizeText(text: string): string {
 }
 
 /**
+ * Resuelve la provincia y Comunidad Autónoma de forma precisa a partir de:
+ * 1. Prefijo de Código Postal español (01..52, precisión 100%).
+ * 2. Texto de provincia o municipio conocido.
+ * 3. Coordenadas geodésicas (Canarias, Baleares o proximidad a centroides provinciales).
+ * Nunca devuelve un fallback artificial a 'Comunidad de Madrid'.
+ */
+export function resolveGeodeticLocation(
+  lat: number,
+  lon: number,
+  postalCode?: string,
+  province?: string,
+  city?: string
+): { province: string; autonomousCommunity: SpainAutonomousCommunity } {
+  // 1. Por código postal (los 2 primeros dígitos identifican la provincia en España de forma determinista)
+  if (postalCode) {
+    const clean = postalCode.trim().replace(/[^0-9]/g, '');
+    if (clean.length >= 2) {
+      const prefix = clean.padStart(5, '0').slice(0, 2);
+      const found = SPAIN_PROVINCES.find((p) => p.code === prefix);
+      if (found) {
+        return { province: found.name, autonomousCommunity: found.community };
+      }
+    }
+  }
+
+  // 2. Por coincidencia textual directa de provincia
+  if (province) {
+    const norm = normalizeText(province);
+    const foundProv = SPAIN_PROVINCES.find((p) => normalizeText(p.name) === norm);
+    if (foundProv) {
+      return { province: foundProv.name, autonomousCommunity: foundProv.community };
+    }
+    if (PROVINCE_TO_COMMUNITY[norm]) {
+      return { province, autonomousCommunity: PROVINCE_TO_COMMUNITY[norm] };
+    }
+  }
+
+  // 3. Por coincidencia textual directa de municipio
+  if (city) {
+    const normCity = normalizeText(city);
+    const foundCity = SPAIN_PROVINCES.find((p) => normalizeText(p.name) === normCity);
+    if (foundCity) {
+      return { province: foundCity.name, autonomousCommunity: foundCity.community };
+    }
+    if (PROVINCE_TO_COMMUNITY[normCity]) {
+      return { province: city, autonomousCommunity: PROVINCE_TO_COMMUNITY[normCity] };
+    }
+  }
+
+  // 4. Geodésico para Islas Canarias (latitud < 30°)
+  if (lat < 30.0) {
+    const pLasPalmas = SPAIN_PROVINCES.find((p) => p.name === 'Las Palmas')!;
+    const pTenerife = SPAIN_PROVINCES.find((p) => p.name === 'Santa Cruz de Tenerife')!;
+    const dLP = calculateDistanceKm(lat, lon, pLasPalmas.lat, pLasPalmas.lon);
+    const dTF = calculateDistanceKm(lat, lon, pTenerife.lat, pTenerife.lon);
+    return dLP < dTF
+      ? { province: pLasPalmas.name, autonomousCommunity: 'Canarias' }
+      : { province: pTenerife.name, autonomousCommunity: 'Canarias' };
+  }
+
+  // 5. Geodésico para Illes Balears (longitud > 1.0 y latitud entre 38.5 y 40.5)
+  if (lon > 1.0 && lat < 40.5) {
+    return { province: 'Illes Balears', autonomousCommunity: 'Illes Balears' };
+  }
+
+  // 6. Proximidad geodésica a capital/centroide provincial peninsular más cercano (Voronoi territorial)
+  let closest = SPAIN_PROVINCES[0];
+  let minDist = Number.POSITIVE_INFINITY;
+
+  for (const p of SPAIN_PROVINCES) {
+    // Excluir islas del cálculo de proximidad peninsular
+    if (p.community === 'Canarias' || p.community === 'Illes Balears') continue;
+    const d = calculateDistanceKm(lat, lon, p.lat, p.lon);
+    if (d < minDist) {
+      minDist = d;
+      closest = p;
+    }
+  }
+
+  return { province: closest.name, autonomousCommunity: closest.community };
+}
+
+/**
  * Resuelve la Comunidad Autónoma a partir del nombre de la provincia o municipio si es identificable.
  */
 export function resolveAutonomousCommunity(
@@ -118,10 +296,14 @@ export function resolveAutonomousCommunity(
 ): SpainAutonomousCommunity | undefined {
   if (province) {
     const norm = normalizeText(province);
+    const found = SPAIN_PROVINCES.find((p) => normalizeText(p.name) === norm);
+    if (found) return found.community;
     if (PROVINCE_TO_COMMUNITY[norm]) return PROVINCE_TO_COMMUNITY[norm];
   }
   if (city) {
     const norm = normalizeText(city);
+    const found = SPAIN_PROVINCES.find((p) => normalizeText(p.name) === norm);
+    if (found) return found.community;
     if (PROVINCE_TO_COMMUNITY[norm]) return PROVINCE_TO_COMMUNITY[norm];
   }
   return undefined;
@@ -194,7 +376,7 @@ export function deduplicateOsmElements(elements: OverpassRawElement[]): Overpass
 /**
  * Normaliza un elemento de OpenStreetMap en una entidad OsmGolfCourse.
  * Si el objeto carece de coordenadas válidas, devuelve null.
- * Cumple la regla de NO inventar datos ausentes.
+ * Cumple la regla de NO inventar datos deportivos ausentes y resuelve geodésicamente la provincia.
  */
 export function normalizeOsmElement(
   element: OverpassRawElement,
@@ -249,8 +431,14 @@ export function normalizeOsmElement(
   }
 
   const city = tags['addr:city']?.trim() || tags['addr:municipality']?.trim() || undefined;
-  const province = tags['addr:province']?.trim() || undefined;
   const postalCode = tags['addr:postcode']?.trim() || undefined;
+  let province = tags['addr:province']?.trim() || undefined;
+
+  // Si la provincia no viene en las etiquetas de OSM, resolverla geodésicamente
+  if (!province) {
+    const geo = resolveGeodeticLocation(coords.lat, coords.lon, postalCode, undefined, city);
+    province = geo.province;
+  }
 
   // Contacto
   const phone = tags.phone?.trim() || tags['contact:phone']?.trim() || undefined;
@@ -366,28 +554,6 @@ export const normalizeOsmElements = (elements: OverpassRawElement[], importedAt 
 };
 
 /**
- * Calcula la distancia aproximada en kilómetros entre dos puntos geodésicos usando Haversine.
- */
-export function calculateDistanceKm(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371; // Radio de la Tierra en km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-/**
  * Comprueba si un campo de OSM ya está cubierto en el catálogo curado para evitar duplicados.
  * Compara por coincidencia léxica del nombre o proximidad geográfica (< 1.5 km) con coincidencia parcial.
  */
@@ -447,9 +613,17 @@ export function isOsmCourseDuplicateOfCurated(
 export function adaptOsmCourseToSpainGolfCourse(
   osmCourse: OsmGolfCourse
 ): SpainGolfCourse {
-  const community = resolveAutonomousCommunity(osmCourse.province, osmCourse.city) ?? 'Comunidad de Madrid';
-  const displayCity = osmCourse.city || (osmCourse.province ? osmCourse.province : 'España');
-  const displayProvince = osmCourse.province || 'Provincia no especificada en OSM';
+  const resolved = resolveGeodeticLocation(
+    osmCourse.latitude,
+    osmCourse.longitude,
+    osmCourse.postalCode,
+    osmCourse.province,
+    osmCourse.city
+  );
+
+  const community = resolved.autonomousCommunity;
+  const displayProvince = osmCourse.province || resolved.province;
+  const displayCity = osmCourse.city || (osmCourse.province ? osmCourse.province : resolved.province);
 
   // Cumplimiento estricto: holesCount solo se establece si está disponible en OSM (9 o 18);
   // para el contrato de GolfApiCourse se usa 18 como estándar de visualización si no está definido,

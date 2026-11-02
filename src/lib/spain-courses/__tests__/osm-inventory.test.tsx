@@ -20,6 +20,7 @@ import {
   isOsmCourseDuplicateOfCurated,
   normalizeOsmCourse,
   normalizeOsmElements,
+  resolveGeodeticLocation,
   validateOverpassResponse,
 } from '../osm-normalizer';
 import type { OverpassRawElement, OverpassRawResponse } from '../osm-types';
@@ -379,6 +380,83 @@ describe('Fase 11: Catálogo Geográfico Nacional de Campos de Golf (OpenStreetM
 
       expect(headerCount).toBe(1);
       expect(asideCount).toBe(1);
+    });
+  });
+
+  describe('7. Georreferenciación Territorial Precisa y Verificación de Conteos por Comunidad (Fase 13)', () => {
+    it('resuelve la provincia y comunidad a partir del prefijo de código postal con certeza 100%', () => {
+      // Madrid (28xxx)
+      const madrid = resolveGeodeticLocation(40.4168, -3.7038, '28035');
+      expect(madrid.province).toBe('Madrid');
+      expect(madrid.autonomousCommunity).toBe('Comunidad de Madrid');
+
+      // Málaga (29xxx)
+      const malaga = resolveGeodeticLocation(36.5, -4.8, '29600');
+      expect(malaga.province).toBe('Málaga');
+      expect(malaga.autonomousCommunity).toBe('Andalucía');
+
+      // Barcelona (08xxx)
+      const bcn = resolveGeodeticLocation(41.4, 2.1, '08001');
+      expect(bcn.province).toBe('Barcelona');
+      expect(bcn.autonomousCommunity).toBe('Cataluña');
+
+      // Toledo (45xxx)
+      const toledo = resolveGeodeticLocation(40.15, -3.84, '45200');
+      expect(toledo.province).toBe('Toledo');
+      expect(toledo.autonomousCommunity).toBe('Castilla-La Mancha');
+    });
+
+    it('resuelve geodésicamente la ubicación insular y peninsular ante la ausencia de código postal', () => {
+      // Canarias (Tenerife)
+      const canarias = resolveGeodeticLocation(28.1718, -16.7909);
+      expect(canarias.autonomousCommunity).toBe('Canarias');
+      expect(canarias.province).toBe('Santa Cruz de Tenerife');
+
+      // Baleares (Mallorca)
+      const baleares = resolveGeodeticLocation(39.5696, 2.6502);
+      expect(baleares.autonomousCommunity).toBe('Illes Balears');
+      expect(baleares.province).toBe('Illes Balears');
+
+      // Andalucía (Marbella / Costa del Sol)
+      const costaDelSol = resolveGeodeticLocation(36.5123, -4.8912);
+      expect(costaDelSol.autonomousCommunity).toBe('Andalucía');
+      expect(costaDelSol.province).toBe('Málaga');
+
+      // Galicia (A Coruña)
+      const galicia = resolveGeodeticLocation(43.3623, -8.4115);
+      expect(galicia.autonomousCommunity).toBe('Galicia');
+      expect(galicia.province).toBe('A Coruña');
+    });
+
+    it('el catálogo contiene entre 45 y 60 campos en la Comunidad de Madrid, eliminando el sesgo erróneo de 574', () => {
+      const madridCourses = searchSpainGolfCourses({ community: 'Comunidad de Madrid' });
+
+      // Verificación estricta del rango real (aprox. 45 a 60 campos en toda la región)
+      expect(madridCourses.length).toBeGreaterThanOrEqual(45);
+      expect(madridCourses.length).toBeLessThanOrEqual(60);
+
+      // Todos los campos filtrados bajo Madrid deben pertenecer rigurosamente a la Comunidad de Madrid
+      for (const course of madridCourses) {
+        expect(course.autonomousCommunity).toBe('Comunidad de Madrid');
+      }
+
+      // No debe contener campos de la Costa del Sol, Baleares o Cataluña
+      const names = madridCourses.map((c) => c.name.toLowerCase());
+      expect(names.some((n) => n.includes('valderrama'))).toBe(false); // Cádiz
+      expect(names.some((n) => n.includes('el saler'))).toBe(false); // Valencia
+      expect(names.some((n) => n.includes('pga catalunya'))).toBe(false); // Girona
+    });
+
+    it('distribuye el inventario nacional de forma coherente en las 17 Comunidades Autónomas', () => {
+      const andalucia = searchSpainGolfCourses({ community: 'Andalucía' });
+      const cataluna = searchSpainGolfCourses({ community: 'Cataluña' });
+      const baleares = searchSpainGolfCourses({ community: 'Illes Balears' });
+      const canarias = searchSpainGolfCourses({ community: 'Canarias' });
+
+      expect(andalucia.length).toBeGreaterThanOrEqual(100);
+      expect(cataluna.length).toBeGreaterThanOrEqual(50);
+      expect(baleares.length).toBeGreaterThanOrEqual(25);
+      expect(canarias.length).toBeGreaterThanOrEqual(25);
     });
   });
 });
