@@ -678,3 +678,72 @@
 >   2. **Supresión Total de Datos Deportivos Fabricados**: Se eliminó la etiqueta artificial `(estimado OSM)` y la imputación ficticia de 18 hoyos y Par 72 para campos sin desglose en OSM. Se introdujo `hasExplicitHoles?: boolean`, de modo que campos de OSM con nombre real pero sin hoyos reflejan con honestidad `"Hoyos y recorrido no registrados en OSM"`.
 >   3. **Conteo Real y Limpio en Madrid**: Tras eliminar las 20 entidades anónimas que inflaban la cuenca de Madrid, la Comunidad de Madrid cuenta con exactamente **31 campos reales y verificados con nombre** (4 curados + 27 de OSM).
 >   4. **Verificación Total**: 0 errores en `npm run typecheck`, 216/216 tests en verde en las 22 suites de Vitest y generación estática limpia de 25 páginas en `npm run build`.
+
+---
+
+## Fase 15: Corrección de Navegación Móvil Multisección y Accesibilidad Completa en AppShell
+
+### Diagnóstico y Alcance
+
+> [!IMPORTANT]
+> **Causa Raíz y Requisitos de Navegación Móvil**:
+> 1. En `src/components/layout/AppShell.tsx`, la barra de navegación inferior móvil aplicaba `navItems.slice(0, 5)`, limitando la navegación en teléfonos a únicamente 5 secciones e impidiendo el acceso a los 9-11 módulos restantes disponibles según rol y club.
+> 2. Reducir el tamaño de los elementos en pantallas estrechas haría las etiquetas e iconos ilegibles.
+> 3. La solución debe garantizar:
+>    - Acceso a todas las secciones disponibles (`resolveNavigationItems(club, role)`).
+>    - Contenedor con desplazamiento horizontal suave (`overflow-x-auto`, `scroll-smooth`, sin barras de scroll antiestéticas).
+>    - Indicadores claros de desplazamiento lateral (degradados sutiles en los extremos y botones de desplazamiento asistido/indicadores de desbordamiento).
+>    - Auto-centrado suave del elemento activo al cargar o cambiar de ruta (`scrollIntoView`).
+>    - Respeto del área segura inferior (`env(safe-area-inset-bottom)`) y compensación del margen inferior del contenido (`pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]`) para no tapar contenido en ningún móvil o APK.
+>    - Cumplimiento de la identidad visual de alta gama (`birdie-theme`) en Modo Oscuro y Modo Claro.
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F15-T01` | **Barra Móvil Desplazable con Indicadores y Soporte Completo de Secciones**: Actualizar `src/components/layout/AppShell.tsx` eliminando `slice(0, 5)` e implementando navegación horizontal con indicadores de scroll lateral, auto-centrado del ítem activo, respeto del área segura inferior (`env(safe-area-inset-bottom)`) y compensación adecuada de padding inferior en el contenedor principal (`.app-content-container`). | `completada` | Todos los elementos de `navItems` se renderizan en móvil con iconos y textos legibles, sin solapar el contenido inferior de las páginas. | **Ejecutado**: Sí (`npm run test`, `npm run typecheck`). **Resultado**: PASS — `slice(0, 5)` suprimido; contenedor horizontal con scroll suave, auto-centrado de sección activa, respeto de safe area y clases `.app-content-container` y `.mobile-bottom-nav`. |
+| `F15-T02` | **Estilo Visual Lujoso Dark/Light para la Navegación Móvil**: Aplicar tokens y paletas de `birdie-theme` en Modo Oscuro y Modo Claro para los ítems móviles (píldoras activas con degradado dorado, contraste accesible, bordes y tipografía clara). | `completada` | Píldora activa con degradado dorado distintivo y estados inactivos coherentes con las paletas de `birdie-theme`. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — Paleta Dark (`#202127`, `#D4BA80`, `#E4D3AC`, `#92A99E`) y Light (`#FCFAF5`, `#BEA16D`, `#0A3A2A`, `#52665B`) aplicadas con degradados sutiles y textos nítidos. |
+| `F15-T03` | **[TEST] Suite de Pruebas Automatizadas para Navegación Móvil**: Añadir pruebas unitarias/integración en `src/components/__tests__/app-shell-and-profile.test.tsx` verificando que la navegación móvil renderiza todas las secciones disponibles para cada rol y configuración de club, sin limitar a 5 ítems, con enlaces correctos y estado activo. | `completada` | Tests verifican el 100% de secciones en la barra móvil tanto para `player` (15 módulos) como para `club_admin`/`superadmin` (16 módulos) y filtrado de `features`. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — 4 nuevos tests en `app-shell-and-profile.test.tsx`; 13/13 tests en verde en la suite y 220/220 tests globales en 22 suites. |
+| `F15-T04` | **[REVISIÓN DE CIERRE FASE 15]**: Ejecutar `npm run typecheck`, `npm run lint`, `npm run test` y `npm run build`, verificar exportación estática en `out/`, documentar y actualizar `BACKLOG.md` con resultados reales. | `completada` | Comandos oficiales del repositorio finalizan con código `0` y resumen de cierre emitido. | **Ejecutado**: Sí (`npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`). **Resultado**: PASS — `tsc --noEmit` código 0; `next lint` código 0; Vitest 22 suites / 220 tests en verde; `next build` exportó 25 rutas estáticas limpias en `out/`. |
+
+> **Estado de la Fase 15**: **CERRADA (4/4 tareas completadas y verificadas)**.
+> - **Resumen de Cumplimiento de Criterios**:
+>   1. **Acceso Completo a Todas las Secciones**: Se eliminó `navItems.slice(0, 5)` de `AppShell.tsx`. La barra de navegación inferior móvil ahora renderiza el 100% de los módulos disponibles según el rol del usuario y las funcionalidades activas del club (15 módulos para `player`, 16 módulos para administradores).
+>   2. **Diseño Horizontal Desplazable con Indicadores**: Contenedor con `overflow-x-auto`, `scroll-smooth`, scrollbars ocultas y botones/indicadores de desbordamiento en los extremos (`ChevronLeft` y `ChevronRight` con máscaras de degradado lateral) que proporcionan una experiencia táctil intuitiva y fluida.
+>   3. **Auto-centrado del Elemento Activo**: Mediante `activeMobileItemRef` y `scrollIntoView`, la sección activa se centra automáticamente al cargar o cambiar de ruta, manteniendo siempre la ubicación del usuario visible y destacada.
+>   4. **Área Segura y Protección contra Solapamiento**: Se implementaron las clases semánticas `.app-content-container` (con `padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px))` en móvil y `2rem` en desktop) y `.mobile-bottom-nav` (con `padding-bottom: max(0.5rem, calc(0.35rem + env(safe-area-inset-bottom, 0px)))`), garantizando que la barra inferior flotante respete el área segura del dispositivo y nunca tape el contenido de las páginas.
+>   5. **Fidelidad Estética de Alta Gama (`birdie-theme`)**: Píldoras activas con degradado dorado, bordes calibrados, iconos nítidos (`w-5 h-5`), tipografía accesible con truncamiento preventivo y soporte completo para Modo Oscuro y Modo Claro.
+>   6. **Verificación Automatizada Completa**: 4 tests nuevos específicos en `src/components/__tests__/app-shell-and-profile.test.tsx` (220 tests globales en verde en 22 suites), `tsc --noEmit` con 0 errores, `next lint` con 0 errores y exportación 100% estática exitosa con 25/25 páginas en `next build`.
+
+---
+
+## Fase 16: Reorganización y Agrupación de Controles de Configuración en Barra Superior (Menú de Ajustes)
+
+### Diagnóstico y Alcance
+
+> [!IMPORTANT]
+> **Optimización de Espacio y Jerarquía en Cabecera (`<header>`)**:
+> 1. En `src/components/layout/AppShell.tsx`, los controles de configuración (selector de idioma ES/EN, conmutador de tema Dark/Light, selector de club y selector de simulación de rol) se disponían dispersos en la barra superior junto con el estado de conexión, hándicap y accesos.
+> 2. En dispositivos móviles y pantallas medianas, esta dispersión saturaba la cabecera, reduciendo el espacio disponible para el nombre, logotipo y lema del club.
+> 3. **Solución a implementar**:
+>    - Agrupar los controles de configuración en un panel/menú de ajustes compacto desplegable accesible desde un botón con icono (`Settings2` / `SlidersHorizontal`).
+>    - Reservar el espacio horizontal de la barra superior para la identidad del club (logo, nombre oficial, lema) y las acciones prioritarias de usuario (HCP, estado offline, acceso/logout).
+>    - Diseñar el menú con tarjetas de alta gama (`birdie-theme`), etiquetas claras y separación semántica por secciones (Tema, Idioma, Club activo, Simulación de Rol).
+>    - Accesibilidad completa: `aria-haspopup="true"`, `aria-expanded`, etiquetas para lectores de pantalla, cierre con tecla `Escape`, clic exterior y backdrop táctil en móviles evitando cualquier desbordamiento fuera de pantalla (`max-w-[calc(100vw-1.5rem)]`).
+>    - Preservar intacta la configuración white-label del club y la compatibilidad con SSR y suites de prueba existentes.
+
+| ID | Tarea | Estado | Criterio de Verificación | Registro de Tests / Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| `F16-T01` | **Diseño del Menú de Ajustes Compacto en Barra Superior (`AppShell.tsx`)**: Reorganizar los controles de configuración (tema Dark/Light, selector de idioma ES/EN, selector de club y simulación de rol) en un menú desplegable accesible mediante botón con icono (`Settings2`), liberando espacio para la marca e identidad del club. | `completada` | Botón de ajustes visible en cabecera; controles de configuración agrupados en menú flotante estilizado con tarjetas de alta gama (`birdie-theme`). | **Ejecutado**: Sí (`npm run test`, `npm run typecheck`). **Resultado**: PASS — Menú de ajustes implementado con diseño flotante elegante, liberando espacio para el logo, nombre y lema del club. |
+| `F16-T02` | **Accesibilidad, Interacción y Adaptabilidad Móvil**: Implementar accesibilidad completa para teclado (`Escape`, `aria-expanded`, `aria-haspopup`, `aria-controls`), clic exterior, backdrop en móvil y confinamiento para pantallas estrechas (`w-[calc(100vw-2rem)]`, `max-w-xs`) sin desbordar el viewport. | `completada` | Menú se abre/cierra fluidamente, responde a `Escape` y clic exterior, y se mantiene dentro de los márgenes en móviles. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — Interacción accesible verificada con cierre por clic exterior, tecla Escape, backdrop táctil en móvil y confinamiento horizontal. |
+| `F16-T03` | **[TEST] Suite de Pruebas Automatizadas para el Menú de Ajustes**: Añadir pruebas unitarias/integración en `src/components/__tests__/app-shell-and-profile.test.tsx` verificando el botón de ajustes accesible, la agrupación de controles (tema, idioma, club, rol), atributos ARIA y compatibilidad con SSR. | `completada` | 100% de tests de interacción y estructura en verde sin regresiones en las 22 suites del proyecto. | **Ejecutado**: Sí (`npm run test`). **Resultado**: PASS — 3 nuevos tests en `app-shell-and-profile.test.tsx`; 16/16 tests en verde en la suite y 223/223 tests globales en 22 suites. |
+| `F16-T04` | **[REVISIÓN DE CIERRE FASE 16]**: Ejecutar `npm run typecheck`, `npm run lint`, `npm run test` y `npm run build`, verificar exportación estática en `out/`, documentar y actualizar `BACKLOG.md` con resultados reales. | `completada` | Comandos oficiales del repositorio finalizan con código `0` y resumen de cierre emitido. | **Ejecutado**: Sí (`npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`). **Resultado**: PASS — `tsc --noEmit` código 0; `next lint` código 0; Vitest 22 suites / 223 tests en verde; `next build` exportó 25 rutas estáticas limpias en `out/`. |
+
+> **Estado de la Fase 16**: **CERRADA (4/4 tareas completadas y verificadas)**.
+> - **Resumen de Cumplimiento de Criterios**:
+>   1. **Espacio Prioritario para la Identidad del Club**: Se descongestionó la barra superior (`<header>`) sustituyendo los 4 controles dispersos por un botón compacto de ajustes (`Settings2`), permitiendo que el logo oficial, el nombre del club y el lema institucional dispongan de amplitud horizontal (`flex-1 min-w-0`) en desktop y móvil sin solapamientos.
+>   2. **Menú de Ajustes Compacto y Estructurado**: El menú desplegable (`#header-settings-menu`) agrupa semánticamente: (a) Tema visual (conmutador Modo Oscuro / Claro), (b) Idioma (Español ES / Inglés EN), (c) Selector de Club white-label, y (d) Selector/badge de rol RLS, todo bajo la paleta y estética de `birdie-theme`.
+>   3. **Accesibilidad para Teclado y Lectores de Pantalla**: Diálogo accesible con `role="dialog"`, `aria-modal="true"`, `aria-haspopup="dialog"`, `aria-expanded`, etiquetas descriptivas para cada sección, botón de cierre `X` (`aria-label="Cerrar ajustes"`), soporte para cierre con tecla `Escape` y cierre al hacer clic fuera del menú.
+>   4. **Adaptabilidad en Pantallas Móviles**: Se evita que el menú se salga de los márgenes mediante `w-[calc(100vw-2rem)]`, `max-w-xs sm:w-80` y `right-0`, acompañado de un backdrop semitransparente táctil que permite cerrar el menú con un toque en cualquier zona exterior.
+>   5. **Preservación White-Label y Compatibilidad**: Cero alteraciones en las opciones de navegación, configuración de clubes o persistencia de temas/idiomas. Compatibilidad total con SSR (el DOM incluye los controles con estado visual reactivo) y cero regresiones en tests preexistentes.
+>   6. **Verificación Total**: 3 tests nuevos específicos en `src/components/__tests__/app-shell-and-profile.test.tsx` (223 tests globales en verde en 22 suites de Vitest), `tsc --noEmit` con 0 errores, `next lint` con 0 errores y exportación 100% estática exitosa con 25/25 páginas en `next build`.
+
+

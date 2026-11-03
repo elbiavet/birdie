@@ -224,4 +224,200 @@ describe('AppShell White-Label Navigation & Perfil con Hándicap', () => {
     expect(onlineHtml).not.toContain('Supabase Sync');
     expect(onlineHtml).not.toContain('Local SQLite');
   });
+
+  describe('Navegación Móvil Multisección Accesible en AppShell', () => {
+    function extractMobileNavHtml(fullHtml: string): string {
+      const match = fullHtml.match(/<nav[^>]*aria-label="Navegación principal móvil"[^>]*>([\s\S]*?)<\/nav>/);
+      return match ? match[0] : '';
+    }
+
+    it('permite acceder en móvil a todas las secciones disponibles para el rol player (15 módulos sin recortar a 5)', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(ClubProvider, {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement('div', null, 'Contenido Móvil'),
+          }),
+        })
+      );
+
+      const mobileNav = extractMobileNavHtml(html);
+      expect(mobileNav).not.toBe('');
+
+      // Extraer todos los hrefs dentro de la barra de navegación móvil
+      const hrefMatches = Array.from(mobileNav.matchAll(/href="([^"]+)"/g)).map((m) => m[1]);
+
+      // Verificar que NO está recortado a 5 ítems
+      expect(hrefMatches.length).toBe(15);
+
+      // Comprobar que todas las secciones del socio están presentes
+      const expectedHrefs = [
+        '/',
+        '/course',
+        '/scorecard',
+        '/stats',
+        '/bookings',
+        '/calendar',
+        '/tournaments',
+        '/events',
+        '/players',
+        '/clubs',
+        '/news',
+        '/info',
+        '/forum',
+        '/admin-chat',
+        '/profile',
+      ];
+      expectedHrefs.forEach((href) => {
+        expect(hrefMatches).toContain(href);
+      });
+
+      // El panel de admin debe estar oculto para el socio
+      expect(hrefMatches).not.toContain('/admin');
+
+      // El elemento activo de inicio ('/') debe tener aria-current="page"
+      expect(mobileNav).toContain('aria-current="page"');
+
+      // Comprobar que el contenedor principal tiene la clase de compensación de padding inferior
+      expect(html).toContain('app-content-container');
+      expect(mobileNav).toContain('mobile-bottom-nav');
+    });
+
+    it('incluye el módulo /admin en la barra móvil para el rol club_admin y superadmin (16 módulos)', () => {
+      const demoClub = getClubConfig('demo-club');
+      const adminNavItems = resolveNavigationItems(demoClub, 'club_admin');
+      const superadminNavItems = resolveNavigationItems(demoClub, 'superadmin');
+
+      expect(adminNavItems.length).toBe(16);
+      expect(superadminNavItems.length).toBe(16);
+      expect(adminNavItems.map((i) => i.href)).toContain('/admin');
+      expect(superadminNavItems.map((i) => i.href)).toContain('/admin');
+    });
+
+    it('filtra automáticamente en la barra móvil las secciones deshabilitadas en features del club', () => {
+      const illescasClub = getClubConfig('senorio-illescas');
+      const customClub = {
+        ...illescasClub,
+        features: {
+          ...illescasClub.features,
+          forum: false,
+          specialEvents: false,
+        },
+      };
+      const filteredItems = resolveNavigationItems(customClub, 'player');
+      const hrefs = filteredItems.map((i) => i.href);
+
+      expect(hrefs).not.toContain('/forum');
+      expect(hrefs).not.toContain('/events');
+      expect(hrefs).toContain('/scorecard');
+      expect(hrefs).toContain('/bookings');
+      expect(hrefs).toContain('/profile');
+    });
+
+    it('garantiza títulos legibles y soporte en temas Dark y Light en la barra de navegación móvil', () => {
+      const darkHtml = renderToStaticMarkup(
+        React.createElement(ThemeProvider, {
+          initialTheme: 'dark',
+          children: React.createElement(ClubProvider, {
+            initialClubId: 'demo-club',
+            children: React.createElement(AppShell, {
+              children: React.createElement('div', null, 'Vista Dark'),
+            }),
+          }),
+        })
+      );
+      const darkNav = extractMobileNavHtml(darkHtml);
+      expect(darkNav).toContain('title="Inicio"');
+      expect(darkNav).toContain('title="Marcador &amp; GPS"');
+      expect(darkNav).toContain('title="Perfil y Hándicap"');
+
+      const lightHtml = renderToStaticMarkup(
+        React.createElement(ThemeProvider, {
+          initialTheme: 'light',
+          children: React.createElement(ClubProvider, {
+            initialClubId: 'demo-club',
+            children: React.createElement(AppShell, {
+              children: React.createElement('div', null, 'Vista Light'),
+            }),
+          }),
+        })
+      );
+      const lightNav = extractMobileNavHtml(lightHtml);
+      expect(lightNav).toContain('title="Inicio"');
+      expect(lightNav).toContain('title="Marcador &amp; GPS"');
+      expect(lightNav).toContain('title="Perfil y Hándicap"');
+    });
+  });
+
+  describe('Reorganización de Controles en Menú de Ajustes de Cabecera (Fase 16)', () => {
+    it('agrupa los controles de configuración (tema, idioma, club) dentro de un panel de ajustes accesible desde un botón con icono', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(ClubProvider, {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement('div', null, 'Contenido Principal'),
+          }),
+        })
+      );
+
+      // Botón activador del menú de ajustes en la cabecera
+      expect(html).toContain('aria-controls="header-settings-menu"');
+      expect(html).toContain('aria-haspopup="dialog"');
+      expect(html).toContain('aria-label="Ajustes"');
+
+      // Panel desplegable de ajustes estructurado
+      expect(html).toContain('id="header-settings-menu"');
+      expect(html).toContain('role="dialog"');
+      expect(html).toContain('aria-label="Ajustes y Preferencias"');
+
+      // Controles agrupados dentro del panel
+      expect(html).toContain('aria-label="Selector de club white-label"');
+      expect(html).toContain('aria-label="Cambiar a Español"');
+      expect(html).toContain('aria-label="Switch to English"');
+      expect(html).toContain('aria-label="Cerrar ajustes"');
+    });
+
+    it('proporciona etiquetas claras y accesibilidad para teclado y lectores de pantalla en los ajustes', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(ThemeProvider, {
+          initialTheme: 'dark',
+          children: React.createElement(ClubProvider, {
+            initialClubId: 'demo-club',
+            children: React.createElement(AppShell, {
+              children: React.createElement('div', null, 'Vista Accesibilidad'),
+            }),
+          }),
+        })
+      );
+
+      // Comprobar atributos ARIA
+      expect(html).toContain('aria-expanded="false"');
+      expect(html).toContain('aria-label="Cambiar a modo Light"');
+      expect(html).toContain('title="Ajustes"');
+      expect(html).toContain('Ajustes y Preferencias');
+      expect(html).toContain('Tema visual');
+      expect(html).toContain('Idioma');
+      expect(html).toContain('Club de Golf');
+    });
+
+    it('reserva espacio para la identidad del club y evita desbordamiento en pantallas móviles', () => {
+      const html = renderToStaticMarkup(
+        React.createElement(ClubProvider, {
+          initialClubId: 'demo-club',
+          children: React.createElement(AppShell, {
+            children: React.createElement('div', null, 'Vista Identidad'),
+          }),
+        })
+      );
+
+      // Identidad del club destacada en la cabecera
+      expect(html).toContain('Real Club de Golf Valle Verde');
+      expect(html).toContain('/clubs/demo-club/logo.svg');
+
+      // Clases de contención para evitar que el menú se salga en pantallas móviles estrechas
+      expect(html).toContain('max-w-xs');
+      expect(html).toContain('w-[calc(100vw-2rem)]');
+      expect(html).toContain('right-0');
+    });
+  });
 });

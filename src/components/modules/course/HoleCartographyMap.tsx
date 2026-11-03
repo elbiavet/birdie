@@ -88,8 +88,7 @@ export function HoleCartographyMap({
 }: HoleCartographyMapProps) {
   const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<import('leaflet').Map | null>(null);
 
   const [tileErrorOccurred, setTileErrorOccurred] = useState(false);
   const [isOffline, setIsOffline] = useState(false);

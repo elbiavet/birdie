@@ -36,6 +36,7 @@ export const en: TranslationDictionary = {
     language: 'Language',
     spanish: 'Spanish',
     english: 'English',
+    settings: 'Settings',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -64,6 +65,11 @@ export const en: TranslationDictionary = {
     offlineSqlite: 'Offline',
     themeLight: 'Light Mode',
     themeDark: 'Dark Mode',
+    settingsTitle: 'Settings & Preferences',
+    theme: 'Visual Theme',
+    club: 'Golf Club',
+    role: 'User Role',
+    closeSettings: 'Close settings',
   },
   home: {
     welcome: 'Welcome',

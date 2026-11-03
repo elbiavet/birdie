@@ -34,6 +34,7 @@ export const es = {
     language: 'Idioma',
     spanish: 'Español',
     english: 'Inglés',
+    settings: 'Ajustes',
   },
   nav: {
     dashboard: 'Inicio',
@@ -62,6 +63,11 @@ export const es = {
     offlineSqlite: 'Sin conexión',
     themeLight: 'Modo Claro',
     themeDark: 'Modo Oscuro',
+    settingsTitle: 'Ajustes y Preferencias',
+    theme: 'Tema visual',
+    club: 'Club de Golf',
+    role: 'Rol de Usuario',
+    closeSettings: 'Cerrar ajustes',
   },
   home: {
     welcome: 'Bienvenido',
